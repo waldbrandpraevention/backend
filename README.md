@@ -5,7 +5,7 @@
 
 <div align="center">
 
-[![Node.js CI](https://img.shields.io/github/workflow/status/waldbrandpraevention/backend/Node.js%20CI?style=for-the-badge)](https://github.com/waldbrandpraevention/backend/actions/workflows/node.js.yml)
+[![pylint](https://img.shields.io/github/workflow/status/waldbrandpraevention/backend/Pylint?style=for-the-badge)](https://github.com/waldbrandpraevention/backend/actions/workflows/Pylint.yml)
 ![](https://img.shields.io/github/commit-activity/m/waldbrandpraevention/backend?style=for-the-badge)
 
 ![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
