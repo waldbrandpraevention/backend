@@ -16,9 +16,23 @@
 
 </div>
 
-## Deployment mit Docker
+## Installation
 
-Siehe [Readme im `waldbrandpraevention/frontend` Repo](https://github.com/waldbrandpraevention/frontend).
+> Die folgende Anleitung beschreibt nur das Deployen des Backends. Um die vollständige Anwendung zu installieren, bitte die detaillierte [Readme im `waldbrandpraevention/frontend` Repo](https://github.com/waldbrandpraevention/frontend#readme) ansehen.
+
+1. GitHub Repo clonen
+```
+git clone https://github.com/waldbrandpraevention/frontend.git
+```
+2. Docker Image erstellen
+```
+cd frontend && docker build -f Dockerfile.withNginx -t wb-frontend .
+```
+3. Docker Container starten
+```
+docker run --rm -it -p 8080:80 wb-frontend
+```
+4. Backend läuft auf http://localhost:8080
 
 ## Development
 
