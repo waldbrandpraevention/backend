@@ -17,6 +17,7 @@
 </div>
 
 ## Installation
+---
 
  Die nachfolgende Anleitung beschreibt nur das Deployen des Backends.<br>
   Um die vollständige Anwendung zu installieren, bitte die detaillierte [Readme im `waldbrandpraevention/frontend` Repo](https://github.com/waldbrandpraevention/frontend#readme) ansehen.
@@ -39,5 +40,22 @@ docker run --rm -it -p 8000:80 wb-backend
 
 ## Development
 
-// todo
+Python Dependencies:
+- fastapi: api stuff
+- python-jose: jwt stuff
+- passlib: hashing
+- uvicorn: server
+
+1. GitHub Repo clonen
+```
+git clone https://github.com/waldbrandpraevention/backend.git
+```
+
+2. Server starten
+```
+cd waldbrandpraevention/backend
+uvicorn main:app --reload
+```
+3. Backend läuft auf http://localhost:8000<br>
+API Documentation auf http://localhost:8000/docs
 
