@@ -203,6 +203,8 @@ async def read_users_me(current_user: User = Depends(get_current_user)):
 #test stuff
 @app.get("/static/test/all")
 async def read_static_test_all():
+    """static test
+    """
     return [{"static_info": "This is the same for everyone. Even people that are not logged in yet."}]
 
 @app.get("/static/test/authenticated")
