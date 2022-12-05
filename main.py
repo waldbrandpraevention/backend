@@ -8,6 +8,7 @@ from pydantic import BaseModel
 
 import random
 from validation import *
+from classes import *
 
 #secret key generated with: openssl rand -hex 32
 #should not be included dn the public repo in the final build
@@ -15,29 +16,6 @@ SECRET_KEY = "cbdc851fece93e7b1a3bf9ca16c9ce62939e22f668866c875d294363e2530b27"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 EMAIL_VERIFICATION_TOKEN_EXPIRE_HOURS = 24
-
-class Token(BaseModel):
-    access_token: str
-    token_type: str
-
-class TokenData(BaseModel):
-    email: str | None = None
-
-class Permission(Enum):
-    USER = 1
-    ADMIN = 2
-    THIRD_PARTY = 3
-
-class User(BaseModel):
-    email: str | None = None
-    first_name: str | None = None
-    last_name: str | None = None
-
-class UserWithSensitiveInfo(User):
-    hashed_password: str
-    permission: Permission | None = None
-    disabled: bool | None = None
-    email_verified: bool
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
