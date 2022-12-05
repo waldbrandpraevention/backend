@@ -18,7 +18,10 @@
 
 ## Installation
 
-> Die folgende Anleitung beschreibt nur das Deployen des Backends. Um die vollständige Anwendung zu installieren, bitte die detaillierte [Readme im `waldbrandpraevention/frontend` Repo](https://github.com/waldbrandpraevention/frontend#readme) ansehen.
+ Die nachfolgende Anleitung beschreibt nur das Deployen des Backends.<br>
+  Um die vollständige Anwendung zu installieren, bitte die detaillierte [Readme im `waldbrandpraevention/frontend` Repo](https://github.com/waldbrandpraevention/frontend#readme) ansehen.
+
+---
 
 1. GitHub Repo clonen
 ```
