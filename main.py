@@ -33,10 +33,6 @@ class User(BaseModel):
     last_name: str | None = None
     disabled: bool | None = None
 
-class ThirdParty(BaseModel):
-    name: str
-    permission: Permission | None = None
-
 class UserWithPassword(User):
     hashed_password: str
 
@@ -215,18 +211,3 @@ async def read_static_test_all():
 @app.get("/static/test/authenticated")
 async def read_static_test_auth(current_user: User = Depends(get_current_user)):
     return [{"static_info": "This is the same for everyone that is logged in"}]
-
-@app.post("/drone/token", response_model=Token)
-async def create_drone_access_token(form_data: OA = Depends()):
-    current_user: User = Depends(get_current_user)
-    if not is_admin(current_user):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="User is not an adim",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    
-    access_token = create_access_token(
-        data={"sub": user.email}, expires_delta=access_token_expires
-    )
-    return None
