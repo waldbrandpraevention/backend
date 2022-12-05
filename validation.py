@@ -1,4 +1,4 @@
-#return list of errors
+#return list of errors on each function
 
 def validate_email(email: str):
     return email
