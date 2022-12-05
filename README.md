@@ -22,17 +22,17 @@
 
 1. GitHub Repo clonen
 ```
-git clone https://github.com/waldbrandpraevention/frontend.git
+git clone https://github.com/waldbrandpraevention/backend.git
 ```
 2. Docker Image erstellen
 ```
-cd frontend && docker build -f Dockerfile.withNginx -t wb-frontend .
+cd backend && docker build -f Dockerfile.local -t wb-backend .
 ```
 3. Docker Container starten
 ```
-docker run --rm -it -p 8080:80 wb-frontend
+docker run --rm -it -p 8000:80 wb-backend
 ```
-4. Backend läuft auf http://localhost:8080
+4. Backend läuft auf http://localhost:8000
 
 ## Development
 
