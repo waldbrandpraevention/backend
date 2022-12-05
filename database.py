@@ -1,6 +1,7 @@
 import sqlite3
 import configparser
 from typing import Union
+from contextlib import contextmanager
 
 CREATE_USER_TABLE = """ CREATE TABLE IF NOT EXISTS users (
                         id integer PRIMARY KEY,
@@ -25,8 +26,6 @@ config = configparser.ConfigParser(CONFIG_PATH)
 DATABASE_PATH = config.get('Database','path')
 BACKUP_PATH = config.get('Database','backuppath')
 
-active_connections = []
-
 EMAIL_REGEX = r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)"
 
 def create_backup():
@@ -40,7 +39,17 @@ def create_backup():
     close_connection(backup_conn)
     close_connection(database_conn)
 
-def connect(path=DATABASE_PATH) -> Union[sqlite3.Connection,None]:
+
+@contextmanager
+def database_connection(path=DATABASE_PATH):
+    conn = connect(path)
+    try:
+        yield conn
+    finally:
+        close_connection(conn)
+    
+
+def connect(path=DATABASE_PATH) -> sqlite3.Connection | None:
     """creates a connection to the database specified in the congig.ini.
 
     Returns:
@@ -58,7 +67,6 @@ def connect(path=DATABASE_PATH) -> Union[sqlite3.Connection,None]:
     conn = None
     try:
         conn = sqlite3.connect(path, check_same_thread=check_same_thread)
-        active_connections.append(conn)
         return conn
     except Exception as e:
         print(e)
@@ -73,16 +81,12 @@ def close_connection(conn:sqlite3.Connection)->None:
     """
     try:
         conn.close()
-        try:
-            active_connections.remove(conn)
-        except ValueError as e: #conn 
-            print(e)
 
     except sqlite3.Error as e:
         print(e)
 
 
-def create_table(conn:sqlite3.Connection, create_table_sql:str)-> None:
+def create_table(create_table_sql:str)-> None:
     """create a table from the create_table_sql statement
 
     Args:
@@ -90,15 +94,16 @@ def create_table(conn:sqlite3.Connection, create_table_sql:str)-> None:
         create_table_sql (str): a CREATE TABLE statement
     """
     try:
-        cursor = conn.cursor()
-        cursor.execute(create_table_sql)
-        conn.commit()
-        cursor.close()
+        with database_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(create_table_sql)
+            conn.commit()
+            cursor.close()
     except sqlite3.Error as e:
         print(e)
 
 
-def create_user(conn:sqlite3.Connection, email, pwhash):
+def create_user(email, pwhash):
     """Create an entry for an user.
 
     Args:
@@ -107,14 +112,15 @@ def create_user(conn:sqlite3.Connection, email, pwhash):
         pass_hash (str): hash of the entered password.
     """
     try:
-        cursor = conn.cursor()
-        cursor.execute(INSERT_USER,(email, pwhash))
-        conn.commit()
-        cursor.close()
+        with database_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(INSERT_USER,(email, pwhash))
+            conn.commit()
+            cursor.close()
     except sqlite3.IntegrityError:
         print('user with this email already exists.')
 
-def update_mail(conn:sqlite3.Connection, old_email, new_email):
+def update_mail(old_email, new_email):
     """Update the users email address.
 
     Args:
@@ -123,31 +129,33 @@ def update_mail(conn:sqlite3.Connection, old_email, new_email):
         new_email (str): new email adress of the user.
     """
     try:
-        cursor = conn.cursor()
-        cursor.execute(UPDATE_MAIL,(old_email, new_email))
-        conn.commit()
-        cursor.close()
+        with database_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(UPDATE_MAIL,(old_email, new_email))
+            conn.commit()
+            cursor.close()
     except sqlite3.IntegrityError:
         print('There is already an account with this email.')
 
-def update_pwhash(conn:sqlite3.Connection, new_pwhash, email):
+def update_pwhash(new_pwhash, email):
     """Update the users email address.
 
     Args:
-        conn (sqlite3.Connection): Connection to a sqlite database.
+        conn (sqlite3.Connection): Connection to a sqlite database.pip install SQLAlchemy==1.4.3 aiosqlite
         old_email (str): current email adress of the user.
         new_email (str): new email adress of the user.
     """
     try:
-        cursor = conn.cursor()
-        cursor.execute(UPDATE_PWHASH,(new_pwhash, email))
-        conn.commit()
-        cursor.close()
+        with database_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(UPDATE_PWHASH,(new_pwhash, email))
+            conn.commit()
+            cursor.close()
     except sqlite3.Error as e:
         print(e)
 
 
-def check_creds(conn:sqlite3.Connection, email:str, pwhash:str) -> bool:
+def check_creds(email:str, pwhash:str) -> bool:
     """Check if the given email and hash matches with the ones stored in the database.
 
     Args:
@@ -158,12 +166,13 @@ def check_creds(conn:sqlite3.Connection, email:str, pwhash:str) -> bool:
     Returns:
         bool: True if mail and hash match, False if not.
     """
-    cursor = conn.cursor()
-    cursor.execute(CHECK_CREDS, (email, pwhash))
-    if not cursor.fetchone():  # An empty result evaluates to False.
-        cursor.close()
-        return False
-    else:
-        cursor.close()
-        return True
+    with database_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute(CHECK_CREDS, (email, pwhash))
+        if not cursor.fetchone():  # An empty result evaluates to False.
+            cursor.close()
+            return False
+        else:
+            cursor.close()
+            return True
 
