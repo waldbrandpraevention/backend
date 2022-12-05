@@ -256,8 +256,23 @@ async def read_static_test_all():
 async def read_static_test_auth(current_user: User = Depends(get_current_user)):
     return [{"static_info": "This is the same for everyone that is logged in"}]
 
-@app.post("/register/", status_code=status.HTTP_201_CREATED)
+@app.post("/signup/", status_code=status.HTTP_201_CREATED)
 async def register(email: str = Form(), password: str = Form(), first_name: str = Form(), last_name: str = Form()):
+    """API call to create a new account
+
+    Args:
+        email (str, optional): Email. Defaults to Form().
+        password (str, optional): Plaintext password. Defaults to Form().
+        first_name (str, optional): Frist name. Defaults to Form().
+        last_name (str, optional): Last name Defaults to Form().
+
+    Raises:
+        HTTPException: _description_
+        HTTPException: _description_
+
+    Returns:
+        _type_: _description_
+    """
     errors = []
     validate_email(email)
     errors.append(validate_password(password))
