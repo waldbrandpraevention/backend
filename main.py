@@ -8,6 +8,7 @@ from pydantic import BaseModel
 
 
 #secret key generated with: openssl rand -hex 32
+#should not be included dn the public repo in the final build
 SECRET_KEY = "cbdc851fece93e7b1a3bf9ca16c9ce62939e22f668866c875d294363e2530b27"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
