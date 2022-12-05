@@ -5,6 +5,7 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from pydantic import BaseModel
+from database import users_table
 
 import random
 from validation import *
@@ -51,7 +52,7 @@ def get_password_hash(password):
     return pwd_context.hash(password)
 
 
-def get_user(email: str):
+def get_user(email: str) -> UserWithSensitiveInfo | None:
     """Creates a user object from the information in the db
 
     Args:
@@ -62,15 +63,10 @@ def get_user(email: str):
         None: if no user exists with the given email
     """
 
-    #Pseudocode
-    # if user exists:
-    #   create and return a UserWithPassword object (class from above, all values need te be initialized, includung the ones from the base user class)
-    # else:
-    #   return None
-    return None
+    return users_table.get_user(email)
 
 async def send_email():
-    return true
+    return True
 
 
 def authenticate_user(email: str, password: str):
@@ -276,7 +272,7 @@ async def verify_email(token: str):
             detail="Token invalid",
         )
 
-    exists = true #check if db has given code
+    exists = True #check if db has given code
     if not exists:
         raise invalid_token_exception
 
@@ -296,11 +292,11 @@ async def verify_email(token: str):
         else:
             raise invalid_token_exception
     db_token = "" #token from db via mail
-    if true: #not in db, should never happen but just in case
+    if True: #not in db, should never happen but just in case
         raise invalid_token_exception
     if token != db_token: 
         raise invalid_token_exception
     #delete token from db
     user = get_user(token_email)
-    user.verified_email = true
+    user.verified_email = True
     return {"message": "Email successfully verified"}
