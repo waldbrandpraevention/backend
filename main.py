@@ -12,6 +12,7 @@ SECRET_KEY = "cbdc851fece93e7b1a3bf9ca16c9ce62939e22f668866c875d294363e2530b27"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
+
 class Token(BaseModel):
     access_token: str
     token_type: str
@@ -22,6 +23,7 @@ class TokenData(BaseModel):
 class Permission(Enum):
     USER = 1
     ADMIN = 2
+    THIRD_PARTY = 3
 
 class User(BaseModel):
     permission: Permission | None = None
@@ -30,6 +32,9 @@ class User(BaseModel):
     last_name: str | None = None
     disabled: bool | None = None
 
+class ThirdParty(BaseModel):
+    name: str
+    permission: Permission | None = None
 
 class UserWithPassword(User):
     hashed_password: str
@@ -40,7 +45,8 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 app = FastAPI()
 
-
+def is_admin(user: User):
+    return user.permission == Permission.ADMIN
 
 def verify_password(plain_password, hashed_password):
     """Checks if a plain password matches a given hash
@@ -158,7 +164,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
     return user
 
 
-@app.post("/token", response_model=Token)
+@app.post("/user/token", response_model=Token)
 async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
     """API call to create an access token
 
@@ -203,10 +209,23 @@ async def read_users_me(current_user: User = Depends(get_current_user)):
 #test stuff
 @app.get("/static/test/all")
 async def read_static_test_all():
-    """static test
-    """
     return [{"static_info": "This is the same for everyone. Even people that are not logged in yet."}]
 
 @app.get("/static/test/authenticated")
 async def read_static_test_auth(current_user: User = Depends(get_current_user)):
     return [{"static_info": "This is the same for everyone that is logged in"}]
+
+@app.post("/drone/token", response_model=Token)
+async def create_drone_access_token(form_data: OA = Depends()):
+    current_user: User = Depends(get_current_user)
+    if not is_admin(current_user):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User is not an adim",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    access_token = create_access_token(
+        data={"sub": user.email}, expires_delta=access_token_expires
+    )
+    return None
