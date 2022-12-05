@@ -19,7 +19,7 @@ class User(BaseModel):
     last_name: str | None = None
 
 class UserWithSensitiveInfo(User):
-    hashed_password: str
+    hashed_password: str | None = None
     permission: Permission | None = None
     disabled: bool | None = None
     email_verified: bool
