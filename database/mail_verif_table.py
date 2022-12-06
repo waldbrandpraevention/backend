@@ -2,16 +2,16 @@ import sqlite3
 from classes import Token, User
 from database.database import database_connection
 
-MAIL_VERIFY_TABLE = """ CREATE TABLE IF NOT EXISTS mail_verification (
-                        id integer PRIMARY KEY,
-                        EMAIL text NOT NULL UNIQUE,
-                        TOKEN text NOT NULL,
-                    ); """
+CREATE_MAIL_VERIFY_TABLE = """ CREATE TABLE IF NOT EXISTS mail_verification (
+                        id INTEGER PRIMARY KEY,
+                        email TEXT NOT NULL UNIQUE,
+                        token TEXT NOT NULL
+                    );"""
 
-INSERT_TOKEN = 'INSERT INTO mail_verification (EMAIL,TOKEN) VALUES (? ,? );'
-CHECK_TOKEN = "SELECT * FROM mail_verification WHERE TOKEN=?;"
-GET_MAIL_BY_TOKEN = 'SELECT EMAIL FROM mail_verification WHERE TOKEN=?;'
-GET_TOKEN_BY_MAIL = 'SELECT TOKEN FROM mail_verification WHERE EMAIL=?;'
+INSERT_TOKEN = 'INSERT INTO mail_verification (email,token) VALUES (? ,? );'
+CHECK_TOKEN = "SELECT * FROM mail_verification WHERE token=?;"
+GET_MAIL_BY_TOKEN = 'SELECT email FROM mail_verification WHERE token=?;'
+GET_TOKEN_BY_MAIL = 'SELECT token FROM mail_verification WHERE email=?;'
 
 def store_token(mail:str, token:str):
     """Store the token for this user.
@@ -47,24 +47,6 @@ def check_token(token:str) -> bool:
             return False
         else:
             cursor.close()
-            return True
-
-def check_token(token:str) -> bool:
-    """Checks if token exists in the Database
-
-    Args:
-        token (str): the token sent by mail.
-
-    Returns:
-        bool: Wether the token exists or not.
-    """
-    with database_connection() as conn:
-        cursor = conn.cursor()
-        cursor.execute(GET_MAIL_BY_TOKEN,(token,))
-        fetched_mail = cursor.fetchone()
-        if not fetched_mail:  # An empty result evaluates to False.
-            return False
-        else:
             return True
 
 def get_mail_by_token(token:str) -> str | None:
