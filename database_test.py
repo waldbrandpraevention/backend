@@ -24,9 +24,11 @@ def test_verifytable():
     create_table(CREATE_MAIL_VERIFY_TABLE)
     token = 'ichbineintoken.:)'
     store_token(mail,token)
+    store_token(mail,token, update=True)
     print(check_token(token))
     print(get_mail_by_token(token))
     print(get_token_by_mail(mail))
+    
 
 start = time.time()
 [test_usertable() for _ in range(500)]
