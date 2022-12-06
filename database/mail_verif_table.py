@@ -9,21 +9,26 @@ CREATE_MAIL_VERIFY_TABLE = """ CREATE TABLE IF NOT EXISTS mail_verification (
                     );"""
 
 INSERT_TOKEN = 'INSERT INTO mail_verification (email,token) VALUES (? ,? );'
+UPDATE_TOKEN = ''' UPDATE mail_verification SET token = ? WHERE email = ?;'''
 CHECK_TOKEN = "SELECT * FROM mail_verification WHERE token=?;"
 GET_MAIL_BY_TOKEN = 'SELECT email FROM mail_verification WHERE token=?;'
 GET_TOKEN_BY_MAIL = 'SELECT token FROM mail_verification WHERE email=?;'
 
-def store_token(mail:str, token:str):
+def store_token(mail:str, token:str, update = False):
     """Store the token for this user.
 
     Args:
         mail (str): _description_
         token (str): _description_
+        update (bool, optional): _description_. Defaults to False.
     """
     try:
         with database_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute(INSERT_TOKEN,(mail, token))
+            if update:
+                cursor.execute(UPDATE_TOKEN,(token, mail))
+            else:
+                cursor.execute(INSERT_TOKEN,(mail, token))
             conn.commit()
             cursor.close()
     except sqlite3.IntegrityError:#TODO check token

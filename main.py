@@ -294,7 +294,7 @@ async def verify_email(token: str):
             new_token = create_access_token(mail_from_token, timedelta(hours=EMAIL_VERIFICATION_TOKEN_EXPIRE_HOURS))
             success = await send_email(new_token) #placeholder
             if success:
-                mail_verif_table.store_token(mail_from_token,new_token)
+                mail_verif_table.store_token(mail_from_token,new_token, update=True)
             #change token in db
             #if sending successfull...
             raise HTTPException(
