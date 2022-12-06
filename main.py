@@ -8,6 +8,7 @@ from pydantic import BaseModel
 from database import users_table
 
 import random
+from database import mail_verif_table
 from validation import *
 from classes import *
 
@@ -24,7 +25,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 app = FastAPI()
 
-def is_admin(user: User):
+def is_admin(user: UserWithSensitiveInfo):
     return user.permission == Permission.ADMIN
 
 def verify_password(plain_password, hashed_password):
@@ -262,7 +263,16 @@ async def register(email: str = Form(), password: str = Form(), first_name: str 
             status_code=status.HTTP_406_NOT_ACCEPTABLE,
             detail="This email is already assosiated with an existing account",
         )
-    #add user to db
+    
+    hashed_pw = get_password_hash(password)
+    user = UserWithSensitiveInfo(   email=email,
+                                    first_name=first_name,
+                                    last_name=last_name,
+                                    hashed_password=hashed_pw,
+                                    permission=1,
+                                    disabled=0,
+                                    email_verified=0)
+    users_table.create_user(user)
     return {"message": "success"}
 
 @app.post("/email-verification/verify/", status_code=status.HTTP_200_OK)
@@ -272,7 +282,7 @@ async def verify_email(token: str):
             detail="Token invalid",
         )
 
-    exists = True #check if db has given code
+    exists = mail_verif_table.check_token(token)
     if not exists:
         raise invalid_token_exception
 
@@ -280,9 +290,11 @@ async def verify_email(token: str):
         token_email = await get_email_from_token(token)
     except HTTPException as e:
         if e.status_code == status.HTTP_406_NOT_ACCEPTABLE: #expired
-            mail_from_token = "" #get from db with token
+            mail_from_token = mail_verif_table.get_mail_by_token(token)
             new_token = create_access_token(mail_from_token, timedelta(hours=EMAIL_VERIFICATION_TOKEN_EXPIRE_HOURS))
-            await send_email(new_token) #placeholder
+            success = await send_email(new_token) #placeholder
+            if success:
+                mail_verif_table.store_token(mail_from_token,new_token)
             #change token in db
             #if sending successfull...
             raise HTTPException(
@@ -291,8 +303,8 @@ async def verify_email(token: str):
             )
         else:
             raise invalid_token_exception
-    db_token = "" #token from db via mail
-    if True: #not in db, should never happen but just in case
+    db_token = mail_verif_table.get_token_by_mail(token_email)
+    if not db_token: #not in db, should never happen but just in case
         raise invalid_token_exception
     if token != db_token: 
         raise invalid_token_exception
