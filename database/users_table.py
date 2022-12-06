@@ -2,6 +2,17 @@ import sqlite3
 from classes import User, UserWithSensitiveInfo,Permission
 from database.database import database_connection
 
+CREATE_USER_TABLE = """ CREATE TABLE IF NOT EXISTS users (
+                        id INTEGER PRIMARY KEY,
+                        email TEXT NOT NULL UNIQUE,
+                        first_name TEXT NOT NULL,
+                        last_name TEXT NOT NULL,
+                        hashed_password TEXT NOT NULL,
+                        permission INTEGER DEFAULT 0,
+                        disabled INTEGER,
+                        email_verified INTEGER NOT NULL
+                    );"""
+
 UPDATE_MAIL = ''' UPDATE users
                     SET email = ? ,
                     WHERE email = ?;'''
