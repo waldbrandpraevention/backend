@@ -4,26 +4,107 @@ from database.database import database_connection
 
 MAIL_VERIFY_TABLE = """ CREATE TABLE IF NOT EXISTS mail_verification (
                         id integer PRIMARY KEY,
-                        email text NOT NULL UNIQUE,
-                        token text NOT NULL,
+                        EMAIL text NOT NULL UNIQUE,
+                        TOKEN text NOT NULL,
                     ); """
 
-INSERT_TOKEN = 'INSERT INTO mail_verification (email,token) VALUES (? ,? );'
+INSERT_TOKEN = 'INSERT INTO mail_verification (EMAIL,TOKEN) VALUES (? ,? );'
+CHECK_TOKEN = "SELECT * FROM mail_verification WHERE TOKEN=?;"
+GET_MAIL_BY_TOKEN = 'SELECT EMAIL FROM mail_verification WHERE TOKEN=?;'
+GET_TOKEN_BY_MAIL = 'SELECT TOKEN FROM mail_verification WHERE EMAIL=?;'
 
-
-def store_token(user:User, token:Token):
-    """Create an entry for an user.
+def store_token(mail:str, token:str):
+    """Store the token for this user.
 
     Args:
-        conn (sqlite3.Connection): Connection to a sqlite database.
-        email (str): email adress of the user.
-        pass_hash (str): hash of the entered password.
+        mail (str): _description_
+        token (str): _description_
     """
     try:
         with database_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute(INSERT_TOKEN,(user.email, token.access_token))
+            cursor.execute(INSERT_TOKEN,(mail, token))
             conn.commit()
             cursor.close()
-    except sqlite3.IntegrityError:
-        print('user with this email already exists.')
+    except sqlite3.IntegrityError:#TODO check token
+        print('there is already a token.')
+
+
+def check_token(token:str) -> bool:
+    """Checks if token exists in the Database
+
+    Args:
+        token (str): the token sent by mail.
+
+    Returns:
+        bool: Wether the token exists or not.
+    """
+    with database_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute(CHECK_TOKEN, (token,))
+        if not cursor.fetchone():  # An empty result evaluates to False.
+            cursor.close()
+            return False
+        else:
+            cursor.close()
+            return True
+
+def check_token(token:str) -> bool:
+    """Checks if token exists in the Database
+
+    Args:
+        token (str): the token sent by mail.
+
+    Returns:
+        bool: Wether the token exists or not.
+    """
+    with database_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute(GET_MAIL_BY_TOKEN,(token,))
+        fetched_mail = cursor.fetchone()
+        if not fetched_mail:  # An empty result evaluates to False.
+            return False
+        else:
+            return True
+
+def get_mail_by_token(token:str) -> str | None:
+    """get the mail associated with this token.
+
+    Args:
+        token (str): access token.
+
+    Returns:
+        str: the email or None if the token wasnt found in the database.
+    """
+    with database_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute(GET_MAIL_BY_TOKEN,(token,))
+        fetched_mail = cursor.fetchone()
+        cursor.close()
+        if not fetched_mail:  # An empty result evaluates to False.
+            return None
+        else:
+            mail = fetched_mail[0]
+            return mail
+
+
+def get_token_by_mail(mail:str) -> str | None:
+    """get the token associated with this mail.
+
+    Args:
+        token (str): access token.
+
+    Returns:
+        str: the email or None if the token wasnt found in the database.
+    """
+    with database_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute(GET_TOKEN_BY_MAIL,(mail,))
+        fetched_token = cursor.fetchone()
+        cursor.close()
+        if not fetched_token:  # An empty result evaluates to False.
+            return None
+        else:
+            mail = fetched_token[0]
+            return mail
+
