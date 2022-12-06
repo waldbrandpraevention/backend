@@ -28,7 +28,7 @@ def create_user(user:UserWithSensitiveInfo):
             cursor.execute(INSERT_USER,(user.email, user.first_name,user.last_name,user.hashed_password,user.permission.value,user.disabled,user.email_verified))
             conn.commit()
             cursor.close()
-    except sqlite3.IntegrityError:
+    except sqlite3.IntegrityError:##TODO create Email exists exception and raise it here
         print('user with this email already exists.')
 
 def get_user(email) -> UserWithSensitiveInfo | None:
