@@ -5,7 +5,7 @@
 
 <div align="center">
 
-[![pylint](https://img.shields.io/github/workflow/status/waldbrandpraevention/backend/Pylint?style=for-the-badge)](https://github.com/waldbrandpraevention/backend/actions/workflows/pylint.yml)
+[![pylint](https://img.shields.io/github/workflow/status/waldbrandpraevention/backend/Pylint?style=for-the-badge)](https://github.com/waldbrandpraevention/backend/actions/workflows/Pylint.yml)
 ![](https://img.shields.io/github/commit-activity/m/waldbrandpraevention/backend?style=for-the-badge)
 
 ![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
@@ -16,13 +16,13 @@
 
 </div>
 
-## Deployment mit Docker
+## Installation
+---
 
-Siehe [Readme im `waldbrandpraevention/frontend` Repo](https://github.com/waldbrandpraevention/frontend).
+ Die nachfolgende Anleitung beschreibt nur das Deployen des Backends.<br>
+  Um die vollständige Anwendung zu installieren, bitte die detaillierte [Readme im `waldbrandpraevention/frontend` Repo](https://github.com/waldbrandpraevention/frontend#readme) ansehen.
 
-## Development
-
-Python backend mit Fastapi
+---
 
 1. GitHub Repo clonen
 ```
@@ -30,23 +30,26 @@ git clone https://github.com/waldbrandpraevention/backend.git
 ```
 2. Docker Image erstellen
 ```
-TODO
+cd backend && docker build . -f Dockerfile.local -t wb-backend
 ```
 3. Docker Container starten
 ```
-TODO
+docker run --rm -it -p 8000:80 wb-backend
+```
+4. Backend läuft auf http://localhost:8000<br>API Documentation auf http://localhost:8000/docs
+
+## Development
+
+1. GitHub Repo clonen
+```
+git clone https://github.com/waldbrandpraevention/backend.git
 ```
 
-Starten ohne Docker
+2. Server starten
 ```
 cd waldbrandpraevention/backend
 uvicorn main:app --reload
 ```
-
-```
-Backend läuft auf http://localhost:8000
-```
-
-```
+3. Backend läuft auf http://localhost:8000<br>
 API Documentation auf http://localhost:8000/docs
-```
+
