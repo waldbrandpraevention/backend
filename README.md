@@ -24,12 +24,6 @@ Siehe [Readme im `waldbrandpraevention/frontend` Repo](https://github.com/waldbr
 
 Python backend mit Fastapi
 
-Python Dependencies:
-- fastapi: api stuff
-- python-jose: jwt stuff
-- passlib: hashing
-- uvicorn: server
-
 1. GitHub Repo clonen
 ```
 git clone https://github.com/waldbrandpraevention/backend.git
