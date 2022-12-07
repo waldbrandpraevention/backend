@@ -1,13 +1,13 @@
 #return list of errors on each function
 
 def validate_email(email: str):
-    return email
+    return []
 
 def validate_password(password: str):
-    return password
+    return []
 
 def validate_first_name(first_name: str):
-    return first_name
+    return []
 
 def validate_last_name(last_name: str):
-    return last_name
+    return []
