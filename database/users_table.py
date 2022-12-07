@@ -1,5 +1,6 @@
 import sqlite3
-from classes import User, UserWithSensitiveInfo,Permission
+
+from api.dependencies.classes import User, UserWithSensitiveInfo, Permission
 from database.database import database_connection
 
 CREATE_USER_TABLE = """ CREATE TABLE IF NOT EXISTS users (
