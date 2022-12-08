@@ -20,25 +20,12 @@
 
  ---
 
- Die nachfolgende Anleitung beschreibt nur das Deployen des Backends.<br>
-  Um die vollständige Anwendung zu installieren, bitte die detaillierte [Readme im `waldbrandpraevention/frontend` Repo](https://github.com/waldbrandpraevention/frontend#readme) ansehen.
+
+  Um die vollständige Anwendung zu installieren, bitte die detaillierte [Readme im `waldbrandpraevention/frontend` Repo](https://github.com/waldbrandpraevention/frontend#readme) beachten.
 
 --- 
 
 
-1. GitHub Repo clonen
-```
-git clone https://github.com/waldbrandpraevention/backend.git
-```
-2. Docker Image erstellen
-```
-cd backend && docker build . -f Dockerfile.local -t wb-backend
-```
-3. Docker Container starten
-```
-docker run --rm -it -p 8000:80 wb-backend
-```
-4. Backend läuft auf http://localhost:8000<br>API Documentation auf http://localhost:8000/docs
 
 ## Development
 
