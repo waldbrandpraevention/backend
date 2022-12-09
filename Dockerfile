@@ -1,10 +1,7 @@
-# sqlite
-FROM alpine:latest
+# sqlite + FastAPI
+FROM python:3.10-alpine
 
 RUN apk add --no-cache sqlite
-
-# FastAPI
-FROM python:3.10-alpine
 
 WORKDIR /api
 
