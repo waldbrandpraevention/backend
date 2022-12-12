@@ -59,7 +59,7 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
     return {"access_token": access_token, "token_type": "bearer"}
 
 @router.post("/users/signup/", status_code=status.HTTP_201_CREATED)
-async def register(email: str = Form(), password: str = Form(), first_name: str = Form(), last_name: str = Form()):
+async def register(email: str = Form(), password: str = Form(), first_name: str = Form(), last_name: str = Form(), organization: str = Form()):
     """API call to create a new account
 
     Args:
@@ -76,7 +76,7 @@ async def register(email: str = Form(), password: str = Form(), first_name: str 
         _type_: _description_
     """
     errors = []
-    validate_email(email)
+    errors.extend(validate_email(email))
     errors.extend(validate_password(password))
     errors.extend(validate_first_name(first_name))
     errors.extend(validate_last_name(last_name))
@@ -96,6 +96,7 @@ async def register(email: str = Form(), password: str = Form(), first_name: str 
                                     first_name=first_name,
                                     last_name=last_name,
                                     hashed_password=hashed_pw,
+                                    organization = organization,
                                     permission=1,
                                     disabled=0,
                                     email_verified=0)
