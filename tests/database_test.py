@@ -10,11 +10,21 @@ from database.organizations import CREATE_ORGANISATIONS_TABLE, create_orga
 import time 
 
 mail = 'test@mail.de'
+mail2 = 'test2@mail.de'
 
 def test_usertable():
     create_table(CREATE_ORGANISATIONS_TABLE)
     create_orga('testorga','TO')
     create_table(CREATE_USER_TABLE)
+    user = UserWithSensitiveInfo(email=mail,
+                first_name='Hans',
+                last_name='Dieter',
+                hashed_password='dsfsdfdsfsfddfsfd',
+                permission=1,
+                disabled=0,
+                email_verified=0,
+                organization = 1)
+    create_user(user)
     user = UserWithSensitiveInfo(email=mail,
                 first_name='Hans',
                 last_name='Dieter',
