@@ -17,12 +17,11 @@ GET_MAIL_BY_TOKEN = 'SELECT email FROM mail_verification WHERE token=?;'
 GET_TOKEN_BY_MAIL = 'SELECT token FROM mail_verification WHERE email=?;'
 
 def store_token(mail:str, token:str):
-    """Store the token for this user.
+    """Store the token.
 
     Args:
-        mail (str): _description_
-        token (str): _description_
-        update (bool, optional): _description_. Defaults to False.
+        mail (str): mail of the user.
+        token (str): token sent to the provided mail.
     """
     try:
         with database_connection() as conn:
@@ -81,10 +80,10 @@ def get_token_by_mail(mail:str) -> str | None:
     """get the token associated with this mail.
 
     Args:
-        token (str): access token.
+        mail (str): mail adress of the user.
 
     Returns:
-        str: the email or None if the token wasnt found in the database.
+        str: the token or None if the mail wasnt found in the database.
     """
     with database_connection() as conn:
         cursor = conn.cursor()
@@ -94,6 +93,6 @@ def get_token_by_mail(mail:str) -> str | None:
         if not fetched_token:  # An empty result evaluates to False.
             return None
         else:
-            mail = fetched_token[0]
-            return mail
+            token = fetched_token[0]
+            return token
 
