@@ -18,6 +18,7 @@ class User(BaseModel):
     email: str | None = None
     first_name: str | None = None
     last_name: str | None = None
+    organization: str | None = None
 
 class UserWithSensitiveInfo(User):
     hashed_password: str | None = None

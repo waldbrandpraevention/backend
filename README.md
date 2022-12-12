@@ -5,8 +5,10 @@
 
 <div align="center">
 
-[![pylint](https://img.shields.io/github/workflow/status/waldbrandpraevention/backend/Pylint?style=for-the-badge)](https://github.com/waldbrandpraevention/backend/actions/workflows/Pylint.yml)
-![](https://img.shields.io/github/commit-activity/m/waldbrandpraevention/backend?style=for-the-badge)
+[![pylint](https://img.shields.io/github/workflow/status/waldbrandpraevention/backend/Pylint?style=for-the-badge&label=ci)](https://github.com/waldbrandpraevention/backend/actions/workflows/Pylint.yml)
+![](https://img.shields.io/github/workflow/status/waldbrandpraevention/backend/Docker?style=for-the-badge&label=docker)
+![](https://img.shields.io/github/commit-activity/m/waldbrandpraevention/backend?style=for-the-badge&label=commits)
+![](https://img.shields.io/docker/image-size/waldbrandpraevention/backend?style=for-the-badge&label=image&color=orange)
 
 ![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
 ![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi)
@@ -16,43 +18,29 @@
 
 </div>
 
-## Deployment mit Docker
+## Installation
 
-Siehe [Readme im `waldbrandpraevention/frontend` Repo](https://github.com/waldbrandpraevention/frontend).
+ ---
+
+
+  Um die vollständige Anwendung zu installieren, bitte die detaillierte [Readme im `waldbrandpraevention/frontend` Repo](https://github.com/waldbrandpraevention/frontend#readme) beachten.
+
+--- 
+
+
 
 ## Development
-
-Python backend mit Fastapi
-
-Python Dependencies:
-- fastapi: api stuff
-- python-jose: jwt stuff
-- passlib: hashing
-- uvicorn: server
 
 1. GitHub Repo clonen
 ```
 git clone https://github.com/waldbrandpraevention/backend.git
 ```
-2. Docker Image erstellen
-```
-TODO
-```
-3. Docker Container starten
-```
-TODO
-```
 
-Starten ohne Docker
+2. Server starten
 ```
 cd waldbrandpraevention/backend
 uvicorn main:app --reload
 ```
-
-```
-Backend läuft auf http://localhost:8000
-```
-
-```
+3. Backend läuft auf http://localhost:8000<br>
 API Documentation auf http://localhost:8000/docs
-```
+
