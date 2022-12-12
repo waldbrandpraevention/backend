@@ -75,7 +75,7 @@ def create_table(create_table_sql:str)-> None:
     try:
         with database_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute(create_table_sql)
+            cursor.executescript(create_table_sql)
             conn.commit()
             cursor.close()
     except sqlite3.Error as e:
