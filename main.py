@@ -23,3 +23,7 @@ async def root():
                 status_code=status.HTTP_418_IM_A_TEAPOT,
                 detail="Random addition: " + str(n1) + " + " + str(n2) + " = " + str(n1 +n2),
             )
+
+@app.get("/test")
+async def test(input: str):
+    return {"message": input}
