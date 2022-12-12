@@ -2,11 +2,13 @@ import sqlite3
 from api.dependencies.classes import User
 from database.database import database_connection
 
-CREATE_MAIL_VERIFY_TABLE = """ CREATE TABLE IF NOT EXISTS mail_verification (
-                        id INTEGER PRIMARY KEY,
-                        email TEXT NOT NULL UNIQUE,
-                        token TEXT NOT NULL
-                    );"""
+CREATE_MAIL_VERIFY_TABLE = """ CREATE TABLE IF NOT EXISTS mail_verification
+                                (
+                                email text NOT NULL ,
+                                token text NOT NULL ,
+
+                                PRIMARY KEY (email)
+                                );"""
 
 INSERT_TOKEN = 'INSERT INTO mail_verification (email,token) VALUES (? ,? );'
 UPDATE_TOKEN = ''' UPDATE mail_verification SET token = ? WHERE email = ?;'''
@@ -14,7 +16,7 @@ CHECK_TOKEN = "SELECT * FROM mail_verification WHERE token=?;"
 GET_MAIL_BY_TOKEN = 'SELECT email FROM mail_verification WHERE token=?;'
 GET_TOKEN_BY_MAIL = 'SELECT token FROM mail_verification WHERE email=?;'
 
-def store_token(mail:str, token:str, update = False):
+def store_token(mail:str, token:str):
     """Store the token for this user.
 
     Args:
@@ -25,10 +27,10 @@ def store_token(mail:str, token:str, update = False):
     try:
         with database_connection() as conn:
             cursor = conn.cursor()
-            if update:
-                cursor.execute(UPDATE_TOKEN,(token, mail))
-            else:
+            try:
                 cursor.execute(INSERT_TOKEN,(mail, token))
+            except sqlite3.IntegrityError:
+                cursor.execute(UPDATE_TOKEN,(token, mail))
             conn.commit()
             cursor.close()
     except sqlite3.IntegrityError:#TODO check token

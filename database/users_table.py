@@ -4,15 +4,21 @@ from api.dependencies.classes import User, UserWithSensitiveInfo, Permission
 from database.database import database_connection
 
 CREATE_USER_TABLE = """ CREATE TABLE IF NOT EXISTS users (
-                        id INTEGER PRIMARY KEY,
+                        id INTEGER,
                         email TEXT NOT NULL UNIQUE,
                         first_name TEXT NOT NULL,
                         last_name TEXT NOT NULL,
-                        hashed_password TEXT NOT NULL,
-                        permission INTEGER DEFAULT 0,
-                        disabled INTEGER,
-                        email_verified INTEGER NOT NULL
-                    );"""
+                        password TEXT NOT NULL,
+                        permission INTEGER DEFAULT 1,
+                        disabled INTEGER DEFAULT 0,
+                        email_verified INTEGER NOT NULL,
+                        organization_id integer NOT NULL,
+
+                        PRIMARY KEY (id),
+                        FOREIGN KEY (organization_id) REFERENCES organizations (id)
+                    );
+                    CREATE UNIQUE INDEX IF NOT EXISTS users_AK ON users (email);
+                    CREATE INDEX IF NOT EXISTS users_FK_1 ON users (organization_id);"""
 
 UPDATE_MAIL = ''' UPDATE users
                     SET email = ? ,
@@ -22,7 +28,7 @@ UPDATE_PWHASH = ''' UPDATE users
                     SET password = ? ,
                     WHERE email = ?;'''
 
-INSERT_USER = 'INSERT INTO users (email,first_name,last_name,hashed_password,permission,disabled,email_verified) VALUES (? ,? ,?,?,?,?,?);'
+INSERT_USER = 'INSERT INTO users (email,first_name,last_name,organization_id,password,permission,disabled,email_verified) VALUES (? ,? ,?,?,?,?,?,?);'
 GET_USER = 'SELECT * FROM users WHERE EMAIL=?;'
 CHECK_CREDS = "SELECT password FROM users WHERE EMAIL=? AND PASSWORD = ?;"
 
@@ -37,7 +43,7 @@ def create_user(user:UserWithSensitiveInfo):
     try:
         with database_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute(INSERT_USER,(user.email, user.first_name,user.last_name,user.hashed_password,user.permission.value,user.disabled,user.email_verified))
+            cursor.execute(INSERT_USER,(user.email, user.first_name,user.last_name,user.organization,user.hashed_password,user.permission.value,user.disabled,user.email_verified))
             conn.commit()
             cursor.close()
     except sqlite3.IntegrityError:##TODO create Email exists exception and raise it here
@@ -62,14 +68,15 @@ def get_user(email) -> UserWithSensitiveInfo | None:
                 return None
             else:
                 try:
-                    permission = Permission(fetched_user[5])
+                    permission = Permission(fetched_user[6])
                     user = UserWithSensitiveInfo(email=fetched_user[1],
                                             first_name=fetched_user[2],
                                             last_name=fetched_user[3],
-                                            hashed_password=fetched_user[4],
+                                            organization=fetched_user[4],
+                                            hashed_password=fetched_user[5],
                                             permission=permission,
-                                            disabled=fetched_user[6],
-                                            email_verified=fetched_user[7])
+                                            disabled=fetched_user[7],
+                                            email_verified=fetched_user[8])
                 except:
                     user = None
                 cursor.close()
