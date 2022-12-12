@@ -35,7 +35,7 @@ def test_usertable():
                 organization = 1)
     create_user(user)
     user = get_user(mail)
-    #print(user)
+    print(user)
 
 def test_verifytable():
     create_table(CREATE_MAIL_VERIFY_TABLE)

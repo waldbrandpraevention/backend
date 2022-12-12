@@ -68,15 +68,19 @@ def get_user(email) -> UserWithSensitiveInfo | None:
                 return None
             else:
                 try:
-                    permission = Permission(fetched_user[6])
+                    try:
+                        permission = Permission(fetched_user[5])
+                    except:
+                        permission = None
+                        
                     user = UserWithSensitiveInfo(email=fetched_user[1],
                                             first_name=fetched_user[2],
                                             last_name=fetched_user[3],
-                                            organization=fetched_user[4],
-                                            hashed_password=fetched_user[5],
+                                            hashed_password=fetched_user[4],
                                             permission=permission,
-                                            disabled=fetched_user[7],
-                                            email_verified=fetched_user[8])
+                                            disabled=fetched_user[6],
+                                            email_verified=fetched_user[7],
+                                            organization=fetched_user[8])
                 except:
                     user = None
                 cursor.close()
