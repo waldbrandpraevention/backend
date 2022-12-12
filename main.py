@@ -1,12 +1,13 @@
 from fastapi import Depends, FastAPI, HTTPException, status
 import random
-from api.routers import email, users
+from api.routers import email, users, zones
 from database.database import create_table
 from database.users_table import CREATE_USER_TABLE
 
 app = FastAPI()
 app.include_router(users.router)
 app.include_router(email.router)
+app.include_router(zones.router)
 
 def main():
     create_table(CREATE_USER_TABLE)
