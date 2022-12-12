@@ -1,4 +1,7 @@
 
+# setting path
+import sys
+sys.path.append('../backend')
 from api.dependencies.classes import User, UserWithSensitiveInfo
 from database.database import create_table
 from database.mail_verif_table import check_token, get_mail_by_token, get_token_by_mail, store_token, CREATE_MAIL_VERIFY_TABLE
