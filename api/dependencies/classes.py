@@ -25,3 +25,15 @@ class UserWithSensitiveInfo(User):
     permission: Permission | None = None
     disabled: bool | None = None
     email_verified: bool
+
+class FireRisk(Enum):
+    VERY_LOW = 1
+    LOW = 2
+    MIDDLE = 3
+    HEIGH = 4
+    VERY_HEIGH = 5
+
+
+class Zone(BaseModel):
+    name: str | None = None
+    fire_risk: FireRisk | None = None

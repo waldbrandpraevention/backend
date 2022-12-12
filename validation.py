@@ -31,6 +31,6 @@ def validate_first_name(first_name: str):
 
 def validate_last_name(last_name: str):
     err = []
-    if len(first_name) == 0:
+    if len(last_name) == 0:
         err.append("First name can't be empty")
     return err
