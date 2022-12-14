@@ -1,5 +1,6 @@
 from fastapi import Depends, FastAPI, HTTPException, status
 import random
+from fastapi.middleware.cors import CORSMiddleware
 from api.routers import email, users, zones
 from database.database import create_table
 from database.users_table import CREATE_USER_TABLE
@@ -8,6 +9,19 @@ app = FastAPI()
 app.include_router(users.router)
 app.include_router(email.router)
 app.include_router(zones.router)
+
+# CORS https://fastapi.tiangolo.com/tutorial/cors/
+origins = [
+    "*"
+]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 def main():
     create_table(CREATE_USER_TABLE)
