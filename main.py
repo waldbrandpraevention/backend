@@ -11,12 +11,9 @@ app.include_router(email.router)
 app.include_router(zones.router)
 
 # CORS https://fastapi.tiangolo.com/tutorial/cors/
-origins = [
-    "*"
-]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
