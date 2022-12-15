@@ -20,6 +20,10 @@ class User(BaseModel):
     last_name: str | None = None
     organization: str | None = None
 
+class Organization(BaseModel):
+    name: str | None = None
+    abbreviation: str | None = None
+
 class UserWithSensitiveInfo(User):
     hashed_password: str | None = None
     permission: Permission | None = None
