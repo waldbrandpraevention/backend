@@ -1,7 +1,9 @@
 
 # setting path
 import sys
+
 sys.path.append('../backend')
+from api.dependencies.authentication import get_password_hash
 from api.dependencies.classes import User, UserWithSensitiveInfo
 from database.database import create_table
 from database.mail_verif_table import check_token, get_mail_by_token, get_token_by_mail, store_token, CREATE_MAIL_VERIFY_TABLE
@@ -13,13 +15,14 @@ import time
 mail = 'test@mail.de'
 mail2 = 'test2@mail.de'
 mail3 = 'neuemail@we.de'
+pwhash = get_password_hash('dsfsdfdsfsfddfsfd')
 
 def test_usertable():
     create_table(CREATE_USER_TABLE)
     userone = UserWithSensitiveInfo(email=mail,
                 first_name='Hans',
                 last_name='Dieter',
-                hashed_password='dsfsdfdsfsfddfsfd',
+                hashed_password=pwhash,
                 permission=1,
                 disabled=0,
                 email_verified=0,
@@ -28,14 +31,15 @@ def test_usertable():
     user = UserWithSensitiveInfo(email=mail,
                 first_name='Hans',
                 last_name='Dieter',
-                hashed_password='dsfsdfdsfsfddfsfd',
+                hashed_password=pwhash,
                 permission=1,
                 disabled=0,
                 email_verified=0,
                 organization = 1)
-    create_user(user)
+    
     update_user(userone,UsrAttributes.FIRST_NAME,'Peter')
     update_user(userone,UsrAttributes.EMAIL,mail3)
+    create_user(user)
     user = get_user(mail3)
     print(user)
 
