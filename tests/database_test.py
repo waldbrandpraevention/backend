@@ -5,6 +5,7 @@ sys.path.append('../backend')
 from api.dependencies.classes import User, UserWithSensitiveInfo
 from database.database import create_table
 from database.mail_verif_table import check_token, get_mail_by_token, get_token_by_mail, store_token, CREATE_MAIL_VERIFY_TABLE
+from database.users_table import create_user,get_user,CREATE_USER_TABLE
 from database.users_table import UsrAttributes, create_user,get_user,CREATE_USER_TABLE, update_user
 from database.organizations import CREATE_ORGANISATIONS_TABLE, OrgAttributes, create_orga, get_orga, update_orga
 import time 
