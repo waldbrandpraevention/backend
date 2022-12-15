@@ -6,11 +6,13 @@ from database.database import database_connection
 
 CREATE_ORGANISATIONS_TABLE = """ CREATE TABLE IF NOT EXISTS organizations
                         (
+                        id INTEGER, 
                         name         text NOT NULL ,
                         abbreviation text NOT NULL ,
 
-                        PRIMARY KEY (name)
-                        );"""
+                        PRIMARY KEY (id)
+                        );
+                        CREATE UNIQUE INDEX IF NOT EXISTS orgs_AK ON organizations (name);"""
 
 INSERT_ORGA =  "INSERT INTO organizations (name,abbreviation) VALUES (?,?);"
 GET_ORGA = 'SELECT * FROM organizations WHERE NAME=?;'
