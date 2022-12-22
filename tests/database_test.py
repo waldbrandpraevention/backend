@@ -78,29 +78,37 @@ def test_orga():
 
 def test_usersettings():
     user = get_user(mail)
+    #create tables
     create_table(settings_table.CREATE_SETTINGS_TABLE)
     create_table(user_settings.CREATE_USERSETTINGS_TABLE)
+    #create settings
     index = settings_table.create_setting('Test','This is a testsetting',defaul_val=0)
     index = settings_table.create_setting('Lightmode','Lightmode activated or not',defaul_val=1)
+    #get list of all settings
     settinglist = settings_table.get_settings()
     print(settinglist)
     if not index:
         index = 1
+    #set the setting with id 1 for user to 2
     user_settings.set_usersetting(index,user_id=user.id,value=2)
+    #get the value, which should be 2
     value = user_settings.get_usersetting(index,user.id)
-    print(value)
+    assert value == 2, 'Couldnt set value.'
+    #set the setting with id 1 for user to 1
     user_settings.set_usersetting(index,user_id=user.id,value=1)
+    #get the value, which should be 1
     value = user_settings.get_usersetting(index,user.id)
-    print(value)
+    assert value == 1, 'Couldnt set value.'
     
 try:
     os.remove(DATABASE_PATH)
-except: 
-    pass
+except Exception as e: 
+    print(e)
 
 start = time.time()
 test_usertable() #for _ in range(500)]
 test_verifytable()
 test_orga()
+test_usersettings()
 end = time.time()
 print(end - start)
