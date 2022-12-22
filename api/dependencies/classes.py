@@ -14,7 +14,14 @@ class Permission(Enum):
     ADMIN = 2
     THIRD_PARTY = 3
 
+class Setting(BaseModel):
+    id: int|None =None
+    name: str|None =None
+    description: str|None =None
+    default_value: int|None =None
+
 class User(BaseModel):
+    id: int | None = None
     email: str | None = None
     first_name: str | None = None
     last_name: str | None = None
