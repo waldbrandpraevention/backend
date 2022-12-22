@@ -2,7 +2,7 @@ from enum import Enum
 import sqlite3
 
 from api.dependencies.classes import Organization, User, UserWithSensitiveInfo, Permission
-from database.database import database_connection
+from database.database import database_connection, fetched_match_class
 
 CREATE_ORGANISATIONS_TABLE = """ CREATE TABLE IF NOT EXISTS organizations
                         (
@@ -55,8 +55,8 @@ def create_orga(organame:str, orga_abb:str):
             cursor.execute(INSERT_ORGA,(organame,orga_abb))
             conn.commit()
             cursor.close()
-    except sqlite3.IntegrityError:##TODO create name exists exception and raise it here
-        print('organization with this name already exists.')
+    except sqlite3.IntegrityError as e:
+        print(e)
 
 def get_orga(organame:str) -> Organization | None:
     """get the orga object with this name.
@@ -97,7 +97,17 @@ def get_all_orga():
         with database_connection() as conn:
             cursor = conn.cursor()
             cursor.execute('SELECT * FROM organizations')
-            conn.commit()
+            fetched_orgas = cursor.fetchall()
             cursor.close()
-    except sqlite3.IntegrityError:##TODO create name exists exception and raise it here
-        print('organization with this name already exists.')
+            output = []
+            for orga in fetched_orgas:
+                if fetched_match_class(Organization,orga):
+                    orga_obj = Organization(
+                        name=orga[0],
+                        abbreviation=orga[1]
+                    )
+                output.append(orga_obj)
+            return output
+    except sqlite3.IntegrityError as e:
+        print(e)
+    return None
