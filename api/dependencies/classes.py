@@ -28,6 +28,7 @@ class User(BaseModel):
     organization: str | None = None
 
 class Organization(BaseModel):
+    id: int | None = None
     name: str | None = None
     abbreviation: str | None = None
 
