@@ -77,8 +77,7 @@ def get_orga(organame:str) -> Organization | None:
                 return None
             else:
                 try:
-                    orga = Organization(name=fetched_orga[0],
-                                        abbreviation=fetched_orga[1])
+                    orga =  get_obj_from_fetched(fetched_orga)
                 except:
                     orga = None
                 
@@ -101,13 +100,28 @@ def get_all_orga():
             cursor.close()
             output = []
             for orga in fetched_orgas:
-                if fetched_match_class(Organization,orga):
-                    orga_obj = Organization(
-                        name=orga[0],
-                        abbreviation=orga[1]
-                    )
-                output.append(orga_obj)
+                orga_obj = get_obj_from_fetched(orga)
+                if orga_obj:
+                    output.append(orga_obj)
             return output
     except sqlite3.IntegrityError as e:
         print(e)
+    return None
+
+def get_obj_from_fetched(fetched_orga):
+    """generate Organization obj from fetched element.
+
+    Args:
+        fetched_orga (list): fetched attributes from orga.
+
+    Returns:
+        Organization: orga object.
+    """
+    if fetched_match_class(Organization,fetched_orga):
+        orga_obj = Organization(
+            id = fetched_orga[0],
+            name=fetched_orga[1],
+            abbreviation=fetched_orga[2]
+        )
+        return orga_obj
     return None
