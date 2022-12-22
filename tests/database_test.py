@@ -11,6 +11,7 @@ from database.mail_verif_table import check_token, get_mail_by_token, get_token_
 from database.users_table import create_user,get_user,CREATE_USER_TABLE
 from database.users_table import UsrAttributes, create_user,get_user,CREATE_USER_TABLE, update_user
 from database.organizations import CREATE_ORGANISATIONS_TABLE, OrgAttributes, create_orga, get_orga, update_orga
+from database import settings_table, user_settings
 import time 
 
 mail = 'test@mail.de'
@@ -25,6 +26,7 @@ user_one = UserWithSensitiveInfo(email=mail,
                 disabled=0,
                 email_verified=0,
                 organization = 1)
+
 user_two = UserWithSensitiveInfo(email=mail,
                 first_name='Hans',
                 last_name='Dieter',
@@ -73,6 +75,23 @@ def test_orga():
     orga2 = get_orga('BPORG')
     print(orga)
     print(orga2)
+
+def test_usersettings():
+    user = get_user(mail)
+    create_table(settings_table.CREATE_SETTINGS_TABLE)
+    create_table(user_settings.CREATE_USERSETTINGS_TABLE)
+    index = settings_table.create_setting('Test','This is a testsetting',defaul_val=0)
+    index = settings_table.create_setting('Lightmode','Lightmode activated or not',defaul_val=1)
+    settinglist = settings_table.get_settings()
+    print(settinglist)
+    if not index:
+        index = 1
+    user_settings.set_usersetting(index,user_id=user.id,value=2)
+    value = user_settings.get_usersetting(index,user.id)
+    print(value)
+    user_settings.set_usersetting(index,user_id=user.id,value=1)
+    value = user_settings.get_usersetting(index,user.id)
+    print(value)
     
 try:
     os.remove(DATABASE_PATH)

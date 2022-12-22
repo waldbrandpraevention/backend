@@ -2,7 +2,7 @@ from enum import Enum
 import sqlite3
 
 from api.dependencies.classes import User, UserWithSensitiveInfo, Permission
-from database.database import database_connection
+from database.database import database_connection, fetched_match_class
 
 CREATE_USER_TABLE = """ CREATE TABLE IF NOT EXISTS users (
                         id INTEGER,
@@ -48,9 +48,10 @@ def create_user(user:UserWithSensitiveInfo):
     try:
         with database_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute(INSERT_USER,(user.email, user.first_name,user.last_name,user.organization,user.hashed_password,user.permission.value,user.disabled,user.email_verified))
+            index = cursor.execute(INSERT_USER,(user.email, user.first_name,user.last_name,user.organization,user.hashed_password,user.permission.value,user.disabled,user.email_verified))
             conn.commit()
             cursor.close()
+            user.id = index
     except sqlite3.IntegrityError as e:##TODO create Email exists exception and raise it here
         print(e)
 
@@ -73,12 +74,17 @@ def get_user(email) -> UserWithSensitiveInfo | None:
                 return None
             else:
                 try:
+                    if not fetched_match_class(UserWithSensitiveInfo,fetched_user):
+                        raise Exception('Fetched data noch matching format.')
+
                     try:
                         permission = Permission(fetched_user[5])
                     except:
                         permission = None
-                        
-                    user = UserWithSensitiveInfo(email=fetched_user[1],
+                    
+                    user = UserWithSensitiveInfo(
+                                            id=fetched_user[0],
+                                            email=fetched_user[1],
                                             first_name=fetched_user[2],
                                             last_name=fetched_user[3],
                                             hashed_password=fetched_user[4],
@@ -86,7 +92,8 @@ def get_user(email) -> UserWithSensitiveInfo | None:
                                             disabled=fetched_user[6],
                                             email_verified=fetched_user[7],
                                             organization=fetched_user[8])
-                except:
+                except Exception as e:
+                    print(e)
                     user = None
                 cursor.close()
                 return user
