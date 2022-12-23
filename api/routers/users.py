@@ -10,9 +10,10 @@ from pydantic import BaseModel
 from database import users_table
 from database import mail_verif_table
 from validation import *
+from datetime import datetime, timedelta
 
 from ..dependencies.authentication import create_access_token, Token, get_password_hash, ACCESS_TOKEN_EXPIRE_MINUTES
-from ..dependencies.users import get_current_user, get_user, User, UserWithSensitiveInfo, authenticate_user
+from ..dependencies.users import *
 
 router = APIRouter()
 
@@ -29,6 +30,18 @@ async def read_users_me(current_user: User = Depends(get_current_user)):
         User: Current user with only the basic infos (no password)
     """
     return current_user
+
+@router.get("/users/me/allerts/", status_code=status.HTTP_200_OK)
+async def read_users_me_allerts(current_user: User = Depends(get_current_user)):
+    """API call to get the curret users allerts
+
+    Args:
+        current_user (User, optional): User. Defaults to Depends(get_current_user).
+
+    Returns:
+        str[]: List of allerts
+    """
+    return await get_user_allerts(current_user)
 
 @router.post("/users/login/", response_model=Token)
 async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
@@ -80,6 +93,7 @@ async def register(email: str = Form(), password: str = Form(), first_name: str 
     errors.extend(validate_password(password))
     errors.extend(validate_first_name(first_name))
     errors.extend(validate_last_name(last_name))
+    errors.extend(validate_organization(organization))
     if len(errors) > 0:
         raise HTTPException(
             status_code=status.HTTP_406_NOT_ACCEPTABLE,
@@ -102,3 +116,28 @@ async def register(email: str = Form(), password: str = Form(), first_name: str 
                                     email_verified=0)
     users_table.create_user(user)
     return {"message": "success"}
+
+
+@router.post("/users/me/update", status_code=status.HTTP_200_OK)
+async def change_user_info(current_user: User = Depends(get_current_user), 
+                           email: str | None = None, password: str | None = None,
+                           first_name: str | None = None, last_name: str | None = None,
+                           organization: str | None = None):
+    """API call to update the current user
+
+    Args:
+        current_user (User, optional): _description_. Defaults to Depends(get_current_user).
+        email (str | None, optional): new email. Defaults to None.
+        password (str | None, optional): password. Defaults to None.
+        first_name (str | None, optional): new first name. Defaults to None.
+        last_name (str | None, optional): new ast name. Defaults to None.
+        organization (str | None, optional): new organization. Defaults to None.
+
+    Returns:
+        _type_: _description_
+    """
+    #TODO DB calls to update
+    #update_password_hash(current_user, get_password_hash(password))
+    #...
+
+    return {"message:", "not implemented yet"}

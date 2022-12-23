@@ -34,3 +34,9 @@ def validate_last_name(last_name: str):
     if len(last_name) == 0:
         err.append("First name can't be empty")
     return err
+
+def validate_organization(last_name: str):
+    err = []
+    if len(last_name) == 0:
+        err.append("Organization can't be empty")
+    return err
