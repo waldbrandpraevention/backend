@@ -1,6 +1,7 @@
 
 from pydantic import BaseModel
 from enum import Enum
+from datetime import datetime
 
 class Token(BaseModel):
     access_token: str
@@ -14,15 +15,15 @@ class Permission(Enum):
     ADMIN = 2
     THIRD_PARTY = 3
 
+class Organization(BaseModel):
+    name: str | None = None
+    abbriviation: str | None = None
+
 class User(BaseModel):
     email: str | None = None
     first_name: str | None = None
     last_name: str | None = None
     organization: str | None = None
-
-class Organization(BaseModel):
-    name: str | None = None
-    abbreviation: str | None = None
 
 class UserWithSensitiveInfo(User):
     hashed_password: str | None = None
@@ -37,7 +38,16 @@ class FireRisk(Enum):
     HEIGH = 4
     VERY_HEIGH = 5
 
-
 class Zone(BaseModel):
     name: str | None = None
     fire_risk: FireRisk | None = None
+    ai: FireRisk | None = None
+
+class Drone(BaseModel):
+    name: str | None = None
+    last_update: datetime | None = None
+    zone: str | None = None
+
+class Allert(BaseModel):
+    content: str | None = None
+    date: datetime | None = None

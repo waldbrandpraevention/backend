@@ -1,14 +1,14 @@
 from fastapi import Depends, APIRouter, FastAPI, HTTPException, status, Request, Form
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from  ..dependencies.zones import get_all_zones, get_zone
+from  ..dependencies.zones import get_all_zones, get_zone, get_zone_count
 from .users import get_current_user
 from ..dependencies.classes import User, Zone
 
 router = APIRouter()
 
 
-@router.get("/zones/", response_model=User)
-async def read_users_me(name: str, current_user: User = Depends(get_current_user)):
+@router.get("/zones/", status_code=status.HTTP_200_OK)
+async def read_zone(name: str, current_user: User = Depends(get_current_user)):
     """API call to get a specific zone
 
     Args:
@@ -27,8 +27,8 @@ async def read_users_me(name: str, current_user: User = Depends(get_current_user
         )
     return zone
 
-@router.get("/zones/all/", response_model=User)
-async def read_users_me(current_user: User = Depends(get_current_user)):
+@router.get("/zones/all/", status_code=status.HTTP_200_OK)
+async def read_zones_all(current_user: User = Depends(get_current_user)):
     """API call to get the all zones
 
     Args:
@@ -37,4 +37,16 @@ async def read_users_me(current_user: User = Depends(get_current_user)):
     Returns:
         Zone[]: List of all zones
     """
-    return get_all_zones()
+    return await get_all_zones()
+
+@router.get("/zones/count/", status_code=status.HTTP_200_OK)
+async def read_zones_count(current_user: User = Depends(get_current_user)):
+    """API call to get the amount of zones
+    Args:
+        current_user (User, optional): User. Defaults to Depends(get_current_user).
+
+    Returns:
+        int: amount of drones
+    """
+
+    return {"count": await get_zone_count()}
