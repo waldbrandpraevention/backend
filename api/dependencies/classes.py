@@ -2,6 +2,7 @@
 import datetime
 from pydantic import BaseModel
 from enum import Enum
+from datetime import datetime
 
 class Token(BaseModel):
     access_token: str
@@ -28,16 +29,16 @@ class User(BaseModel):
     last_name: str | None = None
     organization_id: int | None = None
 
-class Organization(BaseModel):
-    id: int | None = None
-    name: str | None = None
-    abbreviation: str | None = None
-
 class UserWithSensitiveInfo(User):
     hashed_password: str | None = None
     permission: Permission | None = None
     disabled: bool | None = None
     email_verified: bool
+
+class Organization(BaseModel):
+    id: int | None = None
+    name: str | None = None
+    abbreviation: str | None = None
 
 class FireRisk(Enum):
     VERY_LOW = 1
@@ -46,15 +47,24 @@ class FireRisk(Enum):
     HEIGH = 4
     VERY_HEIGH = 5
 
-
 class Zone(BaseModel):
     name: str | None = None
     fire_risk: FireRisk | None = None
+    ai: FireRisk | None = None
 
 class Drone(BaseModel):
+    name: str | None = None
+    last_update: datetime | None = None
+    zone: str | None = None
+    
+class DBDrone(BaseModel):
     id: int | None = None
     name: str | None = None
     droneowner_id: int | None = None
+
+class Allert(BaseModel):
+    content: str | None = None
+    date: datetime | None = None
 
 class DroneData(BaseModel):
     drone_id :int | None = None

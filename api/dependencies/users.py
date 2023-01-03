@@ -1,9 +1,10 @@
 from pydantic import BaseModel
 from fastapi import Depends, HTTPException, status
 from enum import Enum
-from .classes import User, UserWithSensitiveInfo
+from .classes import User, UserWithSensitiveInfo, Allert
 from .authentication import oauth2_scheme, verify_password, get_email_from_token
 from database import users_table
+from datetime import datetime, timedelta
 
 def get_user(email: str) -> UserWithSensitiveInfo | None:
     """Creates a user object from the information in the db
@@ -66,3 +67,11 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
     #if not user.email_verified:
         #raise email_verification_exception
     return user
+
+async def get_user_allerts(user: User):
+    #TODO add db call here or to user directly during object creation
+    allerts = []
+    allerts.append(Allert(content="Test allert", date=datetime.now()))
+    allerts.append(Allert(content="1+1=2", date=datetime.now()))
+    allerts.append(Allert(content="Dein name ist " + user.first_name + " " + user.last_name, date=datetime.now()))
+    return allerts
