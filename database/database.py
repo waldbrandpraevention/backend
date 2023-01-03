@@ -47,7 +47,7 @@ def connect(path=DATABASE_PATH) -> sqlite3.Connection | None:
 
     conn = None
     try:
-        conn = sqlite3.connect(path, check_same_thread=check_same_thread)
+        conn = sqlite3.connect(path, check_same_thread=check_same_thread,detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES)
         return conn
     except Exception as e:
         print(e)

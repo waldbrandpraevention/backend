@@ -1,15 +1,17 @@
 
 # setting path
+import datetime
 import os
 import sys
 
 sys.path.append('../backend')
 from api.dependencies.authentication import get_password_hash
-from api.dependencies.classes import User, UserWithSensitiveInfo
+from api.dependencies.classes import Drone, User, UserWithSensitiveInfo
 from database.database import DATABASE_PATH, create_table
 from database.mail_verif_table import check_token, get_mail_by_token, get_token_by_mail, store_token, CREATE_MAIL_VERIFY_TABLE
 from database.users_table import create_user,get_user,CREATE_USER_TABLE
 from database.users_table import UsrAttributes, create_user,get_user,CREATE_USER_TABLE, update_user
+import database.drones as drones_table
 from database.organizations import CREATE_ORGANISATIONS_TABLE, OrgAttributes, create_orga, get_orga, update_orga
 from database import settings_table, user_settings
 import time 
@@ -25,7 +27,7 @@ user_one = UserWithSensitiveInfo(email=mail,
                 permission=1,
                 disabled=0,
                 email_verified=0,
-                organization = 1)
+                organization_id = 1)
 
 user_two = UserWithSensitiveInfo(email=mail,
                 first_name='Hans',
@@ -34,7 +36,7 @@ user_two = UserWithSensitiveInfo(email=mail,
                 permission=1,
                 disabled=0,
                 email_verified=0,
-                organization = 1)
+                organization_id = 1)
 
 def test_usertable():
     create_table(CREATE_USER_TABLE)
@@ -73,8 +75,6 @@ def test_orga():
     update_orga(orga,OrgAttributes.ABBREVIATION,'TEO')
     update_orga(orga,OrgAttributes.NAME,'BPORG')
     orga2 = get_orga('BPORG')
-    print(orga)
-    print(orga2)
 
 def test_usersettings():
     user = get_user(mail)
@@ -86,7 +86,6 @@ def test_usersettings():
     index = settings_table.create_setting('Lightmode','Lightmode activated or not',defaul_val=1)
     #get list of all settings
     settinglist = settings_table.get_settings()
-    print(settinglist)
     if not index:
         index = 1
     #set the setting with id 1 for user to 2
@@ -99,6 +98,38 @@ def test_usersettings():
     #get the value, which should be 1
     value = user_settings.get_usersetting(index,user.id)
     assert value == 1, 'Couldnt set value.'
+
+
+def test_dronetable():
+    #create tables
+    create_table(drones_table.CREATE_DRONES_TABLE)
+    #create drone
+    testdrone = Drone(id = 1,
+            name='XR-200',
+            droneowner_id= None,
+            last_update=datetime.datetime.now(),
+            last_longitude=49.878708,
+            last_latitude=8.646927)
+    testdrtwo = Drone(id = 2,
+            name='XR-201',
+            droneowner_id= None,
+            last_update=datetime.datetime.now(),
+            last_longitude=49.878708,
+            last_latitude=8.646927)
+    drone_one = drones_table.create_drone(testdrone.name,testdrone.droneowner_id,testdrone.last_update,testdrone.last_longitude,testdrone.last_latitude)
+    for key, value in testdrone.__dict__.items():
+        assert drone_one.__dict__[key] == value, 'Objects not matching'
+    should_be_none = drones_table.create_drone('XR-200',None,datetime.datetime.now(),49.878708,8.646927)
+    assert should_be_none== None, 'Unique Name failed.'
+
+    drone_two = drones_table.create_drone(testdrtwo.name,testdrtwo.droneowner_id,testdrtwo.last_update,testdrtwo.last_longitude,testdrtwo.last_latitude)
+    for key, value in testdrtwo.__dict__.items():
+        assert drone_two.__dict__[key] == value, 'Objects not matching'
+
+    drones = drones_table.get_drones()
+    assert len(drones) == 2, 'Something went wrong inserting the Drones.'
+    assert drones[0].name == testdrone.name, 'Names not matching. Order wrong?'
+
     
 try:
     os.remove(DATABASE_PATH)
@@ -110,5 +141,6 @@ test_usertable() #for _ in range(500)]
 test_verifytable()
 test_orga()
 test_usersettings()
+test_dronetable()
 end = time.time()
 print(end - start)

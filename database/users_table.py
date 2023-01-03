@@ -48,10 +48,11 @@ def create_user(user:UserWithSensitiveInfo):
     try:
         with database_connection() as conn:
             cursor = conn.cursor()
-            index = cursor.execute(INSERT_USER,(user.email, user.first_name,user.last_name,user.organization,user.hashed_password,user.permission.value,user.disabled,user.email_verified))
+            cursor.execute(INSERT_USER,(user.email, user.first_name,user.last_name,user.organization_id,user.hashed_password,user.permission.value,user.disabled,user.email_verified))
+            inserted_id = cursor.lastrowid
             conn.commit()
             cursor.close()
-            user.id = index
+            user.id = inserted_id
     except sqlite3.IntegrityError as e:##TODO create Email exists exception and raise it here
         print(e)
 

@@ -1,4 +1,5 @@
 
+import datetime
 from pydantic import BaseModel
 from enum import Enum
 
@@ -25,7 +26,7 @@ class User(BaseModel):
     email: str | None = None
     first_name: str | None = None
     last_name: str | None = None
-    organization: str | None = None
+    organization_id: int | None = None
 
 class Organization(BaseModel):
     id: int | None = None
@@ -49,3 +50,11 @@ class FireRisk(Enum):
 class Zone(BaseModel):
     name: str | None = None
     fire_risk: FireRisk | None = None
+
+class Drone(BaseModel):
+    id: int | None = None
+    name: str | None = None
+    droneowner_id: int | None = None
+    last_update: datetime.datetime | None = None
+    last_longitude: float | None = None
+    last_latitude: float | None = None
