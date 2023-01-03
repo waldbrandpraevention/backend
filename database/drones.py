@@ -12,17 +12,14 @@ CREATE_DRONES_TABLE = '''CREATE TABLE drones
 id             integer NOT NULL ,
 name           text NOT NULL ,
 droneowner_id  integer,
-last_update    text,
-last_longitude text,
-last_latitude  text,
 PRIMARY KEY (id),
 FOREIGN KEY (droneowner_id) REFERENCES drone_owners (id)
 );
 CREATE UNIQUE INDEX IF NOT EXISTS drones_AK ON drones (name);
 CREATE INDEX drones_FK_1 ON drones (droneowner_id);'''
 
-CREATE_DRONE = 'INSERT INTO drones (name,droneowner_id,last_update,last_longitude,last_latitude) VALUES (? ,? ,?,?,?);'
-GET_DRONE = 'SELECT value FROM drones WHERE name=?;'
+CREATE_DRONE = 'INSERT INTO drones (name,droneowner_id) VALUES (? ,?);'
+GET_DRONE = 'SELECT * FROM drones WHERE name=?;'
 
 
 class DroneAttributes(str,Enum):
@@ -33,7 +30,7 @@ class DroneAttributes(str,Enum):
     LAST_LATITUDE = 'last_latitude'
 
 
-def create_drone(name:str,droneowner_id:int|None,last_update:datetime.datetime|None,last_longitude:float|None,last_latitude:float|None):
+def create_drone(name:str,droneowner_id:int|None):
     """Create an entry for a drone.
 
     Args:
@@ -46,17 +43,14 @@ def create_drone(name:str,droneowner_id:int|None,last_update:datetime.datetime|N
     try:
         with database_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute(CREATE_DRONE,(name,droneowner_id,last_update,last_longitude,last_latitude))
+            cursor.execute(CREATE_DRONE,(name,droneowner_id))
             inserted_id = cursor.lastrowid
             conn.commit()
             cursor.close()
             drone_obj = Drone(
             id = inserted_id,
             name=name,
-            droneowner_id= droneowner_id,
-            last_update=last_update,
-            last_longitude=last_longitude,
-            last_latitude=last_latitude
+            droneowner_id= droneowner_id
         )
         return drone_obj
     except sqlite3.IntegrityError as e:##TODO
@@ -120,10 +114,7 @@ def get_obj_from_fetched(fetched_drone):
         drone_obj = Drone(
             id = fetched_drone[0],
             name=fetched_drone[1],
-            ndroneowner_id= fetched_drone[2],
-            last_update=fetched_drone[3],
-            last_longitude=float(fetched_drone[4]),
-            last_latitude=float(fetched_drone[5])
+            droneowner_id= fetched_drone[2]
         )
         return drone_obj
     return None
