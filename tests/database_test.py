@@ -6,12 +6,13 @@ import sys
 
 sys.path.append('../backend')
 from api.dependencies.authentication import get_password_hash
-from api.dependencies.classes import Drone, User, UserWithSensitiveInfo
+from api.dependencies.classes import Drone, DroneData, User, UserWithSensitiveInfo
 from database.database import DATABASE_PATH, create_table
 from database.mail_verif_table import check_token, get_mail_by_token, get_token_by_mail, store_token, CREATE_MAIL_VERIFY_TABLE
 from database.users_table import create_user,get_user,CREATE_USER_TABLE
 from database.users_table import UsrAttributes, create_user,get_user,CREATE_USER_TABLE, update_user
 import database.drones as drones_table
+import database.drone_data as drone_zone_data_table
 from database.organizations import CREATE_ORGANISATIONS_TABLE, OrgAttributes, create_orga, get_orga, update_orga
 from database import settings_table, user_settings
 import time 
@@ -106,23 +107,17 @@ def test_dronetable():
     #create drone
     testdrone = Drone(id = 1,
             name='XR-200',
-            droneowner_id= None,
-            last_update=datetime.datetime.now(),
-            last_longitude=49.878708,
-            last_latitude=8.646927)
+            droneowner_id= None,)
     testdrtwo = Drone(id = 2,
             name='XR-201',
-            droneowner_id= None,
-            last_update=datetime.datetime.now(),
-            last_longitude=49.878708,
-            last_latitude=8.646927)
-    drone_one = drones_table.create_drone(testdrone.name,testdrone.droneowner_id,testdrone.last_update,testdrone.last_longitude,testdrone.last_latitude)
+            droneowner_id= None)
+    drone_one = drones_table.create_drone(testdrone.name,testdrone.droneowner_id)
     for key, value in testdrone.__dict__.items():
         assert drone_one.__dict__[key] == value, 'Objects not matching'
-    should_be_none = drones_table.create_drone('XR-200',None,datetime.datetime.now(),49.878708,8.646927)
+    should_be_none = drones_table.create_drone('XR-200',None)
     assert should_be_none== None, 'Unique Name failed.'
 
-    drone_two = drones_table.create_drone(testdrtwo.name,testdrtwo.droneowner_id,testdrtwo.last_update,testdrtwo.last_longitude,testdrtwo.last_latitude)
+    drone_two = drones_table.create_drone(testdrtwo.name,testdrtwo.droneowner_id)
     for key, value in testdrtwo.__dict__.items():
         assert drone_two.__dict__[key] == value, 'Objects not matching'
 
@@ -130,7 +125,56 @@ def test_dronetable():
     assert len(drones) == 2, 'Something went wrong inserting the Drones.'
     assert drones[0].name == testdrone.name, 'Names not matching. Order wrong?'
 
+
+def test_dronedatatable():
+    #create tables
+    create_table(drone_zone_data_table.CREATE_DRONE_DATA_TABLE)
+    #create drone
+    testdrone = DroneData(
+        drone_id=1,
+        timestamp=datetime.datetime.utcnow(),
+        longitude=49.878708,
+        latitude=8.646927,
+        picture_path='example/path',
+        ai_predictions={'test':122,'dsbdj':3434,'324343':2334},
+        csv_file_path=None
+    )
+    time.sleep(2)
+    testdatatwo = DroneData(
+        drone_id=1,
+        timestamp=datetime.datetime.utcnow(),
+        longitude=49.888708,
+        latitude=8.656927,
+        picture_path='example/path',
+        ai_predictions={'test':122,'dsbdj':3434,'324343':2334},
+        csv_file_path=None
+    )
+
+    drone_zone_data_table.create_drone_zone_entry(
+    drone_id=testdrone.drone_id,
+    timestamp=testdrone.timestamp,
+    longitude=testdrone.longitude,
+    latitude=testdrone.latitude,
+    picture_path=testdrone.picture_path,
+    ai_predictions=testdrone.ai_predictions,
+    csv_file_path=testdrone.csv_file_path)
+
+    drone_zone_data_table.create_drone_zone_entry(
+    drone_id=testdatatwo.drone_id,
+    timestamp=testdatatwo.timestamp,
+    longitude=testdatatwo.longitude,
+    latitude=testdatatwo.latitude,
+    picture_path=testdatatwo.picture_path,
+    ai_predictions=testdatatwo.ai_predictions,
+    csv_file_path=testdatatwo.csv_file_path)
+
+    output = drone_zone_data_table.get_drone_data_by_timestamp(1,datetime.datetime.utcnow()-datetime.timedelta(minutes=5))
+    assert len(output) == 2, 'Something went wrong inserting the Data (2).'
+    output = drone_zone_data_table.get_drone_data_by_timestamp(1,testdatatwo.timestamp-datetime.timedelta(seconds=1))
+    assert len(output) == 1, 'Something went wrong inserting the Data (1).'
     
+
+
 try:
     os.remove(DATABASE_PATH)
 except Exception as e: 
@@ -142,5 +186,6 @@ test_verifytable()
 test_orga()
 test_usersettings()
 test_dronetable()
+test_dronedatatable()
 end = time.time()
 print(end - start)
