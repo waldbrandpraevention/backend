@@ -1,6 +1,7 @@
 import sqlite3
 import configparser
 from contextlib import contextmanager
+from pydantic import BaseModel
 
 
 CONFIG_PATH='config.ini'
@@ -46,7 +47,7 @@ def connect(path=DATABASE_PATH) -> sqlite3.Connection | None:
 
     conn = None
     try:
-        conn = sqlite3.connect(path, check_same_thread=check_same_thread)
+        conn = sqlite3.connect(path, check_same_thread=check_same_thread,detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES)
         return conn
     except Exception as e:
         print(e)
@@ -80,4 +81,22 @@ def create_table(create_table_sql:str)-> None:
             cursor.close()
     except sqlite3.Error as e:
         print(e)
+
+def fetched_match_class(klasse:BaseModel, fetched_object) -> bool:
+    """checks wether number of fetched attributes matches number of required attributes.
+
+    Args:
+        klasse (BaseModel): the class with should be used.
+        fetched_object (_type_): the fetched attributes.
+
+    Returns:
+        bool: wether the numbers match.
+    """
+    try:
+        if len(klasse.__fields__) == len(fetched_object):
+            return True
+    except Exception as e:
+        print(e)
+    
+    return False
 

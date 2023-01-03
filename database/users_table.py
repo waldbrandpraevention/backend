@@ -1,7 +1,8 @@
+from enum import Enum
 import sqlite3
 
 from api.dependencies.classes import User, UserWithSensitiveInfo, Permission
-from database.database import database_connection
+from database.database import database_connection, fetched_match_class
 
 CREATE_USER_TABLE = """ CREATE TABLE IF NOT EXISTS users (
                         id INTEGER,
@@ -20,13 +21,17 @@ CREATE_USER_TABLE = """ CREATE TABLE IF NOT EXISTS users (
                     CREATE UNIQUE INDEX IF NOT EXISTS users_AK ON users (email);
                     CREATE INDEX IF NOT EXISTS users_FK_1 ON users (organization_id);"""
 
-UPDATE_MAIL = ''' UPDATE users
-                    SET email = ? ,
-                    WHERE email = ?;'''
+class UsrAttributes(str,Enum):
+    EMAIL = 'email'
+    FIRST_NAME = 'first_name'
+    LAST_NAME = 'last_name'
+    PASSWORD = 'password'
+    PERMISSION = 'permission'
+    DISABLED = 'disabled'
+    EMAIL_VERIFIED = 'email_verified'
+    ORGA_ID = 'organization_id'
 
-UPDATE_PWHASH = ''' UPDATE users
-                    SET password = ? ,
-                    WHERE email = ?;'''
+UPDATE_ATTRIBUTE = 'UPDATE users SET {} = ? WHERE email = ?;'
 
 INSERT_USER = 'INSERT INTO users (email,first_name,last_name,organization_id,password,permission,disabled,email_verified) VALUES (? ,? ,?,?,?,?,?,?);'
 GET_USER = 'SELECT * FROM users WHERE EMAIL=?;'
@@ -43,9 +48,11 @@ def create_user(user:UserWithSensitiveInfo):
     try:
         with database_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute(INSERT_USER,(user.email, user.first_name,user.last_name,user.organization,user.hashed_password,user.permission.value,user.disabled,user.email_verified))
+            cursor.execute(INSERT_USER,(user.email, user.first_name,user.last_name,user.organization_id,user.hashed_password,user.permission.value,user.disabled,user.email_verified))
+            inserted_id = cursor.lastrowid
             conn.commit()
             cursor.close()
+            user.id = inserted_id
     except sqlite3.IntegrityError as e:##TODO create Email exists exception and raise it here
         print(e)
 
@@ -68,12 +75,17 @@ def get_user(email) -> UserWithSensitiveInfo | None:
                 return None
             else:
                 try:
+                    if not fetched_match_class(UserWithSensitiveInfo,fetched_user):
+                        raise Exception('Fetched data noch matching format.')
+
                     try:
                         permission = Permission(fetched_user[5])
                     except:
                         permission = None
-                        
-                    user = UserWithSensitiveInfo(email=fetched_user[1],
+                    
+                    user = UserWithSensitiveInfo(
+                                            id=fetched_user[0],
+                                            email=fetched_user[1],
                                             first_name=fetched_user[2],
                                             last_name=fetched_user[3],
                                             hashed_password=fetched_user[4],
@@ -81,7 +93,8 @@ def get_user(email) -> UserWithSensitiveInfo | None:
                                             disabled=fetched_user[6],
                                             email_verified=fetched_user[7],
                                             organization=fetched_user[8])
-                except:
+                except Exception as e:
+                    print(e)
                     user = None
                 cursor.close()
                 return user
@@ -89,7 +102,7 @@ def get_user(email) -> UserWithSensitiveInfo | None:
         print(e)
     
 
-def update_mail(user:User | UserWithSensitiveInfo, new_email):
+def update_user(user:User | UserWithSensitiveInfo, attribute:UsrAttributes, new_value):
     """Update the email address of a user.
 
     Args:
@@ -98,27 +111,11 @@ def update_mail(user:User | UserWithSensitiveInfo, new_email):
     try:
         with database_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute(UPDATE_MAIL,(user.email, new_email))
+            update_str = UPDATE_ATTRIBUTE.format(attribute)
+            cursor.execute(update_str,(new_value, user.email))
             conn.commit()
             cursor.close()
-            user.email = new_email
-    except sqlite3.IntegrityError:
-        print('There is already an account with this email.')
-
-def update_password_hash(user:UserWithSensitiveInfo, new_pwhash):
-    """Update the password of a user.
-
-    Args:
-        new_pwhash (str): new password hash.
-    """
-    try:
-        with database_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute(UPDATE_PWHASH,(new_pwhash, user.email))
-            conn.commit()
-            cursor.close()
-            user.hashed_password = new_pwhash
-    except sqlite3.Error as e:
+    except Exception as e:
         print(e)
 
 

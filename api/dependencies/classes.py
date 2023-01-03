@@ -1,4 +1,5 @@
 
+import datetime
 from pydantic import BaseModel
 from enum import Enum
 from datetime import datetime
@@ -15,21 +16,29 @@ class Permission(Enum):
     ADMIN = 2
     THIRD_PARTY = 3
 
-class Organization(BaseModel):
-    name: str | None = None
-    abbriviation: str | None = None
+class Setting(BaseModel):
+    id: int|None =None
+    name: str|None =None
+    description: str|None =None
+    default_value: int|None =None
 
 class User(BaseModel):
+    id: int | None = None
     email: str | None = None
     first_name: str | None = None
     last_name: str | None = None
-    organization: str | None = None
+    organization_id: int | None = None
 
 class UserWithSensitiveInfo(User):
     hashed_password: str | None = None
     permission: Permission | None = None
     disabled: bool | None = None
     email_verified: bool
+
+class Organization(BaseModel):
+    id: int | None = None
+    name: str | None = None
+    abbreviation: str | None = None
 
 class FireRisk(Enum):
     VERY_LOW = 1
@@ -47,7 +56,21 @@ class Drone(BaseModel):
     name: str | None = None
     last_update: datetime | None = None
     zone: str | None = None
+    
+class DBDrone(BaseModel):
+    id: int | None = None
+    name: str | None = None
+    droneowner_id: int | None = None
 
 class Allert(BaseModel):
     content: str | None = None
     date: datetime | None = None
+
+class DroneData(BaseModel):
+    drone_id :int | None = None
+    timestamp :datetime.datetime | None = None
+    longitude :float | None = None
+    latitude :float | None = None
+    picture_path :str| None = None
+    ai_predictions :dict| None = None
+    csv_file_path :str| None = None

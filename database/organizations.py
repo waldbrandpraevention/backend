@@ -2,15 +2,17 @@ from enum import Enum
 import sqlite3
 
 from api.dependencies.classes import Organization, User, UserWithSensitiveInfo, Permission
-from database.database import database_connection
+from database.database import database_connection, fetched_match_class
 
 CREATE_ORGANISATIONS_TABLE = """ CREATE TABLE IF NOT EXISTS organizations
                         (
+                        id INTEGER, 
                         name         text NOT NULL ,
                         abbreviation text NOT NULL ,
 
-                        PRIMARY KEY (name)
-                        );"""
+                        PRIMARY KEY (id)
+                        );
+                        CREATE UNIQUE INDEX IF NOT EXISTS orgs_AK ON organizations (name);"""
 
 INSERT_ORGA =  "INSERT INTO organizations (name,abbreviation) VALUES (?,?);"
 GET_ORGA = 'SELECT * FROM organizations WHERE NAME=?;'
@@ -53,8 +55,8 @@ def create_orga(organame:str, orga_abb:str):
             cursor.execute(INSERT_ORGA,(organame,orga_abb))
             conn.commit()
             cursor.close()
-    except sqlite3.IntegrityError:##TODO create name exists exception and raise it here
-        print('organization with this name already exists.')
+    except sqlite3.IntegrityError as e:
+        print(e)
 
 def get_orga(organame:str) -> Organization | None:
     """get the orga object with this name.
@@ -75,8 +77,7 @@ def get_orga(organame:str) -> Organization | None:
                 return None
             else:
                 try:
-                    orga = Organization(name=fetched_orga[0],
-                                        abbreviation=fetched_orga[1])
+                    orga =  get_obj_from_fetched(fetched_orga)
                 except:
                     orga = None
                 
@@ -95,7 +96,32 @@ def get_all_orga():
         with database_connection() as conn:
             cursor = conn.cursor()
             cursor.execute('SELECT * FROM organizations')
-            conn.commit()
+            fetched_orgas = cursor.fetchall()
             cursor.close()
-    except sqlite3.IntegrityError:##TODO create name exists exception and raise it here
-        print('organization with this name already exists.')
+            output = []
+            for orga in fetched_orgas:
+                orga_obj = get_obj_from_fetched(orga)
+                if orga_obj:
+                    output.append(orga_obj)
+            return output
+    except sqlite3.IntegrityError as e:
+        print(e)
+    return None
+
+def get_obj_from_fetched(fetched_orga):
+    """generate Organization obj from fetched element.
+
+    Args:
+        fetched_orga (list): fetched attributes from orga.
+
+    Returns:
+        Organization: orga object.
+    """
+    if fetched_match_class(Organization,fetched_orga):
+        orga_obj = Organization(
+            id = fetched_orga[0],
+            name=fetched_orga[1],
+            abbreviation=fetched_orga[2]
+        )
+        return orga_obj
+    return None
