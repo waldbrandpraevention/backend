@@ -55,6 +55,12 @@ class Drone(BaseModel):
     id: int | None = None
     name: str | None = None
     droneowner_id: int | None = None
-    last_update: datetime.datetime | None = None
-    last_longitude: float | None = None
-    last_latitude: float | None = None
+
+class DroneData(BaseModel):
+    drone_id :int | None = None
+    timestamp :datetime.datetime | None = None
+    longitude :float | None = None
+    latitude :float | None = None
+    picture_path :str| None = None
+    ai_predictions :dict| None = None
+    csv_file_path :str| None = None
