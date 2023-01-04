@@ -28,9 +28,13 @@ async def get_drone(name: str):
     Returns:
         Zone[]: List of zones
     """
-    #TODO real db calls with None if not found
+    drone = drones_table.get_drone(name)
+    drone_data = drone_data_table.get_latest_by_timestamp(drone.id)
+    if drone_data:
+        drone.last_update = drone_data.timestamp
+        #TODO Get Zone by lat and long
 
-    return Zone(name, datetime.datetime.now())
+    return drone
 
 async def get_drone_count():
     """Returns the amount of drones
