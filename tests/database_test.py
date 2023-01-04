@@ -1,10 +1,14 @@
 
 # setting path
+import asyncio
 import datetime
 import os
 import sys
 
+
+
 sys.path.append('../backend')
+from api.dependencies.drones import get_all_drones
 from api.dependencies.authentication import get_password_hash
 from api.dependencies.classes import Drone, DroneData, User, UserWithSensitiveInfo
 from database.database import DATABASE_PATH, create_table
@@ -172,6 +176,11 @@ def test_dronedatatable():
     assert len(output) == 2, 'Something went wrong inserting the Data (2).'
     output = drone_zone_data_table.get_drone_data_by_timestamp(1,testdatatwo.timestamp-datetime.timedelta(seconds=1))
     assert len(output) == 1, 'Something went wrong inserting the Data (1).'
+
+    loop = asyncio.get_event_loop()
+    drones = asyncio.gather(*[get_all_drones()])
+    results = loop.run_until_complete(drones)
+    print(results)
     
 
 
@@ -181,10 +190,10 @@ except Exception as e:
     print(e)
 
 start = time.time()
-test_usertable() #for _ in range(500)]
-test_verifytable()
-test_orga()
-test_usersettings()
+# test_usertable() #for _ in range(500)]
+# test_verifytable()
+# test_orga()
+# test_usersettings()
 test_dronetable()
 test_dronedatatable()
 end = time.time()

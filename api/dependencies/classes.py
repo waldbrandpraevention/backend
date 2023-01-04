@@ -52,23 +52,20 @@ class Zone(BaseModel):
     fire_risk: FireRisk | None = None
     ai: FireRisk | None = None
 
-class Drone(BaseModel):
-    name: str | None = None
-    last_update: datetime | None = None
-    zone: str | None = None
-    
-class DBDrone(BaseModel):
-    id: int | None = None
-    name: str | None = None
-    droneowner_id: int | None = None
-
 class Allert(BaseModel):
     content: str | None = None
     date: datetime | None = None
 
+class Drone(BaseModel):
+    id: int | None = None
+    name: str | None = None
+    last_update: datetime | None = None
+    zone: str | None = None
+    droneowner_id: int | None = None    
+
 class DroneData(BaseModel):
     drone_id :int | None = None
-    timestamp :datetime.datetime | None = None
+    timestamp :datetime | None = None
     longitude :float | None = None
     latitude :float | None = None
     picture_path :str| None = None

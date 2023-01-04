@@ -109,7 +109,7 @@ def get_obj_from_fetched(fetched_drone):
     Returns:
         Drone: drone object.
     """
-    if fetched_match_class(Drone,fetched_drone):
+    if len(fetched_drone) == 3:
        
         drone_obj = Drone(
             id = fetched_drone[0],

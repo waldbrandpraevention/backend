@@ -26,6 +26,7 @@ CREATE INDEX drone_data_FK_1 ON drone_data (drone_id);'''
 # CREATE INDEX drone_data_FK_1 ON drone_data (zone_id);
 CREATE_ENTRY = 'INSERT INTO drone_data (drone_id,timestamp,longitude,latitude,picture_path,ai_predictions,csv_file_path) VALUES (? ,?,?,? ,? ,?,?);'
 GET_ENTRYS_BY_TIMESTAMP = 'SELECT * FROM drone_data WHERE drone_id = ? AND timestamp > ? AND timestamp < ?;'
+GET_ENTRY ='SELECT * FROM drone_data WHERE drone_id = ?;'
 
 
 def create_drone_zone_entry(drone_id:int,
@@ -84,6 +85,23 @@ def get_drone_data_by_timestamp(drone_id:int,after:datetime.datetime=datetime.da
                 if dronedata_obj:
                     output.append(dronedata_obj)
             return output
+    except sqlite3.IntegrityError as e:##TODO
+        print(e)
+
+def get_latest_by_timestamp(drone_id:int) -> DroneData:
+    
+    try:
+        with database_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(GET_ENTRY,(drone_id,))
+            fetched_data = cursor.fetchone()
+            cursor.close()
+            if fetched_data:
+                dronedata_obj = get_obj_from_fetched(fetched_data)
+            else:
+                dronedata_obj = None
+                
+            return dronedata_obj
     except sqlite3.IntegrityError as e:##TODO
         print(e)
 
