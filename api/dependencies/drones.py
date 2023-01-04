@@ -26,7 +26,7 @@ async def get_drone(name: str):
     """Returns a specific drone from the db
 
     Returns:
-        Zone[]: List of zones
+        Drone: the requestesd drone
     """
     drone = drones_table.get_drone(name)
     drone_data = drone_data_table.get_latest_by_timestamp(drone.id)
