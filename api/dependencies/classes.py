@@ -1,5 +1,6 @@
 
 import datetime
+from typing import List
 from pydantic import BaseModel
 from enum import Enum
 from datetime import datetime
@@ -57,8 +58,21 @@ class Allert(BaseModel):
     date: datetime | None = None
 
 class Drone(BaseModel):
+    """ name: name of the aerial vehicle according to manufacturer,
+        type: type of the aerial vehicle,
+        flight_range: maximum flight range of the aerial vehicle in [km],
+        cc_range: maximum command and control range of the aerial vehicle in [km],
+        flight_time: maximum flight time of the aerial vehicle in [minutes],
+        sensors: list of attached sensors
+        last_update: timestamp of last communication with drone.
+        ?zone: zone the drone is currently in."""
     id: int | None = None
     name: str | None = None
+    type: str | None = None
+    flight_range: float | None = None
+    cc_range: float | None = None
+    flight_time: float | None = None
+    sensors: List[str] | None = None
     last_update: datetime | None = None
     zone: str | None = None
     droneowner_id: int | None = None    
