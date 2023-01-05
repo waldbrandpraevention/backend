@@ -1,7 +1,3 @@
-
-import re
-
-
 def spatiapoint_to_long_lat(spatia_point:str)-> tuple[float, float]:
     #POINT(1.2345 2.3456)
     float_vals = spatia_point.split('(')[1]
