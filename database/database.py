@@ -1,3 +1,4 @@
+import os
 import sqlite3
 import configparser
 from contextlib import contextmanager
@@ -12,6 +13,14 @@ DATABASE_PATH = config.get('database','path')
 BACKUP_PATH = config.get('database','backuppath')
 
 EMAIL_REGEX = r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)"
+
+file_path = os.path.realpath(__file__)
+file_path= os.path.dirname(file_path)
+file_path= os.path.dirname(file_path)
+spatialite_path = 'mod_spatialite-5.0.1-win-amd64'
+spatialite_path = os.path.join(file_path,spatialite_path)
+# e.g. spatialite_path  = 'C:/Users/pedro/Documents/mod_spatialite-NG-win-amd64
+os.environ['PATH'] = spatialite_path + ';' + os.environ['PATH']
 
 def create_backup():
     """Creates a backup in the path specified in the config.ini.
@@ -48,6 +57,8 @@ def connect(path=DATABASE_PATH) -> sqlite3.Connection | None:
     conn = None
     try:
         conn = sqlite3.connect(path, check_same_thread=check_same_thread,detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES)
+        conn.enable_load_extension(True)
+        conn.load_extension("mod_spatialite")
         return conn
     except Exception as e:
         print(e)
