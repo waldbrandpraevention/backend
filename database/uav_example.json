@@ -1,0 +1,21 @@
+{
+"description": 
+    {
+    "name": "name of the aerial vehicle according to manufacturer",
+    "type": "type of the aerial vehicle",
+    "flight_range": "maximum flight range of the aerial vehicle in [km]",
+    "cc_range": "maximum command and control range of the aerial vehicle in [km]",
+    "flight_time": "maximum flight time of the aerial vehicle in [minutes]",
+    "sensors": "list of attached sensors"
+},
+"config":
+    {
+    "name": "Trinity F90+",
+    "type": "Unmanned Aerial Vehicle",
+    "flight_range": 100,
+    "cc_range": 7.5,
+    "flight_time": 90,
+    "sensors": 
+        ["Qube 240 LiDAR", "Sony RX1 RII", "MicaSense RedEdge-P", "MicaSense Altum-PT"]
+    }
+}

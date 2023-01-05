@@ -1,3 +1,4 @@
 *.db
 **/__pycache__
 *.ini
+*mod_spatialite-5.0.1-win-amd64

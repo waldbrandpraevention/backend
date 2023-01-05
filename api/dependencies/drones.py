@@ -1,6 +1,8 @@
 from .classes import Drone
 from datetime import datetime, timedelta
 import random
+from database import drones as drones_table
+from database import drone_data as drone_data_table
 
 async def get_all_drones():
     """Returns all drones from the db
@@ -9,12 +11,14 @@ async def get_all_drones():
         Zone[]: List of drones
     """
     drones = []
-    #TODO real db calls
+    
+    drones = drones_table.get_drones()
 
-    drones.append(Drone(name="drone-1",
-                        last_update=datetime.now() - timedelta(days=random.randint(0,5), hours=random.randint(0,24)),
-                        zone = "zone-123"))
-    #drones.append(Drone("drone-2", datetime.now() - timedelta(days=random.randint(0,1), hours=random.randint(0,24)), "zone-123"))
+    for drone in drones:
+        drone_data = drone_data_table.get_latest_by_timestamp(drone.id)
+        if drone_data:
+            drone.last_update = drone_data.timestamp
+            #TODO Get Zone by lat and long
 
     return drones
 
@@ -22,11 +26,15 @@ async def get_drone(name: str):
     """Returns a specific drone from the db
 
     Returns:
-        Zone[]: List of zones
+        Drone: the requestesd drone
     """
-    #TODO real db calls with None if not found
+    drone = drones_table.get_drone(name)
+    drone_data = drone_data_table.get_latest_by_timestamp(drone.id)
+    if drone_data:
+        drone.last_update = drone_data.timestamp
+        #TODO Get Zone by lat and long
 
-    return Zone(name, datetime.datetime.now())
+    return drone
 
 async def get_drone_count():
     """Returns the amount of drones

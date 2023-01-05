@@ -1,10 +1,14 @@
 
 # setting path
+import asyncio
 import datetime
 import os
 import sys
 
+
+
 sys.path.append('../backend')
+from api.dependencies.drones import get_all_drones
 from api.dependencies.authentication import get_password_hash
 from api.dependencies.classes import Drone, DroneData, User, UserWithSensitiveInfo
 from database.database import DATABASE_PATH, create_table
@@ -105,19 +109,31 @@ def test_dronetable():
     #create tables
     create_table(drones_table.CREATE_DRONES_TABLE)
     #create drone
-    testdrone = Drone(id = 1,
-            name='XR-200',
-            droneowner_id= None,)
+    testdrone = Drone(  id = 1,
+                        name="Trinity F90+",
+                        droneowner_id= None,
+                        type = "Unmanned Aerial Vehicle",
+                        flight_range = 100,
+                        cc_range = 7.5,
+                        flight_time= 90,
+                        #sensors=["Qube 240 LiDAR", "Sony RX1 RII", "MicaSense RedEdge-P", "MicaSense Altum-PT"]
+                        )
     testdrtwo = Drone(id = 2,
             name='XR-201',
-            droneowner_id= None)
-    drone_one = drones_table.create_drone(testdrone.name,testdrone.droneowner_id)
+            droneowner_id= None,
+            type = "Unmanned Aerial Vehicle",
+            flight_range = 50.7,
+            cc_range = 10,
+            flight_time= 33,
+            #sensors=["Qube 240 LiDAR", "Sony RX1 RII", "MicaSense RedEdge-P", "MicaSense Altum-PT"]
+            )
+    drone_one = drones_table.create_drone(testdrone.name,testdrone.droneowner_id,testdrone.type,testdrone.flight_range,testdrone.cc_range,testdrone.flight_time)
     for key, value in testdrone.__dict__.items():
         assert drone_one.__dict__[key] == value, 'Objects not matching'
-    should_be_none = drones_table.create_drone('XR-200',None)
+    should_be_none = drones_table.create_drone(testdrone.name,None,None,None,None,None)
     assert should_be_none== None, 'Unique Name failed.'
 
-    drone_two = drones_table.create_drone(testdrtwo.name,testdrtwo.droneowner_id)
+    drone_two = drones_table.create_drone(testdrtwo.name,testdrtwo.droneowner_id,testdrtwo.type,testdrtwo.flight_range,testdrtwo.cc_range,testdrtwo.flight_time)
     for key, value in testdrtwo.__dict__.items():
         assert drone_two.__dict__[key] == value, 'Objects not matching'
 
@@ -139,7 +155,7 @@ def test_dronedatatable():
         ai_predictions={'test':122,'dsbdj':3434,'324343':2334},
         csv_file_path=None
     )
-    time.sleep(2)
+    time.sleep(1)
     testdatatwo = DroneData(
         drone_id=1,
         timestamp=datetime.datetime.utcnow(),
@@ -170,8 +186,14 @@ def test_dronedatatable():
 
     output = drone_zone_data_table.get_drone_data_by_timestamp(1,datetime.datetime.utcnow()-datetime.timedelta(minutes=5))
     assert len(output) == 2, 'Something went wrong inserting the Data (2).'
+    assert output[0].latitude == testdrone.latitude, 'Something went wrong with creating geo Point for testdrone.'
     output = drone_zone_data_table.get_drone_data_by_timestamp(1,testdatatwo.timestamp-datetime.timedelta(seconds=1))
     assert len(output) == 1, 'Something went wrong inserting the Data (1).'
+
+    loop = asyncio.get_event_loop()
+    drones = asyncio.gather(*[get_all_drones()])
+    results = loop.run_until_complete(drones)
+    print(results)
     
 
 
@@ -181,10 +203,10 @@ except Exception as e:
     print(e)
 
 start = time.time()
-test_usertable() #for _ in range(500)]
-test_verifytable()
-test_orga()
-test_usersettings()
+# test_usertable() #for _ in range(500)]
+# test_verifytable()
+# test_orga()
+# test_usersettings()
 test_dronetable()
 test_dronedatatable()
 end = time.time()
