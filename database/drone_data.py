@@ -20,12 +20,12 @@ FOREIGN KEY (drone_id) REFERENCES drones (id)
 );
 
 CREATE INDEX drone_data_FK_1 ON drone_data (drone_id);
-SELECT AddGeometryColumn('drone_data', 'geometry', 4326, 'POINT', 'XY');'''
+SELECT AddGeometryColumn('drone_data', 'coordinates', 4326, 'POINT', 'XY');'''
 # zone_id        integer NOT NULL ,
 # FOREIGN KEY (zone_id) REFERENCES Zones (id),
 # CREATE INDEX drone_data_FK_1 ON drone_data (zone_id);
-CREATE_ENTRY = 'INSERT INTO drone_data (drone_id,timestamp,geometry,picture_path,ai_predictions,csv_file_path) VALUES (? ,?,GeomFromText(?, 4326) ,? ,?,?);'
-GET_ENTRYS_BY_TIMESTAMP = 'SELECT *, ST_AsText(geometry) AS geo FROM drone_data WHERE drone_id = ? AND timestamp > ? AND timestamp < ?;'
+CREATE_ENTRY = 'INSERT INTO drone_data (drone_id,timestamp,coordinates,picture_path,ai_predictions,csv_file_path) VALUES (? ,?,GeomFromText(?, 4326) ,? ,?,?);'
+GET_ENTRYS_BY_TIMESTAMP = 'SELECT drone_id,timestamp,picture_path,ai_predictions,csv_file_path, X(coordinates), Y(coordinates) FROM drone_data WHERE drone_id = ? AND timestamp > ? AND timestamp < ?;'
 GET_ENTRY ='SELECT * FROM drone_data WHERE drone_id = ?;'
 
 
@@ -125,7 +125,8 @@ def get_obj_from_fetched(fetched_dronedata) -> DroneData| None:
             ai_predictions = None
 
         try:
-            longitude, latitude= spatiapoint_to_long_lat(fetched_dronedata[6])
+            longitude=float(fetched_dronedata[5])
+            latitude= float(fetched_dronedata[6])
         except Exception as e:
             print(e)
             longitude, latitude= None, None
