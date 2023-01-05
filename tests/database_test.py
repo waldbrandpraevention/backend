@@ -155,7 +155,7 @@ def test_dronedatatable():
         ai_predictions={'test':122,'dsbdj':3434,'324343':2334},
         csv_file_path=None
     )
-    time.sleep(2)
+    time.sleep(1)
     testdatatwo = DroneData(
         drone_id=1,
         timestamp=datetime.datetime.utcnow(),
@@ -186,6 +186,7 @@ def test_dronedatatable():
 
     output = drone_zone_data_table.get_drone_data_by_timestamp(1,datetime.datetime.utcnow()-datetime.timedelta(minutes=5))
     assert len(output) == 2, 'Something went wrong inserting the Data (2).'
+    assert output[0].latitude == testdrone.latitude, 'Something went wrong with creating geo Point for testdrone.'
     output = drone_zone_data_table.get_drone_data_by_timestamp(1,testdatatwo.timestamp-datetime.timedelta(seconds=1))
     assert len(output) == 1, 'Something went wrong inserting the Data (1).'
 
