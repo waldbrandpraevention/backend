@@ -22,6 +22,8 @@ spatialite_path = os.path.join(file_path,spatialite_path)
 # e.g. spatialite_path  = 'C:/Users/pedro/Documents/mod_spatialite-NG-win-amd64
 os.environ['PATH'] = spatialite_path + ';' + os.environ['PATH']
 
+conections = []
+
 def create_backup():
     """Creates a backup in the path specified in the config.ini.
     """
@@ -49,6 +51,10 @@ def connect(path=DATABASE_PATH) -> sqlite3.Connection | None:
     #single-thread 	    0
     #multi-thread 	    1
     #serialized 	    3
+
+    if len(conections)>0:
+        return conections.pop()
+
     if sqlite3.threadsafety == 3:
         check_same_thread = False
     else:
@@ -59,6 +65,11 @@ def connect(path=DATABASE_PATH) -> sqlite3.Connection | None:
         conn = sqlite3.connect(path, check_same_thread=check_same_thread,detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES)
         conn.enable_load_extension(True)
         conn.load_extension("mod_spatialite")
+        try:
+            conn.execute('SELECT InitSpatialMetaData(1);')
+        except:
+            pass
+
         return conn
     except Exception as e:
         print(e)
@@ -72,7 +83,10 @@ def close_connection(conn:sqlite3.Connection)->None:
         conn (sqlite3.Connection): Connection to a sqlite database.
     """
     try:
-        conn.close()
+        if len(conections)>3:
+            conn.close()
+        else:
+            conections.append(conn)
 
     except sqlite3.Error as e:
         print(e)
