@@ -49,6 +49,11 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
     Returns:
         User: User object of the current user
     """
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Token data is invalid",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
     disabled_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="User is disabled",
