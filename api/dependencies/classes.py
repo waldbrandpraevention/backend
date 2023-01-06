@@ -29,12 +29,12 @@ class User(BaseModel):
     first_name: str | None = None
     last_name: str | None = None
     organization_id: int | None = None
-
-class UserWithSensitiveInfo(User):
-    hashed_password: str | None = None
     permission: Permission | None = None
     disabled: bool | None = None
     email_verified: bool
+
+class UserWithSensitiveInfo(User):
+    hashed_password: str | None = None
 
 class Organization(BaseModel):
     id: int | None = None
