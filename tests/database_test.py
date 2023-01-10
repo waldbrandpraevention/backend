@@ -204,18 +204,18 @@ except Exception as e:
     print(e)
 
 start = time.time()
-# test_usertable() #for _ in range(500)]
-# test_verifytable()
-# test_orga()
-# test_usersettings()
-# test_dronetable()
-# test_dronedatatable()
+test_usertable() #for _ in range(500)]
+test_verifytable()
+test_orga()
+test_usersettings()
+test_dronetable()
+test_dronedatatable()
 create_table(zone_table.CREATE_ZONE_TABLE)
-zone_table.create_zone('test',84.23,181.82, 168.32 ,117.5, 103.7 ,58.953, 40.23 ,108.82)
-print(zone_table.get_zone(89.156998,90.156998))#in
-print(zone_table.get_zone(85.156998,61.156998))#out
-print(zone_table.get_zone(148.156998,119.156998))#in
-print(zone_table.get_zone(159.156998,138.156998))#out
+zone_table.create_zone('test',[(84.23,181.82), (168.32 ,117.5), (103.7 ,58.953), (40.23 ,108.82)])
+print(zone_table.get_zone_of_coordinate(89.156998,90.156998))#in
+print(zone_table.get_zone_of_coordinate(85.156998,61.156998))#out
+print(zone_table.get_zone_of_coordinate(148.156998,119.156998))#in
+print(zone_table.get_zone_of_coordinate(159.156998,138.156998))#out
 
 end = time.time()
 print(end - start)
