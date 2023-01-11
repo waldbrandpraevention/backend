@@ -115,6 +115,7 @@ def update_user(user:User | UserWithSensitiveInfo, attribute:UsrAttributes, new_
             cursor.execute(update_str,(new_value, user.email))
             conn.commit()
             cursor.close()
+            
     except Exception as e:
         print(e)
 
