@@ -17,7 +17,7 @@ from database.users_table import create_user,get_user,CREATE_USER_TABLE
 from database.users_table import UsrAttributes, create_user,get_user,CREATE_USER_TABLE, update_user
 import database.drones as drones_table
 import database.drone_data as drone_zone_data_table
-import database.zones as zone_table
+import database.zones_table as zone_table
 from database.organizations import CREATE_ORGANISATIONS_TABLE, OrgAttributes, create_orga, get_orga, update_orga
 from database import settings_table, user_settings
 import time 
