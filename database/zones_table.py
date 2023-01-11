@@ -15,7 +15,7 @@ SELECT AddGeometryColumn('zones', 'area', 4326, 'POLYGON', 'XY');'''
 #   POLYGON((101.23 171.82, 201.32 101.5, 215.7 201.953, 101.23 171.82))
 #   exterior ring, no interior rings
 CREATE_ENTRY = 'INSERT INTO zones (name,area) VALUES (?,GeomFromText(?, 4326));'
-GET_ZONE = 'SELECT id,name FROM zones WHERE ST_Intersects(area, GeomFromText(?, 4326));'
+GET_ZONE = 'SELECT id,name FROM zones WHERE ST_Intersects(area, MakePoint(?, ?, 4326));'
 
 
 def create_zone(name,coordinates: List[tuple[float,float]])->bool:
@@ -60,8 +60,8 @@ def get_zone_of_coordinate(long,lat):
     try:
         with database_connection() as conn:
             cursor = conn.cursor()
-            point_wkt = 'POINT({0} {1})'.format(long, lat)
-            cursor.execute(GET_ZONE,(point_wkt,))
+            #point_wkt = 'POINT({0} {1})'.format(long, lat) for 
+            cursor.execute(GET_ZONE,(long,lat))
             fetched_data = cursor.fetchone()
             cursor.close()
             if fetched_data:
