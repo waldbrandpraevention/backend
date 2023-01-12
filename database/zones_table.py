@@ -29,7 +29,7 @@ GET_ZONES = '''SELECT id,name, ST_AsText(area) AS area FROM zones
                 AND e.origin_rowid = zones.rowid);'''
 
 
-def create_zone(name,coordinates: List[tuple[float,float]])->bool:
+def create_zone(name,coordinates: List[List[float]])->bool:
     """stores geograhic area of a zone.
     Needs at least 3 coordinates to create a zone.
 
@@ -43,10 +43,10 @@ def create_zone(name,coordinates: List[tuple[float,float]])->bool:
     try:
         if len(coordinates) < 3:#at least 3 coordinates are needed.
             return False
-        first_coordinate = coordinates.pop(0)
+        first_coordinate = coordinates[0]
         polygon_wkt = f'POLYGON(({first_coordinate[0]} {first_coordinate[1]}'
-        for coordinate in coordinates:
-            polygon_wkt += f',{coordinate[0]} {coordinate[1]}'
+        for index in range(1,len(coordinates)):
+            polygon_wkt += f',{coordinates[index][0]} {coordinates[index][1]}'
         polygon_wkt +='))'
         with database_connection() as conn:
             cursor = conn.cursor()
@@ -82,7 +82,7 @@ def get_zone_of_coordinate(long,lat):
         print(e)
     return None
 
-def get_zones():
+def get_zones() -> List[Zone]:
     """_summary_
 
     Args:
