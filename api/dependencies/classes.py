@@ -77,11 +77,25 @@ class Drone(BaseModel):
     zone: str | None = None
     droneowner_id: int | None = None    
 
-class DroneData(BaseModel):
+class DroneUpdate(BaseModel):
     drone_id :int | None = None
     timestamp :datetime | None = None
     longitude :float | None = None
     latitude :float | None = None
+    flight_range: float | None = None
+    flight_time: float | None = None
+
+class EventType(Enum):
+    SMOKE = 1
+    FIRE = 2
+
+class DroneEvent(BaseModel):
+    drone_id :int | None = None
+    timestamp :datetime | None = None
+    longitude :float | None = None
+    latitude :float | None = None
+    event_type: EventType | None = None
+    confidence: int | None = None
     picture_path :str| None = None
     ai_predictions :dict| None = None
     csv_file_path :str| None = None

@@ -4,19 +4,17 @@ import asyncio
 import datetime
 import os
 import sys
-
-
-
 sys.path.append('../backend')
 from api.dependencies.drones import get_all_drones
 from api.dependencies.authentication import get_password_hash
-from api.dependencies.classes import Drone, DroneData, User, UserWithSensitiveInfo
+from api.dependencies.classes import Drone, DroneEvent, EventType, User,DroneUpdate, UserWithSensitiveInfo
 from database.database import DATABASE_PATH, create_table
 from database.mail_verif_table import check_token, get_mail_by_token, get_token_by_mail, store_token, CREATE_MAIL_VERIFY_TABLE
 from database.users_table import create_user,get_user,CREATE_USER_TABLE
 from database.users_table import UsrAttributes, create_user,get_user,CREATE_USER_TABLE, update_user
 import database.drones as drones_table
-import database.drone_data as drone_zone_data_table
+import database.drone_events_table as drones_event_table
+import database.drone_updates_table as drone_zone_data_table
 import database.zones_table as zone_table
 from database.organizations import CREATE_ORGANISATIONS_TABLE, OrgAttributes, create_orga, get_orga, update_orga
 from database import settings_table, user_settings
@@ -146,25 +144,35 @@ def test_dronetable():
 def test_dronedatatable():
     #create tables
     create_table(drone_zone_data_table.CREATE_DRONE_DATA_TABLE)
+    create_table(drones_event_table.CREATE_DRONE_EVENT_TABLE)
     #create drone
-    testdrone = DroneData(
+    testdrone = DroneUpdate(
         drone_id=1,
         timestamp=datetime.datetime.utcnow(),
         longitude=49.878708,
         latitude=8.646927,
-        picture_path='example/path',
-        ai_predictions={'test':122,'dsbdj':3434,'324343':2334},
+        flight_range=20.0,
+        flight_time=16.4
+    )
+    testevent = DroneEvent(
+        drone_id=1,
+        timestamp=datetime.datetime.utcnow(),
+        longitude=49.878701,
+        latitude=8.646927,
+        event_type=EventType.SMOKE,
+        confidence=78,
+        picture_path=None,
+        ai_predictions=None,
         csv_file_path=None
     )
     time.sleep(1)
-    testdatatwo = DroneData(
+    testdatatwo = DroneUpdate(
         drone_id=1,
         timestamp=datetime.datetime.utcnow(),
         longitude=49.888708,
         latitude=8.656927,
-        picture_path='example/path',
-        ai_predictions={'test':122,'dsbdj':3434,'324343':2334},
-        csv_file_path=None
+        flight_range=20.0,
+        flight_time=16.4
     )
 
     drone_zone_data_table.create_drone_zone_entry(
@@ -172,18 +180,28 @@ def test_dronedatatable():
     timestamp=testdrone.timestamp,
     longitude=testdrone.longitude,
     latitude=testdrone.latitude,
-    picture_path=testdrone.picture_path,
-    ai_predictions=testdrone.ai_predictions,
-    csv_file_path=testdrone.csv_file_path)
+    flight_range=testdrone.flight_range,
+    flight_time=testdrone.flight_time)
 
     drone_zone_data_table.create_drone_zone_entry(
     drone_id=testdatatwo.drone_id,
     timestamp=testdatatwo.timestamp,
     longitude=testdatatwo.longitude,
     latitude=testdatatwo.latitude,
-    picture_path=testdatatwo.picture_path,
-    ai_predictions=testdatatwo.ai_predictions,
-    csv_file_path=testdatatwo.csv_file_path)
+    flight_range=testdatatwo.flight_range,
+    flight_time=testdatatwo.flight_time)
+
+    drones_event_table.create_drone_event_entry(
+        drone_id=testevent.drone_id,
+        timestamp=testevent.timestamp,
+        longitude=testevent.longitude,
+        latitude=testevent.latitude,
+        event_type=testevent.event_type.value,
+        confidence=testevent.confidence,
+        picture_path=testevent.picture_path,
+        ai_predictions=testevent.ai_predictions,
+        csv_file_path=testevent.csv_file_path
+    )
 
     output = drone_zone_data_table.get_drone_data_by_timestamp(1,datetime.datetime.utcnow()-datetime.timedelta(minutes=5))
     assert len(output) == 2, 'Something went wrong inserting the Data (2).'
@@ -191,12 +209,18 @@ def test_dronedatatable():
     output = drone_zone_data_table.get_drone_data_by_timestamp(1,testdatatwo.timestamp-datetime.timedelta(seconds=1))
     assert len(output) == 1, 'Something went wrong inserting the Data (1).'
 
-    loop = asyncio.get_event_loop()
-    drones = asyncio.gather(*[get_all_drones()])
-    results = loop.run_until_complete(drones)
-    print(results)
+    output = drones_event_table.get_drone_event_by_timestamp(1)
+    assert len(output) == 1, 'Something went wrong inserting the Data (2).'
+    assert output[0].latitude == testdrone.latitude, 'Something went wrong with creating geo Point for testdrone.'
     
-
+def test_zone():
+    create_table(zone_table.CREATE_ZONE_TABLE)
+    zone_table.create_zone('zone_one',[(84.23,181.82), (168.32 ,117.5), (103.7 ,58.953), (40.23 ,108.82)])
+    zone_table.create_zone('zone_two',[(184.23,281.82), (268.32 ,217.5), (203.7 ,158.953), (140.23 ,208.82)])
+    assert zone_table.get_zone_of_coordinate(89.156998,90.156998) == True, "Point is in square"
+    assert zone_table.get_zone_of_coordinate(85.156998,61.156998) == False, "Point is not in square"
+    assert zone_table.get_zone_of_coordinate(148.156998,119.156998) == True, "Point is in square"
+    assert zone_table.get_zone_of_coordinate(159.156998,138.156998) == False, "Point is not in square"
 
 try:
     os.remove(DATABASE_PATH)
@@ -210,12 +234,7 @@ test_orga()
 test_usersettings()
 test_dronetable()
 test_dronedatatable()
-create_table(zone_table.CREATE_ZONE_TABLE)
-zone_table.create_zone('test',[(84.23,181.82), (168.32 ,117.5), (103.7 ,58.953), (40.23 ,108.82)])
-print(zone_table.get_zone_of_coordinate(89.156998,90.156998))#in
-print(zone_table.get_zone_of_coordinate(85.156998,61.156998))#out
-print(zone_table.get_zone_of_coordinate(148.156998,119.156998))#in
-print(zone_table.get_zone_of_coordinate(159.156998,138.156998))#out
+test_zone()
 
 end = time.time()
 print(end - start)
