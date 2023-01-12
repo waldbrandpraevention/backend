@@ -88,7 +88,7 @@ def get_user(email) -> UserWithSensitiveInfo | None:
                         permission = None
                     
                     try:
-                        orga = organizations.get_obj_from_fetched(fetched_user[:-3])
+                        orga = organizations.get_obj_from_fetched(fetched_user[-3:])
                     except:
                         orga = None
                     

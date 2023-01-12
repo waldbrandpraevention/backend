@@ -49,6 +49,7 @@ def test_usertable():
     create_user(user_one)
     fetched_user = get_user(user_one.email)
     assert fetched_user.first_name == user_one.first_name, "Couldnt create or get user"
+    assert fetched_user.organization.name == testorga.name, "Couldnt fetch orga of user"
 
     update_user(user_one,UsrAttributes.FIRST_NAME,'Peter')
     fetched_user = get_user(user_one.email)
@@ -79,8 +80,10 @@ def test_orga():
     create_orga(testorga.name,testorga.abbreviation)
     orga = get_orga('testorga')
     update_orga(orga,OrgAttributes.ABBREVIATION,'TEO')
-    update_orga(orga,OrgAttributes.NAME,'BPORG')
-    orga2 = get_orga('BPORG')
+    new_name = 'BPORG'
+    update_orga(orga,OrgAttributes.NAME,new_name)
+    testorga.name = new_name
+    orga2 = get_orga(new_name)
 
 def test_usersettings():
     user = get_user(mail)
