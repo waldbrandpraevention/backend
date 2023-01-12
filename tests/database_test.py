@@ -10,7 +10,7 @@ import sys
 sys.path.append('../backend')
 from api.dependencies.drones import get_all_drones
 from api.dependencies.authentication import get_password_hash
-from api.dependencies.classes import Drone, DroneData, User, UserWithSensitiveInfo
+from api.dependencies.classes import Drone, DroneData, Organization, User, UserWithSensitiveInfo
 from database.database import DATABASE_PATH, create_table
 from database.mail_verif_table import check_token, get_mail_by_token, get_token_by_mail, store_token, CREATE_MAIL_VERIFY_TABLE
 from database.users_table import create_user,get_user,CREATE_USER_TABLE
@@ -25,6 +25,7 @@ mail = 'test@mail.de'
 mail2 = 'test2@mail.de'
 mail3 = 'neuemail@we.de'
 pwhash = get_password_hash('dsfsdfdsfsfddfsfd')
+testorga = Organization(id=1,name='testorga',abbreviation='TO')
 user_one = UserWithSensitiveInfo(email=mail,
                 first_name='Hans',
                 last_name='Dieter',
@@ -32,7 +33,7 @@ user_one = UserWithSensitiveInfo(email=mail,
                 permission=1,
                 disabled=0,
                 email_verified=0,
-                organization_id = 1)
+                organization= testorga)
 
 user_two = UserWithSensitiveInfo(email=mail,
                 first_name='Hans',
@@ -41,7 +42,7 @@ user_two = UserWithSensitiveInfo(email=mail,
                 permission=1,
                 disabled=0,
                 email_verified=0,
-                organization_id = 1)
+                organization= testorga)
 
 def test_usertable():
     create_table(CREATE_USER_TABLE)
@@ -75,7 +76,7 @@ def test_verifytable():
 
 def test_orga():
     create_table(CREATE_ORGANISATIONS_TABLE)
-    create_orga('testorga','TO')
+    create_orga(testorga.name,testorga.abbreviation)
     orga = get_orga('testorga')
     update_orga(orga,OrgAttributes.ABBREVIATION,'TEO')
     update_orga(orga,OrgAttributes.NAME,'BPORG')
@@ -203,10 +204,10 @@ except Exception as e:
     print(e)
 
 start = time.time()
-# test_usertable() #for _ in range(500)]
-# test_verifytable()
-# test_orga()
-# test_usersettings()
+test_orga()
+test_usertable() #for _ in range(500)]
+test_verifytable()
+test_usersettings()
 test_dronetable()
 test_dronedatatable()
 end = time.time()

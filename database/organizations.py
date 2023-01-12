@@ -16,6 +16,7 @@ CREATE_ORGANISATIONS_TABLE = """ CREATE TABLE IF NOT EXISTS organizations
 
 INSERT_ORGA =  "INSERT INTO organizations (name,abbreviation) VALUES (?,?);"
 GET_ORGA = 'SELECT * FROM organizations WHERE NAME=?;'
+GET_ORGA_BY_ID = 'SELECT * FROM organizations WHERE ID=?;'
 UPDATE_ORGA_NAME = ''' UPDATE users
                     SET email = ? ,
                     WHERE email = ?;'''
@@ -54,9 +55,17 @@ def create_orga(organame:str, orga_abb:str):
             cursor = conn.cursor()
             cursor.execute(INSERT_ORGA,(organame,orga_abb))
             conn.commit()
+            inserted_id = cursor.lastrowid
             cursor.close()
+            orga = Organization(
+                id=inserted_id,
+                name=organame,
+                abbreviation=orga_abb
+            )
+            return orga
     except sqlite3.IntegrityError as e:
         print(e)
+    return None
 
 def get_orga(organame:str) -> Organization | None:
     """get the orga object with this name.
@@ -84,6 +93,36 @@ def get_orga(organame:str) -> Organization | None:
                 return orga
     except Exception as e:
         print(e)
+    return None
+
+
+def get_orga_by_id(orga_id:int) -> Organization | None:
+    """get the orga object with this id.
+
+    Args:
+        orga_id (int): orga to look for.
+
+    Returns:
+        orga: Organization or None.
+    """
+    try:
+        with database_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(GET_ORGA_BY_ID,(orga_id,))
+            fetched_orga = cursor.fetchone()
+            cursor.close()
+            if not fetched_orga:  # An empty result evaluates to False.
+                return None
+            else:
+                try:
+                    orga =  get_obj_from_fetched(fetched_orga)
+                except:
+                    orga = None
+                
+                return orga
+    except Exception as e:
+        print(e)
+    return None
 
 def get_all_orga():
     """Create an entry for an organization.

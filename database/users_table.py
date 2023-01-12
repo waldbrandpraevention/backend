@@ -3,6 +3,7 @@ import sqlite3
 
 from api.dependencies.classes import User, UserWithSensitiveInfo, Permission
 from database.database import database_connection, fetched_match_class
+from database import organizations
 
 CREATE_USER_TABLE = """ CREATE TABLE IF NOT EXISTS users (
                         id INTEGER,
@@ -48,7 +49,7 @@ def create_user(user:UserWithSensitiveInfo):
     try:
         with database_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute(INSERT_USER,(user.email, user.first_name,user.last_name,user.organization_id,user.hashed_password,user.permission.value,user.disabled,user.email_verified))
+            cursor.execute(INSERT_USER,(user.email, user.first_name,user.last_name,user.organization.id,user.hashed_password,user.permission.value,user.disabled,user.email_verified))
             inserted_id = cursor.lastrowid
             conn.commit()
             cursor.close()
@@ -83,6 +84,11 @@ def get_user(email) -> UserWithSensitiveInfo | None:
                     except:
                         permission = None
                     
+                    try:
+                        orga = organizations.get_orga_by_id(fetched_user[8])
+                    except:
+                        orga = None
+                    
                     user = UserWithSensitiveInfo(
                                             id=fetched_user[0],
                                             email=fetched_user[1],
@@ -92,7 +98,7 @@ def get_user(email) -> UserWithSensitiveInfo | None:
                                             permission=permission,
                                             disabled=fetched_user[6],
                                             email_verified=fetched_user[7],
-                                            organization=fetched_user[8])
+                                            organization=orga)
                 except Exception as e:
                     print(e)
                     user = None
