@@ -107,7 +107,7 @@ def create_table(create_table_sql:str)-> None:
     except sqlite3.Error as e:
         print(e)
 
-def fetched_match_class(klasse:BaseModel, fetched_object) -> bool:
+def fetched_match_class(klasse:BaseModel, fetched_object, subtract:int=0) -> bool:
     """checks wether number of fetched attributes matches number of required attributes.
 
     Args:
@@ -118,8 +118,9 @@ def fetched_match_class(klasse:BaseModel, fetched_object) -> bool:
         bool: wether the numbers match.
     """
     try:
-        if len(klasse.__fields__) == len(fetched_object):
-            return True
+        if fetched_object:
+            if len(klasse.__fields__) - subtract == len(fetched_object):
+                return True
     except Exception as e:
         print(e)
     
