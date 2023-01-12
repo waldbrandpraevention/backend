@@ -35,7 +35,10 @@ class UsrAttributes(str,Enum):
 UPDATE_ATTRIBUTE = 'UPDATE users SET {} = ? WHERE email = ?;'
 
 INSERT_USER = 'INSERT INTO users (email,first_name,last_name,organization_id,password,permission,disabled,email_verified) VALUES (? ,? ,?,?,?,?,?,?);'
-GET_USER = 'SELECT * FROM users WHERE EMAIL=?;'
+GET_USER_WITH_ORGA = '''SELECT users.id,email,first_name,last_name,password,permission,disabled,email_verified,orga.id,orga.name,orga.abbreviation
+                        FROM users 
+                        JOIN organizations orga ON orga.id = organization_id 
+                        WHERE EMAIL=?;'''
 CHECK_CREDS = "SELECT password FROM users WHERE EMAIL=? AND PASSWORD = ?;"
 
 def create_user(user:UserWithSensitiveInfo):
@@ -69,14 +72,14 @@ def get_user(email) -> UserWithSensitiveInfo | None:
     try:
         with database_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute(GET_USER,(email,))
+            cursor.execute(GET_USER_WITH_ORGA,(email,))
             fetched_user = cursor.fetchone()
             if not fetched_user:  # An empty result evaluates to False.
                 cursor.close()
                 return None
             else:
                 try:
-                    if not fetched_match_class(UserWithSensitiveInfo,fetched_user):
+                    if not fetched_match_class(UserWithSensitiveInfo,fetched_user,2):
                         raise Exception('Fetched data noch matching format.')
 
                     try:
@@ -85,7 +88,7 @@ def get_user(email) -> UserWithSensitiveInfo | None:
                         permission = None
                     
                     try:
-                        orga = organizations.get_orga_by_id(fetched_user[8])
+                        orga = organizations.get_obj_from_fetched(fetched_user[:-3])
                     except:
                         orga = None
                     
