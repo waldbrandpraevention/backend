@@ -1,7 +1,7 @@
 from .classes import Drone
 from datetime import datetime, timedelta
 import random
-from database import drones as drones_table
+from database import drones_table
 from database import drone_updates_table as drone_data_table
 
 async def get_all_drones():

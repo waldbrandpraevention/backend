@@ -12,12 +12,12 @@ from database.database import DATABASE_PATH, create_table
 from database.mail_verif_table import check_token, get_mail_by_token, get_token_by_mail, store_token, CREATE_MAIL_VERIFY_TABLE
 from database.users_table import create_user,get_user,CREATE_USER_TABLE
 from database.users_table import UsrAttributes, create_user,get_user,CREATE_USER_TABLE, update_user
-import database.drones as drones_table
+import database.drones_table as drones_table
 import database.drone_events_table as drones_event_table
 import database.drone_updates_table as drone_zone_data_table
 import database.zones_table as zone_table
-from database.organizations import CREATE_ORGANISATIONS_TABLE, OrgAttributes, create_orga, get_orga, update_orga
-from database import settings_table, user_settings
+from database.organizations_table import CREATE_ORGANISATIONS_TABLE, OrgAttributes, create_orga, get_orga, update_orga
+from database import settings_table, user_settings_table
 import time 
 
 mail = 'test@mail.de'
@@ -84,7 +84,7 @@ def test_usersettings():
     user = get_user(mail)
     #create tables
     create_table(settings_table.CREATE_SETTINGS_TABLE)
-    create_table(user_settings.CREATE_USERSETTINGS_TABLE)
+    create_table(user_settings_table.CREATE_USERSETTINGS_TABLE)
     #create settings
     index = settings_table.create_setting('Test','This is a testsetting',defaul_val=0)
     index = settings_table.create_setting('Lightmode','Lightmode activated or not',defaul_val=1)
@@ -93,14 +93,14 @@ def test_usersettings():
     if not index:
         index = 1
     #set the setting with id 1 for user to 2
-    user_settings.set_usersetting(index,user_id=user.id,value=2)
+    user_settings_table.set_usersetting(index,user_id=user.id,value=2)
     #get the value, which should be 2
-    value = user_settings.get_usersetting(index,user.id)
+    value = user_settings_table.get_usersetting(index,user.id)
     assert value == 2, 'Couldnt set value.'
     #set the setting with id 1 for user to 1
-    user_settings.set_usersetting(index,user_id=user.id,value=1)
+    user_settings_table.set_usersetting(index,user_id=user.id,value=1)
     #get the value, which should be 1
-    value = user_settings.get_usersetting(index,user.id)
+    value = user_settings_table.get_usersetting(index,user.id)
     assert value == 1, 'Couldnt set value.'
 
 
@@ -233,10 +233,10 @@ except Exception as e:
     print(e)
 
 start = time.time()
-# test_usertable() #for _ in range(500)]
-# test_verifytable()
-# test_orga()
-# test_usersettings()
+test_usertable() #for _ in range(500)]
+test_verifytable()
+test_orga()
+test_usersettings()
 test_dronetable()
 test_dronedatatable()
 test_zone()
