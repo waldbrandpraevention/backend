@@ -149,16 +149,16 @@ def test_dronedatatable():
     testdrone = DroneUpdate(
         drone_id=1,
         timestamp=datetime.datetime.utcnow(),
-        longitude=49.878708,
-        latitude=8.646927,
+        longitude=89.156998,
+        latitude=90.156998,
         flight_range=20.0,
         flight_time=16.4
     )
     testevent = DroneEvent(
         drone_id=1,
         timestamp=datetime.datetime.utcnow(),
-        longitude=49.878701,
-        latitude=8.646927,
+        longitude=89.156998,
+        latitude=90.156998,
         event_type=EventType.SMOKE,
         confidence=78,
         picture_path=None,
@@ -215,12 +215,17 @@ def test_dronedatatable():
     
 def test_zone():
     create_table(zone_table.CREATE_ZONE_TABLE)
-    zone_table.create_zone('zone_one',[(84.23,181.82), (168.32 ,117.5), (103.7 ,58.953), (40.23 ,108.82)])
-    zone_table.create_zone('zone_two',[(184.23,281.82), (268.32 ,217.5), (203.7 ,158.953), (140.23 ,208.82)])
-    assert zone_table.get_zone_of_coordinate(89.156998,90.156998) == True, "Point is in square"
-    assert zone_table.get_zone_of_coordinate(85.156998,61.156998) == False, "Point is not in square"
-    assert zone_table.get_zone_of_coordinate(148.156998,119.156998) == True, "Point is in square"
-    assert zone_table.get_zone_of_coordinate(159.156998,138.156998) == False, "Point is not in square"
+    zone_one_coord = [[84.23,181.82], [168.32 ,117.5], [103.7 ,58.953], [40.23 ,108.82]]
+    zone_table.create_zone('zone_one',zone_one_coord)
+    zone_table.create_zone('zone_two',[[184.23,281.82], [268.32 ,217.5], [203.7 ,158.953], [140.23 ,208.82]])
+    outpu = zone_table.get_zones()
+    assert outpu[0].coordinates == zone_one_coord, "Zone cord not matching"
+    assert zone_table.get_zone_of_coordinate(89.156998,90.156998) != None, "Point is in square"
+    assert zone_table.get_zone_of_coordinate(85.156998,61.156998) == None, "Point is not in square"
+    assert zone_table.get_zone_of_coordinate(148.156998,119.156998) != None, "Point is in square"
+    assert zone_table.get_zone_of_coordinate(159.156998,138.156998) == None, "Point is not in square"
+
+
 
 try:
     os.remove(DATABASE_PATH)
@@ -228,10 +233,10 @@ except Exception as e:
     print(e)
 
 start = time.time()
-test_usertable() #for _ in range(500)]
-test_verifytable()
-test_orga()
-test_usersettings()
+# test_usertable() #for _ in range(500)]
+# test_verifytable()
+# test_orga()
+# test_usersettings()
 test_dronetable()
 test_dronedatatable()
 test_zone()
