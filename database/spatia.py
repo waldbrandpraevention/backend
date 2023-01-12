@@ -12,7 +12,7 @@ def spatiapoint_to_long_lat(spatia_point:str)-> tuple[float, float]:
     return long, lat
 
 def spatiapoly_to_long_lat_arr(spatia_point:str)-> List[List[float]]:
-    #Polygon(1.2345 2.3456,1.2345 2.3456,1.2345 2.3456,1.2345 2.3456)
+    #Polygon((1.2345 2.3456,1.2345 2.3456,1.2345 2.3456,1.2345 2.3456))
     float_vals = spatia_point.split('(')[2]
     float_vals = float_vals.replace(')','')
     #1.2345 2.3456
