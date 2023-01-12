@@ -3,37 +3,40 @@ from enum import Enum
 import json
 import sqlite3
 from typing import List
-from api.dependencies.classes import DroneData
+from api.dependencies.classes import DroneEvent, EventType
 from database.database import database_connection, fetched_match_class
-from database.spatia import spatiapoint_to_long_lat
 
 
-CREATE_DRONE_DATA_TABLE = '''CREATE TABLE drone_data
+CREATE_DRONE_EVENT_TABLE = '''CREATE TABLE drone_event
 (
 drone_id       integer NOT NULL ,
 timestamp    timestamp NOT NULL ,
-picture_path   text NOT NULL ,
+event_type   integer NOT NULL,
+confidence   integer NOT NULL,
+picture_path   text,
 ai_predictions json ,
 csv_file_path  text ,
 PRIMARY KEY (drone_id, timestamp),
 FOREIGN KEY (drone_id) REFERENCES drones (id)
 );
 
-CREATE INDEX drone_data_FK_1 ON drone_data (drone_id);
-SELECT AddGeometryColumn('drone_data', 'coordinates', 4326, 'POINT', 'XY');'''
+CREATE INDEX drone_event_FK_1 ON drone_event (drone_id);
+SELECT AddGeometryColumn('drone_event', 'coordinates', 4326, 'POINT', 'XY');'''
 # zone_id        integer NOT NULL ,
 # FOREIGN KEY (zone_id) REFERENCES Zones (id),
 # CREATE INDEX drone_data_FK_1 ON drone_data (zone_id);
-CREATE_ENTRY = 'INSERT INTO drone_data (drone_id,timestamp,coordinates,picture_path,ai_predictions,csv_file_path) VALUES (? ,?,GeomFromText(?, 4326) ,? ,?,?);'
-GET_ENTRYS_BY_TIMESTAMP = 'SELECT drone_id,timestamp,picture_path,ai_predictions,csv_file_path, X(coordinates), Y(coordinates) FROM drone_data WHERE drone_id = ? AND timestamp > ? AND timestamp < ?;'
-GET_ENTRY ='SELECT * FROM drone_data WHERE drone_id = ?;'
+CREATE_ENTRY = 'INSERT INTO drone_event (drone_id,timestamp,coordinates,event_type,confidence,picture_path,ai_predictions,csv_file_path) VALUES (? ,?,MakePoint(?, ?, 4326)  ,? ,?,?,?,?);'
+GET_ENTRYS_BY_TIMESTAMP = 'SELECT drone_id,timestamp, X(coordinates), Y(coordinates),event_type,confidence,picture_path,ai_predictions,csv_file_path FROM drone_event WHERE drone_id = ? AND timestamp > ? AND timestamp < ?;'
+GET_ENTRY ='SELECT * FROM drone_event WHERE drone_id = ?;'
 
 
 
-def create_drone_zone_entry(drone_id:int,
+def create_drone_event_entry(drone_id:int,
                             timestamp:datetime.datetime,
                             longitude:float,
                             latitude:float,
+                            event_type:int,
+                            confidence:int,
                             picture_path:str|None,
                             ai_predictions:dict|None,
                             csv_file_path:str|None)-> bool:
@@ -54,8 +57,10 @@ def create_drone_zone_entry(drone_id:int,
     try:
         with database_connection() as conn:
             cursor = conn.cursor()
-            point_wkt = 'POINT({0} {1})'.format(longitude, latitude)
-            cursor.execute(CREATE_ENTRY,(drone_id,timestamp,point_wkt,picture_path,json.dumps(ai_predictions),csv_file_path))
+            #point_wkt = 'POINT({0} {1})'.format(longitude, latitude), for GeomFromText(?, 4326)
+            if ai_predictions:
+                ai_predictions = json.dumps(ai_predictions)
+            cursor.execute(CREATE_ENTRY,(drone_id,timestamp,longitude,latitude,event_type,confidence,picture_path,ai_predictions,csv_file_path))
             conn.commit()
             cursor.close()
             return True
@@ -63,7 +68,7 @@ def create_drone_zone_entry(drone_id:int,
         print(e)
     return False
 
-def get_drone_data_by_timestamp(drone_id:int,after:datetime.datetime=datetime.datetime.min,before:datetime.datetime=datetime.datetime.max) -> List[DroneData]:
+def get_drone_event_by_timestamp(drone_id:int,after:datetime.datetime=datetime.datetime.min,before:datetime.datetime=datetime.datetime.max) -> List[DroneEvent]:
     """fetches all entrys that are within the choosen timeframe.
     If only drone_id is set, every entry will be fetched.
 
@@ -90,7 +95,7 @@ def get_drone_data_by_timestamp(drone_id:int,after:datetime.datetime=datetime.da
     except sqlite3.IntegrityError as e:##TODO
         print(e)
 
-def get_latest_by_timestamp(drone_id:int) -> DroneData:
+def get_latest_by_timestamp(drone_id:int) -> DroneEvent:
     
     try:
         with database_connection() as conn:
@@ -108,7 +113,7 @@ def get_latest_by_timestamp(drone_id:int) -> DroneData:
         print(e)
 
 
-def get_obj_from_fetched(fetched_dronedata) -> DroneData| None:
+def get_obj_from_fetched(fetched_dronedata) -> DroneEvent| None:
     """generating DroneData objects with the fetched data.
 
     Args:
@@ -117,28 +122,35 @@ def get_obj_from_fetched(fetched_dronedata) -> DroneData| None:
     Returns:
         DroneData| None: the generated object.
     """
-    if fetched_match_class(DroneData,fetched_dronedata):
+    if fetched_match_class(DroneEvent,fetched_dronedata):
         try:
-            ai_predictions = json.loads(fetched_dronedata[3])
+            ai_predictions = json.loads(fetched_dronedata[7])
         except:
             print('json loads error')
             ai_predictions = None
 
         try:
-            longitude=float(fetched_dronedata[5])
-            latitude= float(fetched_dronedata[6])
+            longitude=float(fetched_dronedata[2])
+            latitude= float(fetched_dronedata[3])
         except Exception as e:
             print(e)
             longitude, latitude= None, None
 
-        drone_data_obj = DroneData(
+        try:
+            eventtype = EventType(fetched_dronedata[4])
+        except:
+            eventtype = None
+
+        drone_data_obj = DroneEvent(
             drone_id = fetched_dronedata[0],
             timestamp = fetched_dronedata[1],
             longitude = longitude,
             latitude = latitude,
-            picture_path = fetched_dronedata[2],
+            event_type=eventtype,
+            confidence=fetched_dronedata[5],
+            picture_path = fetched_dronedata[6],
             ai_predictions = ai_predictions,
-            csv_file_path = fetched_dronedata[4],
+            csv_file_path = fetched_dronedata[8]
         )
         return drone_data_obj
     return None

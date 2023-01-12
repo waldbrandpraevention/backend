@@ -1,4 +1,4 @@
-{
+{"first_draft":{
     "description": 
         {
         "name": "name of the aerial vehicle according to manufacturer",
@@ -18,71 +18,73 @@
         "sensors": 
             ["Qube 240 LiDAR", "Sony RX1 RII", "MicaSense RedEdge-P", "MicaSense Altum-PT"]
         }
-    }
-    {"description": 
+    },
+"current":{
+    "description": 
+    {
+    "meta": 
+        {
+            "name": "name of the aerial vehicle according to manufacturer",
+            "type": "type of the aerial vehicle",
+            "flight_range": "flight range of the aerial vehicle left in [km]. Maximum flight range of the vehicle is 100km.",
+            "flight_time": "flight time of the aerial vehicle left in [minutes]. Maximum flight time of the vehicle is 90min."
+        },
+    "events": 
+        [
+        {
+            "object": "object detected by computer vision system. Will be an item of [fire, smoke]", 
+            "timestamp": "timestamp of event in milliseconds since 1970 for UTC", 
+            "lat": "latitude of the coordinate of the event for WGS85, EPSG 4326 reference system", 
+            "lon": "longitude of the coordinate of the event for WGS85, EPSG 4326 reference system", 
+            "confidence": "confidence of the computer vision system inference. Value between 0 and 100.", 
+            "sensor_used": "sensor used for inference. Item of [Qube 240 LiDAR,Sony RX1 RII,MicaSense RedEdge-P,MicaSense Altum-PT]"
+        }
+        ]
+    }, 
+    "config": 
         {
         "meta": 
             {
-                "name": "name of the aerial vehicle according to manufacturer",
-                "type": "type of the aerial vehicle",
-                "flight_range": "flight range of the aerial vehicle left in [km]. Maximum flight range of the vehicle is 100km.",
-                "flight_time": "flight time of the aerial vehicle left in [minutes]. Maximum flight time of the vehicle is 90min."
-            },
+                "name": "Trinity F90+", 
+                "type": "Unmanned Aerial Vehicle", 
+                "flight_range": 43, 
+                "flight_time": 41
+            }, 
         "events": 
             [
-            {
-                "object": "object detected by computer vision system. Will be an item of [fire, smoke]", 
-                "timestamp": "timestamp of event in milliseconds since 1970 for UTC", 
-                "lat": "latitude of the coordinate of the event for WGS85, EPSG 4326 reference system", 
-                "lon": "longitude of the coordinate of the event for WGS85, EPSG 4326 reference system", 
-                "confidence": "confidence of the computer vision system inference. Value between 0 and 100.", 
-                "sensor_used": "sensor used for inference. Item of [Qube 240 LiDAR,Sony RX1 RII,MicaSense RedEdge-P,MicaSense Altum-PT]"
-            }
-            ]
-        }, 
-        "config": 
-            {
-            "meta": 
                 {
-                    "name": "Trinity F90+", 
-                    "type": "Unmanned Aerial Vehicle", 
-                    "flight_range": 43, 
-                    "flight_time": 41
+                    "object": "smoke", 
+                    "timestamp": 1673342055528, 
+                    "lat": 52.120131, 
+                    "lon": 12.843895, 
+                    "confidence": 86, 
+                    "sensor_used": "Sony RX1 RII"
                 }, 
-            "events": 
-                [
-                    {
-                        "object": "smoke", 
-                        "timestamp": 1673342055528, 
-                        "lat": 52.120131, 
-                        "lon": 12.843895, 
-                        "confidence": 86, 
-                        "sensor_used": "Sony RX1 RII"
-                    }, 
-                    {
-                        "object": "smoke", 
-                        "timestamp": 1673342550310, 
-                        "lat": 52.103374, 
-                        "lon": 12.850193, 
-                        "confidence": 91, 
-                        "sensor_used": "Sony RX1 RII"
-                }, 
-                    {
-                        "object": "fire", 
-                        "timestamp": 1673342571600, 
-                        "lat": 52.095377, 
-                        "lon": 12.900364, 
-                        "confidence": 83, 
-                        "sensor_used": "Sony RX1 RII"
-                }, 
-                    {
-                        "object": "smoke", 
-                        "timestamp": 1673342571600, 
-                        "lat": 52.095377, 
-                        "lon": 12.900364, 
-                        "confidence": 89, 
-                        "sensor_used": "Sony RX1 RII"
-                    }
-                ]
-            }
+                {
+                    "object": "smoke", 
+                    "timestamp": 1673342550310, 
+                    "lat": 52.103374, 
+                    "lon": 12.850193, 
+                    "confidence": 91, 
+                    "sensor_used": "Sony RX1 RII"
+            }, 
+                {
+                    "object": "fire", 
+                    "timestamp": 1673342571600, 
+                    "lat": 52.095377, 
+                    "lon": 12.900364, 
+                    "confidence": 83, 
+                    "sensor_used": "Sony RX1 RII"
+            }, 
+                {
+                    "object": "smoke", 
+                    "timestamp": 1673342571600, 
+                    "lat": 52.095377, 
+                    "lon": 12.900364, 
+                    "confidence": 89, 
+                    "sensor_used": "Sony RX1 RII"
+                }
+            ]
+        }
     }
+}
