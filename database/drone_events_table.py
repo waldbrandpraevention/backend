@@ -29,6 +29,9 @@ CREATE_ENTRY = 'INSERT INTO drone_event (drone_id,timestamp,coordinates,event_ty
 GET_ENTRYS_BY_TIMESTAMP = 'SELECT drone_id,timestamp, X(coordinates), Y(coordinates),event_type,confidence,picture_path,ai_predictions,csv_file_path FROM drone_event WHERE drone_id = ? AND timestamp > ? AND timestamp < ?;'
 GET_ENTRY ='SELECT * FROM drone_event WHERE drone_id = ?;'
 
+GET_IN_ZONE = '''SELECT drone_id,timestamp, X(coordinates), Y(coordinates),event_type,confidence,picture_path,ai_predictions,csv_file_path FROM drone_event
+                WHERE ST_Intersects(drone_event.coordinates, GeomFromText(?, 4326));'''
+
 
 
 def create_drone_event_entry(drone_id:int,
@@ -84,6 +87,33 @@ def get_drone_event_by_timestamp(drone_id:int,after:datetime.datetime=datetime.d
         with database_connection() as conn:
             cursor = conn.cursor()
             cursor.execute(GET_ENTRYS_BY_TIMESTAMP,(drone_id,after,before))
+            fetched_data = cursor.fetchall()
+            cursor.close()
+            output = []
+            for drone_data in fetched_data:
+                dronedata_obj = get_obj_from_fetched(drone_data)
+                if dronedata_obj:
+                    output.append(dronedata_obj)
+            return output
+    except sqlite3.IntegrityError as e:##TODO
+        print(e)
+
+def get_drone_events_in_zone(polygon:str) -> List[DroneEvent]:
+    """fetches all entrys that are within the choosen timeframe.
+    If only drone_id is set, every entry will be fetched.
+
+    Args:
+        drone_id (int): _description_
+        after (datetime.datetime): fetches everything after this date (not included)
+        before (datetime.datetime): fetches everything before this date (not included)
+
+    Returns:
+        List[DroneData]: List with the fetched data.
+    """
+    try:
+        with database_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(GET_IN_ZONE,(polygon,))
             fetched_data = cursor.fetchall()
             cursor.close()
             output = []

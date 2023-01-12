@@ -48,11 +48,6 @@ class FireRisk(Enum):
     HEIGH = 4
     VERY_HEIGH = 5
 
-class Zone(BaseModel):
-    name: str | None = None
-    fire_risk: FireRisk | None = None
-    ai: FireRisk | None = None
-
 class Allert(BaseModel):
     content: str | None = None
     date: datetime | None = None
@@ -99,3 +94,11 @@ class DroneEvent(BaseModel):
     picture_path :str| None = None
     ai_predictions :dict| None = None
     csv_file_path :str| None = None
+
+class Zone(BaseModel):
+    id: int | None = None
+    name: str | None = None
+    events: List[DroneEvent] | None = None
+    fire_risk: FireRisk | None = None
+    ai: FireRisk | None = None
+    coordinates: List[List[float]] | None = None
