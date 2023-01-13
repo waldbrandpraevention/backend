@@ -5,6 +5,7 @@ import sqlite3
 
 from api.dependencies.classes import Drone
 from database.database import database_connection, fetched_match_class
+import database.database as db
 
 # "name": "name of the aerial vehicle according to manufacturer",
 # "type": "type of the aerial vehicle",
@@ -43,27 +44,20 @@ def create_drone(name:str,droneowner_id:int|None,type:str|None,flight_range:int|
         flight_time (int | None): maximum flight time of the aerial vehicle in [minutes]
 
     Returns:
-        Drone: _description_
+        Drone: obj of the drone.
     """
-    try:
-        with database_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute(CREATE_DRONE,(name,droneowner_id,type,flight_range,cc_range,flight_time))
-            inserted_id = cursor.lastrowid
-            conn.commit()
-            cursor.close()
-            drone_obj = Drone(
-            id = inserted_id,
-            name=name,
-            droneowner_id= droneowner_id,
-            type=type,
-            flight_range=flight_range,
-            cc_range=cc_range,
-            flight_time=flight_time
+    inserted_id = db.insert(CREATE_DRONE,(name,droneowner_id,type,flight_range,cc_range,flight_time))
+    if inserted_id:
+        drone_obj = Drone(
+        id = inserted_id,
+        name=name,
+        droneowner_id= droneowner_id,
+        type=type,
+        flight_range=flight_range,
+        cc_range=cc_range,
+        flight_time=flight_time
         )
         return drone_obj
-    except sqlite3.IntegrityError as e:##TODO
-        print(e)
     return None
 
 def get_drone(name:str)-> Drone | None:
@@ -75,17 +69,8 @@ def get_drone(name:str)-> Drone | None:
     Returns:
         Drone | None: the drone obj or None if not found.
     """
-    try:
-        with database_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute(GET_DRONE,(name,))
-            fetched_drone = cursor.fetchone()
-            cursor.close()
-            if fetched_drone:
-                drone_obj = get_obj_from_fetched(fetched_drone)
-                return drone_obj
-    except sqlite3.IntegrityError as e:##TODO
-        print(e)
+    fetched_drone = db.fetch_one(GET_DRONE,(name,))
+    return get_obj_from_fetched(fetched_drone)
 
 def get_drones() -> List[Drone]:
     """fetches all stored drones.
@@ -93,21 +78,13 @@ def get_drones() -> List[Drone]:
     Returns:
         List[Drone]: list of all stored drones.
     """
-    try:
-        with database_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute('SELECT * FROM drones')
-            fetched_drones = cursor.fetchall()
-            cursor.close()
-            output = []
-            for drone in fetched_drones:
-                drone_obj = get_obj_from_fetched(drone)
-                if drone_obj:
-                    output.append(drone_obj)
-            return output
-    except sqlite3.IntegrityError as e:
-        print(e)
-    return None
+    fetched_drones = db.fetch_all('SELECT * FROM drones')
+    output = []
+    for drone in fetched_drones:
+        drone_obj = get_obj_from_fetched(drone)
+        if drone_obj:
+            output.append(drone_obj)
+    return output
 
 def get_obj_from_fetched(fetched_drone):
     """generate Drone obj from fetched element.
@@ -118,14 +95,19 @@ def get_obj_from_fetched(fetched_drone):
     Returns:
         Drone: drone object.
     """
-       
-    drone_obj = Drone(
-        id = fetched_drone[0],
-        name=fetched_drone[1],
-        droneowner_id= fetched_drone[2],
-        type=fetched_drone[3],
-        flight_range=fetched_drone[4],
-        cc_range=fetched_drone[5],
-        flight_time=fetched_drone[6]
-    )
-    return drone_obj
+    if fetched_match_class(Drone,fetched_drone,2):
+        try:
+            drone_obj = Drone(
+                id = fetched_drone[0],
+                name=fetched_drone[1],
+                droneowner_id= fetched_drone[2],
+                type=fetched_drone[3],
+                flight_range=fetched_drone[4],
+                cc_range=fetched_drone[5],
+                flight_time=fetched_drone[6]
+            )
+            return drone_obj
+        except Exception as e:
+            print(e)
+
+    return None
