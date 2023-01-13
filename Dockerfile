@@ -1,9 +1,9 @@
 # sqlite + spatialite + FastAPI
-FROM debian:bullseye AS spatialite_builder
-
-RUN apt update && apt install -y libsqlite3-mod-spatialite && apt clean
-
 FROM python:3.10-alpine
+
+RUN apk add --no-cache sqlite
+
+RUN apk add --no-cache libspatialite
 
 WORKDIR /api
 
