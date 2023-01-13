@@ -48,11 +48,6 @@ class FireRisk(Enum):
     HEIGH = 4
     VERY_HEIGH = 5
 
-class Zone(BaseModel):
-    name: str | None = None
-    fire_risk: FireRisk | None = None
-    ai: FireRisk | None = None
-
 class Allert(BaseModel):
     content: str | None = None
     date: datetime | None = None
@@ -63,7 +58,6 @@ class Drone(BaseModel):
         flight_range: maximum flight range of the aerial vehicle in [km],
         cc_range: maximum command and control range of the aerial vehicle in [km],
         flight_time: maximum flight time of the aerial vehicle in [minutes],
-        sensors: list of attached sensors
         last_update: timestamp of last communication with drone.
         ?zone: zone the drone is currently in."""
     id: int | None = None
@@ -72,16 +66,37 @@ class Drone(BaseModel):
     flight_range: float | None = None
     cc_range: float | None = None
     flight_time: float | None = None
-    sensors: List[str] | None = None
     last_update: datetime | None = None
     zone: str | None = None
     droneowner_id: int | None = None    
 
-class DroneData(BaseModel):
+class DroneUpdate(BaseModel):
     drone_id :int | None = None
     timestamp :datetime | None = None
     longitude :float | None = None
     latitude :float | None = None
+    flight_range: float | None = None
+    flight_time: float | None = None
+
+class EventType(Enum):
+    SMOKE = 1
+    FIRE = 2
+
+class DroneEvent(BaseModel):
+    drone_id :int | None = None
+    timestamp :datetime | None = None
+    longitude :float | None = None
+    latitude :float | None = None
+    event_type: EventType | None = None
+    confidence: int | None = None
     picture_path :str| None = None
     ai_predictions :dict| None = None
     csv_file_path :str| None = None
+
+class Zone(BaseModel):
+    id: int | None = None
+    name: str | None = None
+    events: List[DroneEvent] | None = None
+    fire_risk: FireRisk | None = None
+    ai: FireRisk | None = None
+    coordinates: List[List[float]] | None = None

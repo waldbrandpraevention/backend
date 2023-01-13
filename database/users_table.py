@@ -3,7 +3,8 @@ import sqlite3
 
 from api.dependencies.classes import User, UserWithSensitiveInfo, Permission
 from database.database import database_connection, fetched_match_class
-from database import organizations
+import database.database as db
+from database import organizations_table as organizations
 
 CREATE_USER_TABLE = """ CREATE TABLE IF NOT EXISTS users (
                         id INTEGER,
@@ -32,7 +33,7 @@ class UsrAttributes(str,Enum):
     EMAIL_VERIFIED = 'email_verified'
     ORGA_ID = 'organization_id'
 
-UPDATE_ATTRIBUTE = 'UPDATE users SET {} = ? WHERE email = ?;'
+UPDATE_ATTRIBUTE = 'UPDATE users SET {} = ? WHERE id = ?;'
 
 INSERT_USER = 'INSERT INTO users (email,first_name,last_name,organization_id,password,permission,disabled,email_verified) VALUES (? ,? ,?,?,?,?,?,?);'
 GET_USER_WITH_ORGA = '''SELECT users.id,email,first_name,last_name,password,permission,disabled,email_verified,orga.id,orga.name,orga.abbreviation
@@ -41,7 +42,7 @@ GET_USER_WITH_ORGA = '''SELECT users.id,email,first_name,last_name,password,perm
                         WHERE EMAIL=?;'''
 CHECK_CREDS = "SELECT password FROM users WHERE EMAIL=? AND PASSWORD = ?;"
 
-def create_user(user:UserWithSensitiveInfo):
+def create_user(user:UserWithSensitiveInfo) -> bool:
     """Create an entry for an user.
 
     Args:
@@ -49,16 +50,11 @@ def create_user(user:UserWithSensitiveInfo):
         email (str): email adress of the user.
         pass_hash (str): hash of the entered password.
     """
-    try:
-        with database_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute(INSERT_USER,(user.email, user.first_name,user.last_name,user.organization.id,user.hashed_password,user.permission.value,user.disabled,user.email_verified))
-            inserted_id = cursor.lastrowid
-            conn.commit()
-            cursor.close()
-            user.id = inserted_id
-    except sqlite3.IntegrityError as e:##TODO create Email exists exception and raise it here
-        print(e)
+    inserted_id = db.insert(INSERT_USER,(user.email, user.first_name,user.last_name,user.organization.id,user.hashed_password,user.permission.value,user.disabled,user.email_verified))
+    if inserted_id:
+        user.id = inserted_id
+        return True
+    return False
 
 def get_user(email) -> UserWithSensitiveInfo | None:
     """Get the user object by email.
@@ -69,80 +65,70 @@ def get_user(email) -> UserWithSensitiveInfo | None:
     Returns:
         user: User object or None.
     """
+    fetched_user = db.fetch_one(GET_USER_WITH_ORGA,(email,))
     try:
-        with database_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute(GET_USER_WITH_ORGA,(email,))
-            fetched_user = cursor.fetchone()
-            if not fetched_user:  # An empty result evaluates to False.
-                cursor.close()
-                return None
-            else:
-                try:
-                    if not fetched_match_class(UserWithSensitiveInfo,fetched_user,2):
-                        raise Exception('Fetched data noch matching format.')
-
-                    try:
-                        permission = Permission(fetched_user[5])
-                    except:
-                        permission = None
-                    
-                    try:
-                        orga = organizations.get_obj_from_fetched(fetched_user[-3:])
-                    except:
-                        orga = None
-                    
-                    user = UserWithSensitiveInfo(
-                                            id=fetched_user[0],
-                                            email=fetched_user[1],
-                                            first_name=fetched_user[2],
-                                            last_name=fetched_user[3],
-                                            hashed_password=fetched_user[4],
-                                            permission=permission,
-                                            disabled=fetched_user[6],
-                                            email_verified=fetched_user[7],
-                                            organization=orga)
-                except Exception as e:
-                    print(e)
-                    user = None
-                cursor.close()
-                return user
+        user = get_obj_from_fetched(fetched_user)
     except Exception as e:
         print(e)
-    
+        user = None
+    return user
 
-def update_user(user:User | UserWithSensitiveInfo, attribute:UsrAttributes, new_value):
-    """Update the email address of a user.
+def update_user(user_id:int, attribute:UsrAttributes, new_value):
+    """update an attribute of an user.
 
     Args:
-        new_email (str): new email adress of the user.
+        user_id (int): id of the user.
+        attribute (UsrAttributes): attribute that should be updated.
+        new_value (_type_): the new value of the choosen attribute.
     """
-    try:
-        with database_connection() as conn:
-            cursor = conn.cursor()
-            update_str = UPDATE_ATTRIBUTE.format(attribute)
-            cursor.execute(update_str,(new_value, user.email))
-            conn.commit()
-            cursor.close()
-    except Exception as e:
-        print(e)
+    update_str = UPDATE_ATTRIBUTE.format(attribute)
+    return db.update(update_str,(new_value, user_id))
 
 
-def check_creds(user:UserWithSensitiveInfo) -> bool:
+def check_creds(mail:str,hashed_pass:str) -> bool:
     """user to check the creds for.
 
     Args:
-        user (UserWithSensitiveInfo): User object that should be checked.
+        mail (str): mail of the user.
+        hashed_pass (str): hashed pw of the
 
     Returns:
         bool: True if creds match, False if not.
     """
-    with database_connection() as conn:
-        cursor = conn.cursor()
-        cursor.execute(CHECK_CREDS, (user.email, user.hashed_password))
-        if not cursor.fetchone():  # An empty result evaluates to False.
-            cursor.close()
-            return False
-        else:
-            cursor.close()
-            return True
+    return db.check_fetch(CHECK_CREDS, (mail, hashed_pass))
+
+
+def get_obj_from_fetched(fetched_user) -> UserWithSensitiveInfo | None:
+    """generate User obj from fetched element.
+
+    Args:
+        fetched_user (list): fetched attributes from User.
+
+    Returns:
+        UserWithSensitiveInfo | None: User object or None if obj cant be generated.
+    """
+
+    if not fetched_match_class(UserWithSensitiveInfo,fetched_user, add=2):
+        raise Exception('Fetched data noch matching format.')
+
+    try:
+        permission = Permission(fetched_user[5])
+    except:
+        permission = None
+    try:
+        orga = organizations.get_obj_from_fetched(fetched_user[-3:])
+    except:
+        orga = None
+    
+    user = UserWithSensitiveInfo(
+                            id=fetched_user[0],
+                            email=fetched_user[1],
+                            first_name=fetched_user[2],
+                            last_name=fetched_user[3],
+                            hashed_password=fetched_user[4],
+                            permission=permission,
+                            disabled=fetched_user[6],
+                            email_verified=fetched_user[7],
+                            organization=orga)
+    
+    return user

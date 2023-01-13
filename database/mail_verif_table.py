@@ -1,6 +1,7 @@
 import sqlite3
 from api.dependencies.classes import User
 from database.database import database_connection
+import database.database as db
 
 CREATE_MAIL_VERIFY_TABLE = """ CREATE TABLE IF NOT EXISTS mail_verification
                                 (
@@ -24,16 +25,9 @@ def store_token(mail:str, token:str):
         token (str): token sent to the provided mail.
     """
     try:
-        with database_connection() as conn:
-            cursor = conn.cursor()
-            try:
-                cursor.execute(INSERT_TOKEN,(mail, token))
-            except sqlite3.IntegrityError:
-                cursor.execute(UPDATE_TOKEN,(token, mail))
-            conn.commit()
-            cursor.close()
-    except sqlite3.IntegrityError:#TODO check token
-        print('there is already a token.')
+        db.insert(INSERT_TOKEN,(mail, token))
+    except sqlite3.IntegrityError:
+        db.update(UPDATE_TOKEN,(token,mail))
 
 
 def check_token(token:str) -> bool:
@@ -45,15 +39,7 @@ def check_token(token:str) -> bool:
     Returns:
         bool: Wether the token exists or not.
     """
-    with database_connection() as conn:
-        cursor = conn.cursor()
-        cursor.execute(CHECK_TOKEN, (token,))
-        if not cursor.fetchone():  # An empty result evaluates to False.
-            cursor.close()
-            return False
-        else:
-            cursor.close()
-            return True
+    return db.check_fetch(CHECK_TOKEN, (token,))
 
 def get_mail_by_token(token:str) -> str | None:
     """get the mail associated with this token.
@@ -64,16 +50,10 @@ def get_mail_by_token(token:str) -> str | None:
     Returns:
         str: the email or None if the token wasnt found in the database.
     """
-    with database_connection() as conn:
-        cursor = conn.cursor()
-        cursor.execute(GET_MAIL_BY_TOKEN,(token,))
-        fetched_mail = cursor.fetchone()
-        cursor.close()
-        if not fetched_mail:  # An empty result evaluates to False.
-            return None
-        else:
-            mail = fetched_mail[0]
-            return mail
+    fetched_mail = db.fetch_one(GET_MAIL_BY_TOKEN,(token,))
+    if fetched_mail:
+        return fetched_mail[0]
+    return None
 
 
 def get_token_by_mail(mail:str) -> str | None:
@@ -85,14 +65,8 @@ def get_token_by_mail(mail:str) -> str | None:
     Returns:
         str: the token or None if the mail wasnt found in the database.
     """
-    with database_connection() as conn:
-        cursor = conn.cursor()
-        cursor.execute(GET_TOKEN_BY_MAIL,(mail,))
-        fetched_token = cursor.fetchone()
-        cursor.close()
-        if not fetched_token:  # An empty result evaluates to False.
-            return None
-        else:
-            token = fetched_token[0]
-            return token
+    fetched_token = db.fetch_one(GET_TOKEN_BY_MAIL,(mail,))
+    if fetched_token:
+        return fetched_token[0]
+    return None
 
