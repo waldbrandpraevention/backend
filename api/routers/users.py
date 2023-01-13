@@ -8,7 +8,7 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from pydantic import BaseModel
 from database import users_table
-from database import mail_verif_table, organizations
+from database import mail_verif_table, organizations_table
 from validation import *
 from datetime import datetime, timedelta
 
@@ -106,7 +106,7 @@ async def register(email: str = Form(), password: str = Form(), first_name: str 
         )
     
     hashed_pw = get_password_hash(password)
-    organization_obj = organizations.get_orga(organization) 
+    organization_obj = organizations_table.get_orga(organization) 
     user = UserWithSensitiveInfo(   email=email,
                                     first_name=first_name,
                                     last_name=last_name,

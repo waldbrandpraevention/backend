@@ -7,9 +7,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from api.dependencies.authentication import get_password_hash
 from api.dependencies.classes import Organization, UserWithSensitiveInfo
 from api.routers import email, users, zones, drones
-from database import users_table, organizations
+from database import users_table, organizations_table
 from database.database import create_table
-from database.organizations import CREATE_ORGANISATIONS_TABLE
+from database.organizations_table import CREATE_ORGANISATIONS_TABLE
 from database.users_table import CREATE_USER_TABLE
 
 app = FastAPI()
@@ -32,7 +32,7 @@ def create_default_user():
     if os.getenv("ADMIN_MAIL") is not None \
             and os.getenv("ADMIN_PASSWORD") is not None \
             and os.getenv("ADMIN_ORGANIZATION") is not None:
-        organization = organizations.create_orga(organame=os.getenv("ADMIN_ORGANIZATION"), orga_abb=os.getenv("ADMIN_ORGANIZATION"))
+        organization = organizations_table.create_orga(organame=os.getenv("ADMIN_ORGANIZATION"), orga_abb=os.getenv("ADMIN_ORGANIZATION"))
         hashed_pw = get_password_hash(os.getenv("ADMIN_PASSWORD"))
         user = UserWithSensitiveInfo(email=os.getenv("ADMIN_MAIL"),
                                      first_name="Admin",
