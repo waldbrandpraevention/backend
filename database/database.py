@@ -130,7 +130,7 @@ def fetched_match_class(klasse:BaseModel, fetched_object, subtract:int=0,add:int
     """
     try:
         if fetched_object:
-            if len(klasse.__fields__) - subtract == len(fetched_object):
+            if len(klasse.__fields__) - subtract + add == len(fetched_object):
                 return True
     except Exception as e:
         print(e)

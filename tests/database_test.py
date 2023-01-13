@@ -50,7 +50,10 @@ def test_usertable():
     fetched_user = get_user(user_one.email)
     assert fetched_user.first_name == user_one.first_name, "Couldnt create or get user"
     for key, value in user_one.__dict__.items():
-        assert fetched_user.__dict__[key] == value, 'Objects not matching'
+        if key == 'organization':
+            assert fetched_user.__dict__[key].name == value.name, 'Objects not matching'
+        else:
+            assert fetched_user.__dict__[key] == value, 'Objects not matching'
 
     update_user(user_one.id,UsrAttributes.FIRST_NAME,'Peter')
     fetched_user = get_user(user_one.email)
@@ -66,7 +69,10 @@ def test_usertable():
     fetched_user = get_user(mail)
     assert fetched_user.first_name == user_two.first_name, "Couldnt create user with first email"
     for key, value in user_two.__dict__.items():
-        assert fetched_user.__dict__[key] == value, 'Objects not matching'
+        if key == 'organization':
+            assert fetched_user.__dict__[key].name == value.name, 'Objects not matching'
+        else:
+            assert fetched_user.__dict__[key] == value, 'Objects not matching'
 
 
 def test_verifytable():
