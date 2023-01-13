@@ -3,6 +3,7 @@
 import asyncio
 import datetime
 import os
+import sqlite3
 import sys
 sys.path.append('../backend')
 from api.dependencies.drones import get_all_drones
@@ -48,11 +49,11 @@ def test_usertable():
     fetched_user = get_user(user_one.email)
     assert fetched_user.first_name == user_one.first_name, "Couldnt create or get user"
 
-    update_user(user_one,UsrAttributes.FIRST_NAME,'Peter')
+    update_user(user_one.id,UsrAttributes.FIRST_NAME,'Peter')
     fetched_user = get_user(user_one.email)
     assert fetched_user.first_name == 'Peter', "Couldnt change username"
 
-    update_user(user_one,UsrAttributes.EMAIL,mail3)
+    update_user(user_one.id,UsrAttributes.EMAIL,mail3)
     fetched_user = get_user(user_one.email)
     assert fetched_user == None, "Couldnt change email"
     fetched_user = get_user(mail3)
@@ -65,12 +66,14 @@ def test_usertable():
 
 def test_verifytable():
     create_table(CREATE_MAIL_VERIFY_TABLE)
-    token = 'ichbineintoken:)'
-    store_token(mail,token)
+    token = 'ichbineintoken'
     store_token(mail,token)
     assert check_token(token) == True, "Couldnt store token"
     assert get_mail_by_token(token) == mail, "Mail doesnt match the token"
     assert get_token_by_mail(mail) == token, "Couldnt store token"
+    token = 'ichbineintoken:)'
+    store_token(mail,token)
+    assert get_token_by_mail(mail) == token, "Couldnt update token"
 
 def test_orga():
     create_table(CREATE_ORGANISATIONS_TABLE)
@@ -129,8 +132,11 @@ def test_dronetable():
     drone_one = drones_table.create_drone(testdrone.name,testdrone.droneowner_id,testdrone.type,testdrone.flight_range,testdrone.cc_range,testdrone.flight_time)
     for key, value in testdrone.__dict__.items():
         assert drone_one.__dict__[key] == value, 'Objects not matching'
-    should_be_none = drones_table.create_drone(testdrone.name,None,None,None,None,None)
-    assert should_be_none== None, 'Unique Name failed.'
+    try:
+        drones_table.create_drone(testdrone.name,None,None,None,None,None)
+        print('IntegrityError should be thrown')
+    except sqlite3.IntegrityError:
+        pass
 
     drone_two = drones_table.create_drone(testdrtwo.name,testdrtwo.droneowner_id,testdrtwo.type,testdrtwo.flight_range,testdrtwo.cc_range,testdrtwo.flight_time)
     for key, value in testdrtwo.__dict__.items():
@@ -175,7 +181,7 @@ def test_dronedatatable():
         flight_time=16.4
     )
 
-    drone_zone_data_table.create_drone_zone_entry(
+    drone_zone_data_table.create_drone_update(
     drone_id=testdrone.drone_id,
     timestamp=testdrone.timestamp,
     longitude=testdrone.longitude,
@@ -183,7 +189,7 @@ def test_dronedatatable():
     flight_range=testdrone.flight_range,
     flight_time=testdrone.flight_time)
 
-    drone_zone_data_table.create_drone_zone_entry(
+    drone_zone_data_table.create_drone_update(
     drone_id=testdatatwo.drone_id,
     timestamp=testdatatwo.timestamp,
     longitude=testdatatwo.longitude,
