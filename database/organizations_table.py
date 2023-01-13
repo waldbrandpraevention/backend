@@ -1,8 +1,10 @@
 from enum import Enum
 import sqlite3
+from typing import List
 
 from api.dependencies.classes import Organization, User, UserWithSensitiveInfo, Permission
 from database.database import database_connection, fetched_match_class
+import database.database as db
 
 CREATE_ORGANISATIONS_TABLE = """ CREATE TABLE IF NOT EXISTS organizations
                         (
@@ -31,15 +33,8 @@ def update_orga(orga: Organization, attribute:OrgAttributes, new_value):
     Args:
         new_email (str): new email adress of the user.
     """
-    try:
-        with database_connection() as conn:
-            cursor = conn.cursor()
-            update_str = UPDATE_ATTRIBUTE.format(attribute)
-            cursor.execute(update_str,(new_value, orga.name))
-            conn.commit()
-            cursor.close()
-    except Exception as e:
-        print(e)
+    update_str = UPDATE_ATTRIBUTE.format(attribute)
+    db.update(update_str,(new_value, orga.name))
 
 
 def create_orga(organame:str, orga_abb:str):
@@ -49,14 +44,7 @@ def create_orga(organame:str, orga_abb:str):
         organame (str): name of the organization.
         orgaabb (str): abbreviation of the organization.
     """
-    try:
-        with database_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute(INSERT_ORGA,(organame,orga_abb))
-            conn.commit()
-            cursor.close()
-    except sqlite3.IntegrityError as e:
-        print(e)
+    db.insert(INSERT_ORGA,(organame,orga_abb))
 
 def get_orga(organame:str) -> Organization | None:
     """get the orga object with this name.
@@ -67,46 +55,23 @@ def get_orga(organame:str) -> Organization | None:
     Returns:
         orga: Organization or None.
     """
-    try:
-        with database_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute(GET_ORGA,(organame,))
-            fetched_orga = cursor.fetchone()
-            cursor.close()
-            if not fetched_orga:  # An empty result evaluates to False.
-                return None
-            else:
-                try:
-                    orga =  get_obj_from_fetched(fetched_orga)
-                except:
-                    orga = None
-                
-                return orga
-    except Exception as e:
-        print(e)
+    fetched_orga = db.fetch_one(GET_ORGA,(organame,))
+    return get_obj_from_fetched(fetched_orga)
 
-def get_all_orga():
+def get_all_orga()-> List[Organization]:
     """Create an entry for an organization.
 
-    Args:
-        organame (str): name of the organization.
-        orgaabb (str): abbreviation of the organization.
+    Returns:
+        List[Organization]: list of all stored organizations.
     """
-    try:
-        with database_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute('SELECT * FROM organizations')
-            fetched_orgas = cursor.fetchall()
-            cursor.close()
-            output = []
-            for orga in fetched_orgas:
-                orga_obj = get_obj_from_fetched(orga)
-                if orga_obj:
-                    output.append(orga_obj)
-            return output
-    except sqlite3.IntegrityError as e:
-        print(e)
-    return None
+
+    fetched_orgas = db.fetch_all('SELECT * FROM organizations')
+    output = []
+    for orga in fetched_orgas:
+        orga_obj = get_obj_from_fetched(orga)
+        if orga_obj:
+            output.append(orga_obj)
+    return output
 
 def get_obj_from_fetched(fetched_orga):
     """generate Organization obj from fetched element.

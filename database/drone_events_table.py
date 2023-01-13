@@ -5,7 +5,7 @@ import sqlite3
 from typing import List
 from api.dependencies.classes import DroneEvent, EventType
 from database.database import database_connection, fetched_match_class
-
+import database.database as db
 
 CREATE_DRONE_EVENT_TABLE = '''CREATE TABLE drone_event
 (
@@ -22,9 +22,7 @@ FOREIGN KEY (drone_id) REFERENCES drones (id)
 
 CREATE INDEX drone_event_FK_1 ON drone_event (drone_id);
 SELECT AddGeometryColumn('drone_event', 'coordinates', 4326, 'POINT', 'XY');'''
-# zone_id        integer NOT NULL ,
-# FOREIGN KEY (zone_id) REFERENCES Zones (id),
-# CREATE INDEX drone_data_FK_1 ON drone_data (zone_id);
+
 CREATE_ENTRY = 'INSERT INTO drone_event (drone_id,timestamp,coordinates,event_type,confidence,picture_path,ai_predictions,csv_file_path) VALUES (? ,?,MakePoint(?, ?, 4326)  ,? ,?,?,?,?);'
 GET_ENTRYS_BY_TIMESTAMP = 'SELECT drone_id,timestamp, X(coordinates), Y(coordinates),event_type,confidence,picture_path,ai_predictions,csv_file_path FROM drone_event WHERE drone_id = ? AND timestamp > ? AND timestamp < ?;'
 GET_ENTRY ='SELECT * FROM drone_event WHERE drone_id = ?;'
@@ -46,29 +44,25 @@ def create_drone_event_entry(drone_id:int,
     """store the data sent by the drone.
 
     Args:
-        drone_id (int): _description_
-        timestamp (datetime.datetime): _description_
-        longitude (float): _description_
-        latitude (float): _description_
-        picture_path (str | None): _description_
-        ai_predictions (dict | None): _description_
-        csv_file_path (str | None): _description_
+        drone_id (int): id of the drone.
+        timestamp (datetime.datetime): datime timestamp of the event.
+        longitude (float): longitute of the event's location.
+        latitude (float): latitude of the event's location.
+        picture_path (str | None): path to the folder containing the events pictures.
+        ai_predictions (dict | None): dict with predictions of the ai.
+        csv_file_path (str | None): path to the folder containing the events csv files.
 
     Returns:
         bool: True for success, False if something went wrong.
     """
-    try:
-        with database_connection() as conn:
-            cursor = conn.cursor()
-            #point_wkt = 'POINT({0} {1})'.format(longitude, latitude), for GeomFromText(?, 4326)
-            if ai_predictions:
-                ai_predictions = json.dumps(ai_predictions)
-            cursor.execute(CREATE_ENTRY,(drone_id,timestamp,longitude,latitude,event_type,confidence,picture_path,ai_predictions,csv_file_path))
-            conn.commit()
-            cursor.close()
-            return True
-    except sqlite3.IntegrityError as e:##TODO
-        print(e)
+    if ai_predictions:
+        dumped_ai_predictions = json.dumps(ai_predictions)
+    else:
+        dumped_ai_predictions = None
+
+    inserted_id = db.insert(CREATE_ENTRY,(drone_id,timestamp,longitude,latitude,event_type,confidence,picture_path,dumped_ai_predictions,csv_file_path))
+    if inserted_id:
+        return True
     return False
 
 def get_drone_event_by_timestamp(drone_id:int,after:datetime.datetime=datetime.datetime.min,before:datetime.datetime=datetime.datetime.max) -> List[DroneEvent]:
@@ -76,32 +70,23 @@ def get_drone_event_by_timestamp(drone_id:int,after:datetime.datetime=datetime.d
     If only drone_id is set, every entry will be fetched.
 
     Args:
-        drone_id (int): _description_
+        drone_id (int): the id of the drone.
         after (datetime.datetime): fetches everything after this date (not included)
         before (datetime.datetime): fetches everything before this date (not included)
 
     Returns:
         List[DroneData]: List with the fetched data.
     """
-    try:
-        with database_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute(GET_ENTRYS_BY_TIMESTAMP,(drone_id,after,before))
-            fetched_data = cursor.fetchall()
-            cursor.close()
-            output = []
-            for drone_data in fetched_data:
-                dronedata_obj = get_obj_from_fetched(drone_data)
-                if dronedata_obj:
-                    output.append(dronedata_obj)
-            return output
-    except sqlite3.IntegrityError as e:##TODO
-        print(e)
+    fetched_data = db.fetch_all(GET_ENTRYS_BY_TIMESTAMP,(drone_id,after,before))
+    output = []
+    for drone_data in fetched_data:
+        dronedata_obj = get_obj_from_fetched(drone_data)
+        if dronedata_obj:
+            output.append(dronedata_obj)
+    return output
 
 def get_drone_events_in_zone(polygon:str) -> List[DroneEvent]:
-    """fetches all entrys that are within the choosen timeframe.
-    If only drone_id is set, every entry will be fetched.
-
+    """fetches all entrys that are within the choosen polygon.
     Args:
         drone_id (int): _description_
         after (datetime.datetime): fetches everything after this date (not included)
@@ -110,37 +95,27 @@ def get_drone_events_in_zone(polygon:str) -> List[DroneEvent]:
     Returns:
         List[DroneData]: List with the fetched data.
     """
-    try:
-        with database_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute(GET_IN_ZONE,(polygon,))
-            fetched_data = cursor.fetchall()
-            cursor.close()
-            output = []
-            for drone_data in fetched_data:
-                dronedata_obj = get_obj_from_fetched(drone_data)
-                if dronedata_obj:
-                    output.append(dronedata_obj)
-            return output
-    except sqlite3.IntegrityError as e:##TODO
-        print(e)
+    fetched_data = db.fetch_all(GET_IN_ZONE,(polygon,))
+    output = []
+    for drone_data in fetched_data:
+        dronedata_obj = get_obj_from_fetched(drone_data)
+        if dronedata_obj:
+            output.append(dronedata_obj)
+    return output
 
-def get_latest_by_timestamp(drone_id:int) -> DroneEvent:
-    
-    try:
-        with database_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute(GET_ENTRY,(drone_id,))
-            fetched_data = cursor.fetchone()
-            cursor.close()
-            if fetched_data:
-                dronedata_obj = get_obj_from_fetched(fetched_data)
-            else:
-                dronedata_obj = None
-                
-            return dronedata_obj
-    except sqlite3.IntegrityError as e:##TODO
-        print(e)
+def get_latest_event(drone_id:int) -> DroneEvent:
+    """fetch latest event, this dron has recorded.
+
+    Args:
+        drone_id (int): id of the drone.
+
+    Returns:
+        DroneEvent
+    """
+    fetched_data = db.fetch_one(GET_ENTRY,(drone_id,))
+    if fetched_data:
+        return get_obj_from_fetched(fetched_data) 
+    return None
 
 
 def get_obj_from_fetched(fetched_dronedata) -> DroneEvent| None:
@@ -156,7 +131,7 @@ def get_obj_from_fetched(fetched_dronedata) -> DroneEvent| None:
         try:
             ai_predictions = json.loads(fetched_dronedata[7])
         except:
-            print('json loads error')
+            print('couldnt load ai_predictions')
             ai_predictions = None
 
         try:

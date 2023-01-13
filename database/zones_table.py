@@ -4,8 +4,9 @@ import sqlite3
 from typing import List
 from api.dependencies.classes import FireRisk, Zone
 from database.database import database_connection, fetched_match_class
-from database.spatia import spatiapoly_to_long_lat_arr
+from database.spatia import spatiapoly_to_long_lat_arr, coordinates_to_polygon
 from database.drone_events_table import get_drone_events_in_zone
+import database.database as db
 
 CREATE_ZONE_TABLE = '''CREATE TABLE zones
 (
@@ -40,84 +41,51 @@ def create_zone(name,coordinates: List[List[float]])->bool:
     Returns:
         bool: Wether the zone could be created or not.
     """
-    try:
-        if len(coordinates) < 3:#at least 3 coordinates are needed.
-            return False
-        first_coordinate = coordinates[0]
-        polygon_wkt = f'POLYGON(({first_coordinate[0]} {first_coordinate[1]}'
-        for index in range(1,len(coordinates)):
-            polygon_wkt += f',{coordinates[index][0]} {coordinates[index][1]}'
-        polygon_wkt +='))'
-        with database_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute(CREATE_ENTRY,(name,polygon_wkt))
-            conn.commit()
-            cursor.close()
-            return True
-    except sqlite3.IntegrityError as e:##TODO
-        print(e)
+    if len(coordinates) < 3:#at least 3 coordinates are needed.
+        return False
+    polygon_wkt = coordinates_to_polygon(coordinates)
+    inserted_id = db.insert(CREATE_ENTRY,(name,polygon_wkt))
+    if inserted_id:
+        return True
     return False
 
-def get_zone_of_coordinate(long,lat):
-    """_summary_
+def get_zone_of_coordinate(long,lat) -> Zone | None:
+    """fetch the zone, the described point is in.
 
     Args:
-        long (_type_): _description_
-        lat (_type_): _description_
+        long (_type_): longitude of the point.
+        lat (_type_): latitude of the point.
 
     Returns:
-        _type_: _description_
+        Zone | None: the Zone if the point is inside a zones area, None if not.
     """
-    try:
-        with database_connection() as conn:
-            cursor = conn.cursor()
-            #point_wkt = 'POINT({0} {1})'.format(long, lat) for 
-            cursor.execute(GET_ZONE,(long,lat))
-            fetched_zone = cursor.fetchone()
-            cursor.close()
-            zone_obj = get_obj_from_fetched(fetched_zone)
-            return zone_obj
-                
-    except sqlite3.IntegrityError as e:##TODO
-        print(e)
-    return None
+    fetched_zone = db.fetch_one(GET_ZONE,(long,lat))
+    return get_obj_from_fetched(fetched_zone)
 
 def get_zones() -> List[Zone]:
-    """_summary_
-
-    Args:
-        long (_type_): _description_
-        lat (_type_): _description_
+    """get a list of all zones.
 
     Returns:
-        _type_: _description_
+        List[Zone]: list containing Zone obj.
     """
-    try:
-        with database_connection() as conn:
-            cursor = conn.cursor()
-            #point_wkt = 'POINT({0} {1})'.format(long, lat) for 
-            cursor.execute(GET_ZONES)
-            fetched_zone = cursor.fetchall()
-            cursor.close()
-            output = []
-            for zone in fetched_zone:
-                zone_obj = get_obj_from_fetched(zone)
-                if zone_obj:
-                    output.append(zone_obj)
-            return output
-                
-    except sqlite3.IntegrityError as e:##TODO
-        print(e)
+    fetched_zones = db.fetch_all(GET_ZONES)
+    if fetched_zones:
+        output = []
+        for zone in fetched_zones:
+            zone_obj = get_obj_from_fetched(zone)
+            if zone_obj:
+                output.append(zone_obj)
+        return output
     return None
 
-def get_obj_from_fetched(fetched_zone):
-    """generate Organization obj from fetched element.
+def get_obj_from_fetched(fetched_zone) -> Zone | None:
+    """generate Zone obj from fetched element.
 
     Args:
-        fetched_orga (list): fetched attributes from orga.
+        fetched_zone (list): fetched attributes from zone.
 
     Returns:
-        Organization: orga object.
+        Zone | None: zone object or None if obj cant be generated.
     """
     if fetched_match_class(Zone,fetched_zone,3):
         coord_array = spatiapoly_to_long_lat_arr(fetched_zone[2])
@@ -131,13 +99,13 @@ def get_obj_from_fetched(fetched_zone):
         firerisk = round(firerisk)
         firerisk_enum = FireRisk(firerisk)
 
-        orga_obj = Zone(
+        zone_obj = Zone(
             id = fetched_zone[0],
             name=fetched_zone[1],
             coordinates=coord_array,
             events=events,
             fire_risk=firerisk_enum
         )
-        return orga_obj
+        return zone_obj
     return None
 

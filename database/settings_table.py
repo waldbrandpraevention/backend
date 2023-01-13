@@ -1,7 +1,9 @@
 from enum import Enum
 import sqlite3
+from typing import List
 from api.dependencies.classes import Setting
 from database.database import database_connection, fetched_match_class
+import database.database as db
 
 #https://stackoverflow.com/a/10228192, if we need settings that cant be stored as integer
 
@@ -33,43 +35,21 @@ def create_setting(name:str,description:str, defaul_val: int) -> int | None:
     Returns:
         int | None: Id of the inserted entry, None if an error occurs.
     """
-    try:
-        with database_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute(INSERT_SETTING,(name, description,defaul_val))
-            inserted_id = cursor.lastrowid
-            conn.commit()
-            cursor.close()
-            return inserted_id
-    except sqlite3.IntegrityError as e:##TODO
-        print(e)
-    return None
+    return db.insert(INSERT_SETTING,(name, description,defaul_val))
 
-def get_settings():
+def get_settings() -> List[Setting]:
     """fetch all settings.
 
     Returns:
         list: list of all settings.
     """
-    try:
-        with database_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute('SELECT * FROM settings')
-            fetched_settings = cursor.fetchall()
-            cursor.close()
-            output = []
-            for setting in fetched_settings:
-                if fetched_match_class(Setting,setting):
-                    setting_obj = Setting(
-                        id=setting[0],
-                        name=setting[1],
-                        description=setting[2],
-                        default_value=setting[3]
-                    )
-                output.append(setting_obj)
-            return output
-    except sqlite3.IntegrityError as e:##TODO
-        print(e)
+    fetched_settings = db.fetch_all('SELECT * FROM settings')
+    output = []
+    for setting in fetched_settings:
+        setting_obj = get_obj_from_fetched(setting)
+        if setting_obj:
+            output.append(setting_obj)
+    return output
 
 def update_setting(setting_name:str, attribute:SettingsAttributes, new_value: str|int):
     """Update an attribute of the settings entry.
@@ -79,12 +59,24 @@ def update_setting(setting_name:str, attribute:SettingsAttributes, new_value: st
         attribute (SettingsAttributes): attribute that should be updated.
         new_value (str|int): new_value that should be set.
     """
-    try:
-        with database_connection() as conn:
-            cursor = conn.cursor()
-            update_str = UPDATE_SETTING.format(attribute)
-            cursor.execute(update_str,(new_value, setting_name))
-            conn.commit()
-            cursor.close()
-    except Exception as e:#TODO
-        print(e)
+    update_str = UPDATE_SETTING.format(attribute)
+    db.update(update_str,(new_value, setting_name))
+
+def get_obj_from_fetched(fetched_setting) -> Setting:
+    """generate Setting obj from fetched element.
+
+    Args:
+        fetched_setting (list): fetched attributes from setting.
+
+    Returns:
+        Setting: setting object.
+    """
+    if fetched_match_class(Setting,fetched_setting):
+        setting_obj = Setting(
+            id=fetched_setting[0],
+            name=fetched_setting[1],
+            description=fetched_setting[2],
+            default_value=fetched_setting[3]
+        )
+        return setting_obj
+    return None
