@@ -48,6 +48,8 @@ def test_usertable():
     create_user(user_one)
     fetched_user = get_user(user_one.email)
     assert fetched_user.first_name == user_one.first_name, "Couldnt create or get user"
+    for key, value in user_one.__dict__.items():
+        assert fetched_user.__dict__[key] == value, 'Objects not matching'
 
     update_user(user_one.id,UsrAttributes.FIRST_NAME,'Peter')
     fetched_user = get_user(user_one.email)
@@ -62,6 +64,8 @@ def test_usertable():
     create_user(user_two)
     fetched_user = get_user(mail)
     assert fetched_user.first_name == user_two.first_name, "Couldnt create user with first email"
+    for key, value in user_two.__dict__.items():
+        assert fetched_user.__dict__[key] == value, 'Objects not matching'
 
 
 def test_verifytable():
@@ -212,6 +216,8 @@ def test_dronedatatable():
     output = drone_zone_data_table.get_drone_data_by_timestamp(1,datetime.datetime.utcnow()-datetime.timedelta(minutes=5))
     assert len(output) == 2, 'Something went wrong inserting the Data (2).'
     assert output[0].latitude == testdrone.latitude, 'Something went wrong with creating geo Point for testdrone.'
+    for key, value in testdrone.__dict__.items():
+        assert output[0].__dict__[key] == value, 'Objects not matching'
     output = drone_zone_data_table.get_drone_data_by_timestamp(1,testdatatwo.timestamp-datetime.timedelta(seconds=1))
     assert len(output) == 1, 'Something went wrong inserting the Data (1).'
 
