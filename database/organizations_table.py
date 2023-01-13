@@ -18,6 +18,7 @@ CREATE_ORGANISATIONS_TABLE = """ CREATE TABLE IF NOT EXISTS organizations
 
 INSERT_ORGA =  "INSERT INTO organizations (name,abbreviation) VALUES (?,?);"
 GET_ORGA = 'SELECT * FROM organizations WHERE NAME=?;'
+GET_ORGA_BY_ID = 'SELECT * FROM organizations WHERE ID=?;'
 UPDATE_ORGA_NAME = ''' UPDATE users
                     SET email = ? ,
                     WHERE email = ?;'''
@@ -58,7 +59,19 @@ def get_orga(organame:str) -> Organization | None:
     fetched_orga = db.fetch_one(GET_ORGA,(organame,))
     return get_obj_from_fetched(fetched_orga)
 
-def get_all_orga()-> List[Organization]:
+def get_orga_by_id(orga_id:int) -> Organization | None:
+    """get the orga object with this id.
+
+    Args:
+        orga_id (int): orga to look for.
+
+    Returns:
+        orga: Organization or None.
+    """
+    fetched_orga = db.fetch_one(GET_ORGA_BY_ID,(orga_id,))
+    return get_obj_from_fetched(fetched_orga)
+
+def get_all_orga():
     """Create an entry for an organization.
 
     Returns:

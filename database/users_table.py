@@ -4,6 +4,7 @@ import sqlite3
 from api.dependencies.classes import User, UserWithSensitiveInfo, Permission
 from database.database import database_connection, fetched_match_class
 import database.database as db
+from database import organizations_table as organizations
 
 CREATE_USER_TABLE = """ CREATE TABLE IF NOT EXISTS users (
                         id INTEGER,
@@ -35,7 +36,10 @@ class UsrAttributes(str,Enum):
 UPDATE_ATTRIBUTE = 'UPDATE users SET {} = ? WHERE id = ?;'
 
 INSERT_USER = 'INSERT INTO users (email,first_name,last_name,organization_id,password,permission,disabled,email_verified) VALUES (? ,? ,?,?,?,?,?,?);'
-GET_USER = 'SELECT * FROM users WHERE EMAIL=?;'
+GET_USER_WITH_ORGA = '''SELECT users.id,email,first_name,last_name,password,permission,disabled,email_verified,orga.id,orga.name,orga.abbreviation
+                        FROM users 
+                        JOIN organizations orga ON orga.id = organization_id 
+                        WHERE EMAIL=?;'''
 CHECK_CREDS = "SELECT password FROM users WHERE EMAIL=? AND PASSWORD = ?;"
 
 def create_user(user:UserWithSensitiveInfo) -> bool:
@@ -46,7 +50,7 @@ def create_user(user:UserWithSensitiveInfo) -> bool:
         email (str): email adress of the user.
         pass_hash (str): hash of the entered password.
     """
-    inserted_id = db.insert(INSERT_USER,(user.email, user.first_name,user.last_name,user.organization_id,user.hashed_password,user.permission.value,user.disabled,user.email_verified))
+    inserted_id = db.insert(INSERT_USER,(user.email, user.first_name,user.last_name,user.organization.id,user.hashed_password,user.permission.value,user.disabled,user.email_verified))
     if inserted_id:
         user.id = inserted_id
         return True
@@ -61,7 +65,7 @@ def get_user(email) -> UserWithSensitiveInfo | None:
     Returns:
         user: User object or None.
     """
-    fetched_user = db.fetch_one(GET_USER,(email,))
+    fetched_user = db.fetch_one(GET_USER_WITH_ORGA,(email,))
     try:
         user = get_obj_from_fetched(fetched_user)
     except Exception as e:
@@ -104,13 +108,17 @@ def get_obj_from_fetched(fetched_user) -> UserWithSensitiveInfo | None:
         UserWithSensitiveInfo | None: User object or None if obj cant be generated.
     """
 
-    if not fetched_match_class(UserWithSensitiveInfo,fetched_user):
+    if not fetched_match_class(UserWithSensitiveInfo,fetched_user, add=2):
         raise Exception('Fetched data noch matching format.')
 
     try:
         permission = Permission(fetched_user[5])
     except:
         permission = None
+    try:
+        orga = organizations.get_obj_from_fetched(fetched_user[-3:])
+    except:
+        orga = None
     
     user = UserWithSensitiveInfo(
                             id=fetched_user[0],
@@ -121,6 +129,6 @@ def get_obj_from_fetched(fetched_user) -> UserWithSensitiveInfo | None:
                             permission=permission,
                             disabled=fetched_user[6],
                             email_verified=fetched_user[7],
-                            organization=fetched_user[8])
+                            organization=orga)
     
     return user

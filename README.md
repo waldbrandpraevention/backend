@@ -1,6 +1,6 @@
 <h1 align="center">Waldbrandprävention Backend</h1>
 <p align="center">   
-    <img width="460" height="300" src="https://bp.adriansoftware.de/logos/logo-v1.svg?ref=gh-back"> <!-- Todo make file local -->
+    <img width="460" height="300" src="https://bp.adriansoftware.de/media/logo-v1.svg?ref=gh-back"> <!-- Todo make file local -->
 </p>
 
 <div align="center">

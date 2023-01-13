@@ -23,23 +23,23 @@ class Setting(BaseModel):
     description: str|None =None
     default_value: int|None =None
 
+class Organization(BaseModel):
+    id: int | None = None
+    name: str | None = None
+    abbreviation: str | None = None
+
 class User(BaseModel):
     id: int | None = None
     email: str | None = None
     first_name: str | None = None
     last_name: str | None = None
-    organization_id: int | None = None
-
-class UserWithSensitiveInfo(User):
-    hashed_password: str | None = None
+    organization: Organization | None = None
     permission: Permission | None = None
     disabled: bool | None = None
     email_verified: bool
 
-class Organization(BaseModel):
-    id: int | None = None
-    name: str | None = None
-    abbreviation: str | None = None
+class UserWithSensitiveInfo(User):
+    hashed_password: str | None = None
 
 class FireRisk(Enum):
     VERY_LOW = 1
