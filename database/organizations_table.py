@@ -45,7 +45,16 @@ def create_orga(organame:str, orga_abb:str):
         organame (str): name of the organization.
         orgaabb (str): abbreviation of the organization.
     """
-    db.insert(INSERT_ORGA,(organame,orga_abb))
+    inserted_id = db.insert(INSERT_ORGA,(organame,orga_abb))
+    if inserted_id:
+        orga_obj = Organization(
+            id = inserted_id,
+            name=organame,
+            abbreviation=orga_abb
+        )
+        return orga_obj
+    
+    return None
 
 def get_orga(organame:str) -> Organization | None:
     """get the orga object with this name.
