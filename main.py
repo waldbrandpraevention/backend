@@ -7,10 +7,16 @@ from fastapi.middleware.cors import CORSMiddleware
 from api.dependencies.authentication import get_password_hash
 from api.dependencies.classes import Organization, UserWithSensitiveInfo
 from api.routers import email, users, zones, drones
-from database import users_table, organizations_table
+from database import users_table, organizations_table, drones_table, drone_updates_table, zones_table
 from database.database import create_table
 from database.organizations_table import CREATE_ORGANISATIONS_TABLE
 from database.users_table import CREATE_USER_TABLE
+from database.drones_table import CREATE_DRONES_TABLE, create_drone
+from database.drone_updates_table import CREATE_DRONE_DATA_TABLE, create_drone_update
+from database.zones_table import CREATE_ZONE_TABLE, create_zone
+
+from threading import Thread 
+from drone_simulation import run_simulation
 
 app = FastAPI()
 app.include_router(users.router)
@@ -48,7 +54,18 @@ def create_default_user():
 def main():
     create_table(CREATE_ORGANISATIONS_TABLE)
     create_table(CREATE_USER_TABLE)
+    #create_table(CREATE_DRONES_TABLE)
+    #create_table(CREATE_DRONE_DATA_TABLE)
     create_default_user()
+
+    #create_drone("Bob", 42, "some type", 100000, 100000, 100000)
+    #create_drone("Hugo", 69, "some type", 100000, 100000, 100000)
+    #create_drone("Klaus", 12345, "some type", 100000, 100000, 100000)
+    #create_drone_update()
+
+    #TODO add drones and zones and stuff here
+    #t = Thread(target = run_simulation) 
+    #t.start()  
 
 
 main()

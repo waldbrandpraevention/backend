@@ -14,6 +14,7 @@ from datetime import datetime, timedelta
 
 from ..dependencies.authentication import create_access_token, Token, get_password_hash, ACCESS_TOKEN_EXPIRE_MINUTES
 from ..dependencies.users import *
+from ..dependencies.email import *
 
 router = APIRouter()
 
@@ -31,9 +32,9 @@ async def read_users_me(current_user: User = Depends(get_current_user)):
     """
     return current_user
 
-@router.get("/users/me/allerts/", status_code=status.HTTP_200_OK)
+@router.get("/users/me/alerts/", status_code=status.HTTP_200_OK)
 async def read_users_me_allerts(current_user: User = Depends(get_current_user)):
-    """API call to get the curret users allerts
+    """API call to get the curret users alerts
 
     Args:
         current_user (User, optional): User. Defaults to Depends(get_current_user).
@@ -116,6 +117,9 @@ async def register(email: str = Form(), password: str = Form(), first_name: str 
                                     disabled=0,
                                     email_verified=0)
     users_table.create_user(user)
+
+    send_signup_email(email)
+
     return {"message": "success"}
 
 

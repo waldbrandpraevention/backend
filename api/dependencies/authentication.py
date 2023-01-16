@@ -12,6 +12,7 @@ import random
 from database import mail_verif_table
 from validation import *
 from .classes import Token, TokenData
+from .email import *
 
 
 #secret key generated with: openssl rand -hex 32
@@ -100,3 +101,11 @@ async def get_email_from_token(token: str = Depends(oauth2_scheme)):
             detail="Token is expired",
         )
     return token_data.email
+
+async def send_signup_email(email: str):
+    token = create_access_token(
+        data={"sub": email}, expires_delta=EMAIL_VERIFICATION_TOKEN_EXPIRE_HOURS
+    )
+    mail_verif_table.store_token(email, token)
+    message = "Bitte Link klicken: " + "https://kiwa.tech/api/email/verify/?token=" + token
+    send_email(email, "KIWA Account",)
