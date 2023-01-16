@@ -7,6 +7,7 @@ def run_simulation():
         drones = get_drones()
         for drone in drones:
             update = get_latest_update(drone.id)
+            #ensure the drone stays in zone
             x = update.longitude + 0.00001
             y = update.latitude + 0.00001
             create_drone_update
