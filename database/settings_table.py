@@ -1,9 +1,10 @@
 from enum import Enum
 import sqlite3
 from typing import List
-from api.dependencies.classes import Setting
+from api.dependencies.classes import Setting,SettingsType
 from database.database import database_connection, fetched_match_class
 import database.database as db
+
 
 #https://stackoverflow.com/a/10228192, if we need settings that cant be stored as integer
 
@@ -13,6 +14,7 @@ id           integer NOT NULL ,
 name         text NOT NULL ,
 description text NOT NULL ,
 default_val integer NOT NULL,
+type        integer NOT NUll,
 PRIMARY KEY (id)
 );
 CREATE UNIQUE INDEX IF NOT EXISTS settings_AK ON settings (name);'''
@@ -22,10 +24,10 @@ class SettingsAttributes(str,Enum):
     DESCRIPTION ='description'
     DEFAULT_VALUE ='default_val'
     
-INSERT_SETTING = 'INSERT INTO settings (name, description,default_val) VALUES (?,?,?);'
+INSERT_SETTING = 'INSERT INTO settings (name, description,default_val,type) VALUES (?,?,?,?);'
 UPDATE_SETTING = 'UPDATE settings SET {} = ? WHERE name = ?;'
 
-def create_setting(name:str,description:str, defaul_val: int) -> int | None:
+def create_setting(name:str,description:str, defaul_val: int,type:SettingsType) -> int | None:
     """create a setting.
 
     Args:
@@ -35,7 +37,7 @@ def create_setting(name:str,description:str, defaul_val: int) -> int | None:
     Returns:
         int | None: Id of the inserted entry, None if an error occurs.
     """
-    return db.insert(INSERT_SETTING,(name, description,defaul_val))
+    return db.insert(INSERT_SETTING,(name, description,defaul_val,type.value))
 
 def get_settings() -> List[Setting]:
     """fetch all settings.
@@ -76,7 +78,8 @@ def get_obj_from_fetched(fetched_setting) -> Setting:
             id=fetched_setting[0],
             name=fetched_setting[1],
             description=fetched_setting[2],
-            default_value=fetched_setting[3]
+            default_value=fetched_setting[3],
+            type=fetched_setting[4],
         )
         return setting_obj
     return None

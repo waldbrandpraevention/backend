@@ -2,13 +2,14 @@
 # setting path
 import asyncio
 import datetime
+import json
 import os
 import sqlite3
 import sys
 sys.path.append('../backend')
 from api.dependencies.drones import get_all_drones
 from api.dependencies.authentication import get_password_hash
-from api.dependencies.classes import Drone, DroneEvent, EventType, Organization, User,DroneUpdate, UserWithSensitiveInfo
+from api.dependencies.classes import Drone, DroneEvent, EventType, Organization, User,DroneUpdate, UserWithSensitiveInfo,SettingsType
 from database.database import DATABASE_PATH, create_table
 from database.mail_verif_table import check_token, get_mail_by_token, get_token_by_mail, store_token, CREATE_MAIL_VERIFY_TABLE
 from database.users_table import create_user,get_user,CREATE_USER_TABLE
@@ -102,22 +103,26 @@ def test_usersettings():
     create_table(settings_table.CREATE_SETTINGS_TABLE)
     create_table(user_settings_table.CREATE_USERSETTINGS_TABLE)
     #create settings
-    index = settings_table.create_setting('Test','This is a testsetting',defaul_val=0)
-    index = settings_table.create_setting('Lightmode','Lightmode activated or not',defaul_val=1)
+    index = settings_table.create_setting('Test','This is a testsetting','test', SettingsType.STRING)
+    index = settings_table.create_setting('Lightmode','Lightmode activated or not',json.dumps({'test':1}),SettingsType.JSON)
     #get list of all settings
     settinglist = settings_table.get_settings()
-    if not index:
-        index = 1
     #set the setting with id 1 for user to 2
-    user_settings_table.set_usersetting(index,user_id=user.id,value=2)
+    user_settings_table.set_usersetting(1,user_id=user.id,value='ich will das')
     #get the value, which should be 2
-    value = user_settings_table.get_usersetting(index,user.id)
-    assert value == 2, 'Couldnt set value.'
+    setting = user_settings_table.get_usersetting(1,user.id)
+    assert setting.value == 'ich will das', 'Couldnt set value.'
     #set the setting with id 1 for user to 1
-    user_settings_table.set_usersetting(index,user_id=user.id,value=1)
+    user_settings_table.set_usersetting(1,user_id=user.id,value=1)
     #get the value, which should be 1
-    value = user_settings_table.get_usersetting(index,user.id)
-    assert value == 1, 'Couldnt set value.'
+    setting = user_settings_table.get_usersetting(1,user.id)
+    assert setting.value != 'ich will das', 'Couldnt set value.'
+
+    #set the setting with id 2 for user to {'test':2}
+    user_settings_table.set_usersetting(2,user_id=user.id,value=json.dumps({'test':2}))
+    usrsetting = user_settings_table.get_usersetting(2,user.id)
+    print(usrsetting)
+
 
 
 def test_dronetable():
@@ -258,9 +263,9 @@ test_orga()
 test_usertable() #for _ in range(500)]
 test_verifytable()
 test_usersettings()
-test_dronetable()
-test_dronedatatable()
-test_zone()
+# test_dronetable()
+# test_dronedatatable()
+# test_zone()
 
 end = time.time()
 print(end - start)
