@@ -17,11 +17,25 @@ class Permission(Enum):
     ADMIN = 2
     THIRD_PARTY = 3
 
+class SettingsType(int,Enum):
+    INTEGER=0
+    STRING =1
+    JSON =2
+
 class Setting(BaseModel):
     id: int|None =None
     name: str|None =None
     description: str|None =None
-    default_value: int|None =None
+    default_value: str|int|dict|None =None
+    type: SettingsType|None=None
+
+class UserSetting(BaseModel):
+    id: int|None =None
+    user_id: int|None=None
+    name: str|None =None
+    description: str|None =None
+    value: str|int|dict|None=None
+    type: SettingsType|None=None
 
 class Organization(BaseModel):
     id: int | None = None
