@@ -26,6 +26,7 @@ class SettingsAttributes(str,Enum):
     
 INSERT_SETTING = 'INSERT INTO settings (name, description,default_val,type) VALUES (?,?,?,?);'
 UPDATE_SETTING = 'UPDATE settings SET {} = ? WHERE name = ?;'
+GET_SETTING = 'SELECT * FROM settings WHERE ID = ?;'
 
 def create_setting(name:str,description:str, defaul_val: int,type:SettingsType) -> int | None:
     """create a setting.
@@ -52,6 +53,16 @@ def get_settings() -> List[Setting]:
         if setting_obj:
             output.append(setting_obj)
     return output
+
+def get_setting(setting_id) -> Setting:
+    """fetch all settings.
+
+    Returns:
+        Setting: setting.
+    """
+    fetched_settings = db.fetch_one(GET_SETTING,(setting_id,))
+    setting_obj = get_obj_from_fetched(fetched_settings)
+    return setting_obj
 
 def update_setting(setting_name:str, attribute:SettingsAttributes, new_value: str|int):
     """Update an attribute of the settings entry.
