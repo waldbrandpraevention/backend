@@ -120,15 +120,15 @@ def get_obj_from_fetched(fetched_setting,user_id = None) -> UserSetting:
         return setting_obj
     return None
 
-def get_value(value,type):
-    """_summary_
+def get_value(value,type) -> int|str|dict:
+    """convert stored text value into the given type.
 
     Args:
-        value (_type_): _description_
-        type (int): _description_
+        value (_type_): stored value.
+        type (int): stored type.
 
     Returns:
-        _type_: _description_
+        int|str|dict: converted value.
     """
     if type == SettingsType.INTEGER:
         type_value=int(value)
