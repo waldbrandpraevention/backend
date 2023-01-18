@@ -1,8 +1,7 @@
 from enum import Enum
-import sqlite3
 
 from api.dependencies.classes import User, UserWithSensitiveInfo, Permission
-from database.database import database_connection, fetched_match_class
+from database.database import fetched_match_class
 import database.database as db
 from database import organizations_table as organizations
 
@@ -68,8 +67,8 @@ def get_user(email) -> UserWithSensitiveInfo | None:
     fetched_user = db.fetch_one(GET_USER_WITH_ORGA,(email,))
     try:
         user = get_obj_from_fetched(fetched_user)
-    except Exception as e:
-        print(e)
+    except Exception as exception:
+        print(exception)
         user = None
     return user
 

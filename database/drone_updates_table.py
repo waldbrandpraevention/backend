@@ -1,11 +1,8 @@
 import datetime
 from enum import Enum
-import json
-import sqlite3
 from typing import List
 from api.dependencies.classes import DroneUpdate
-from database.database import database_connection, fetched_match_class
-from database.spatia import spatiapoint_to_long_lat
+from database.database import fetched_match_class
 import database.database as db
 
 
@@ -99,8 +96,8 @@ def get_obj_from_fetched(fetched_dronedata) -> DroneUpdate| None:
         try:
             longitude=float(fetched_dronedata[4])
             latitude= float(fetched_dronedata[5])
-        except Exception as e:
-            print(e)
+        except Exception as exception:
+            print(exception)
             longitude, latitude= None, None
 
         drone_data_obj = DroneUpdate(

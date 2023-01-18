@@ -1,10 +1,8 @@
 from typing import List
-import datetime
 from enum import Enum
-import sqlite3
 
 from api.dependencies.classes import Drone
-from database.database import database_connection, fetched_match_class
+from database.database import fetched_match_class
 import database.database as db
 
 # "name": "name of the aerial vehicle according to manufacturer",
@@ -107,7 +105,7 @@ def get_obj_from_fetched(fetched_drone):
                 flight_time=fetched_drone[6]
             )
             return drone_obj
-        except Exception as e:
-            print(e)
+        except Exception as exception:
+            print(exception)
 
     return None

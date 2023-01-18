@@ -1,6 +1,4 @@
 import sqlite3
-from api.dependencies.classes import User
-from database.database import database_connection
 import database.database as db
 
 CREATE_MAIL_VERIFY_TABLE = """ CREATE TABLE IF NOT EXISTS mail_verification

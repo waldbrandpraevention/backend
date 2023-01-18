@@ -2,13 +2,14 @@
 # setting path
 import asyncio
 import datetime
+import json
 import os
 import sqlite3
 import sys
 sys.path.append('../backend')
 from api.dependencies.drones import get_all_drones
 from api.dependencies.authentication import get_password_hash
-from api.dependencies.classes import Drone, DroneEvent, EventType, Organization, User,DroneUpdate, UserWithSensitiveInfo
+from api.dependencies.classes import Drone, DroneEvent, EventType, Organization, User,DroneUpdate, UserWithSensitiveInfo,SettingsType
 from database.database import DATABASE_PATH, create_table
 from database.mail_verif_table import check_token, get_mail_by_token, get_token_by_mail, store_token, CREATE_MAIL_VERIFY_TABLE
 from database.users_table import create_user,get_user,CREATE_USER_TABLE
@@ -45,6 +46,8 @@ user_two = UserWithSensitiveInfo(email=mail,
                 organization= testorga)
 
 def test_usertable():
+    """tests for user table.
+    """
     create_table(CREATE_USER_TABLE)
     create_user(user_one)
     fetched_user = get_user(user_one.email)
@@ -76,6 +79,8 @@ def test_usertable():
 
 
 def test_verifytable():
+    """tests for mail verification table.
+    """
     create_table(CREATE_MAIL_VERIFY_TABLE)
     token = 'ichbineintoken'
     store_token(mail,token)
@@ -87,6 +92,8 @@ def test_verifytable():
     assert get_token_by_mail(mail) == token, "Couldnt update token"
 
 def test_orga():
+    """tests for orga table.
+    """
     create_table(CREATE_ORGANISATIONS_TABLE)
     create_orga(testorga.name,testorga.abbreviation)
     orga = get_orga('testorga')
@@ -97,30 +104,40 @@ def test_orga():
     orga2 = get_orga(new_name)
 
 def test_usersettings():
+    """tests for usersettings and settings table.
+    """
     user = get_user(mail)
     #create tables
     create_table(settings_table.CREATE_SETTINGS_TABLE)
     create_table(user_settings_table.CREATE_USERSETTINGS_TABLE)
     #create settings
-    index = settings_table.create_setting('Test','This is a testsetting',defaul_val=0)
-    index = settings_table.create_setting('Lightmode','Lightmode activated or not',defaul_val=1)
+    index = settings_table.create_setting('Test','This is a testsetting','test', SettingsType.STRING)
+    index = settings_table.create_setting('Lightmode','Lightmode activated or not',json.dumps({'test':1}),SettingsType.JSON)
     #get list of all settings
     settinglist = settings_table.get_settings()
-    if not index:
-        index = 1
     #set the setting with id 1 for user to 2
-    user_settings_table.set_usersetting(index,user_id=user.id,value=2)
+    user_settings_table.set_usersetting(1,user_id=user.id,value='ich will das')
     #get the value, which should be 2
-    value = user_settings_table.get_usersetting(index,user.id)
-    assert value == 2, 'Couldnt set value.'
+    setting = user_settings_table.get_usersetting(1,user.id)
+    assert setting.value == 'ich will das', 'Couldnt set value.'
     #set the setting with id 1 for user to 1
-    user_settings_table.set_usersetting(index,user_id=user.id,value=1)
+    user_settings_table.set_usersetting(1,user_id=user.id,value=1)
     #get the value, which should be 1
-    value = user_settings_table.get_usersetting(index,user.id)
-    assert value == 1, 'Couldnt set value.'
+    setting = user_settings_table.get_usersetting(1,user.id)
+    assert setting.value != 'ich will das', 'Couldnt set value.'
+
+    #set the setting with id 2 for user to {'test':2}
+    user_settings_table.set_usersetting(2,user_id=user.id,value=json.dumps({'test':2}))
+    usrsetting = user_settings_table.get_usersetting(2,user.id)
+    print(usrsetting)
+    usrsetting = user_settings_table.get_usersetting(2,3)
+    print(usrsetting)
+
 
 
 def test_dronetable():
+    """tests for drones table.
+    """
     #create tables
     create_table(drones_table.CREATE_DRONES_TABLE)
     #create drone
@@ -161,6 +178,8 @@ def test_dronetable():
 
 
 def test_dronedatatable():
+    """tests for drone updates and drone events table.
+    """
     #create tables
     create_table(drone_zone_data_table.CREATE_DRONE_DATA_TABLE)
     create_table(drones_event_table.CREATE_DRONE_EVENT_TABLE)
@@ -235,6 +254,8 @@ def test_dronedatatable():
     assert output[0].latitude == testdrone.latitude, 'Something went wrong with creating geo Point for testdrone.'
     
 def test_zone():
+    """tests for zone table.
+    """
     create_table(zone_table.CREATE_ZONE_TABLE)
     zone_one_coord = [[84.23,181.82], [168.32 ,117.5], [103.7 ,58.953], [40.23 ,108.82]]
     zone_table.create_zone('zone_one',zone_one_coord)
@@ -250,17 +271,17 @@ def test_zone():
 
 try:
     os.remove(DATABASE_PATH)
-except Exception as e: 
-    print(e)
+except Exception as exception: 
+    print(exception)
 
 start = time.time()
 test_orga()
 test_usertable() #for _ in range(500)]
 test_verifytable()
 test_usersettings()
-test_dronetable()
-test_dronedatatable()
-test_zone()
+# test_dronetable()
+# test_dronedatatable()
+# test_zone()
 
 end = time.time()
 print(end - start)

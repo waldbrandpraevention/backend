@@ -82,8 +82,8 @@ def connect(path=DATABASE_PATH) -> sqlite3.Connection | None:
             pass
 
         return conn
-    except Exception as e:
-        print(e)
+    except Exception as exception:
+        print(exception)
 
     return conn
 
@@ -99,8 +99,8 @@ def close_connection(conn:sqlite3.Connection)->None:
         else:
             conections.append(conn)
 
-    except sqlite3.Error as e:
-        print(e)
+    except sqlite3.Error as exception:
+        print(exception)
 
 def create_table(create_table_sql:str)-> None:
     """create a table from the create_table_sql statement
@@ -115,8 +115,8 @@ def create_table(create_table_sql:str)-> None:
             cursor.executescript(create_table_sql)
             conn.commit()
             cursor.close()
-    except sqlite3.Error as e:
-        print(e)
+    except sqlite3.Error as exception:
+        print(exception)
 
 def fetched_match_class(klasse:BaseModel, fetched_object, subtract:int=0,add:int = 0) -> bool:
     """checks wether number of fetched attributes matches number of required attributes.
@@ -132,8 +132,8 @@ def fetched_match_class(klasse:BaseModel, fetched_object, subtract:int=0,add:int
         if fetched_object:
             if len(klasse.__fields__) - subtract + add == len(fetched_object):
                 return True
-    except Exception as e:
-        print(e)
+    except Exception as exception:
+        print(exception)
     
     return False
 
@@ -158,9 +158,9 @@ def insert(insert_sql:str,insert_tuple=None) -> int | None:
             conn.commit()
             cursor.close()
             return inserted_id
-    except sqlite3.IntegrityError as e:##TODO create Item exists exception and raise it here
-        print(e)
-        raise e
+    except sqlite3.IntegrityError as exception:##TODO create Item exists exception and raise it here
+        print(exception)
+        raise exception
 
 def update(update_sql:str,update_tuple=None) -> bool:
     """updates an entry in the db.
@@ -182,8 +182,8 @@ def update(update_sql:str,update_tuple=None) -> bool:
             conn.commit()
             cursor.close()
             return True
-    except sqlite3.Error as e:
-        print(e)
+    except sqlite3.Error as exception:
+        print(exception)
     return False
 
 def fetch_one(fetch_sql:str,fetch_tuple=None):
@@ -206,8 +206,8 @@ def fetch_one(fetch_sql:str,fetch_tuple=None):
             fetched_user = cursor.fetchone()
             cursor.close()
             return fetched_user
-    except Exception as e:
-        print(e)
+    except Exception as exception:
+        print(exception)
     return None
 
 def fetch_all(fetch_sql:str,fetch_tuple=None):
@@ -230,8 +230,8 @@ def fetch_all(fetch_sql:str,fetch_tuple=None):
             fetched_user = cursor.fetchall()
             cursor.close()
             return fetched_user
-    except Exception as e:
-        print(e)
+    except Exception as exception:
+        print(exception)
 
     return None
 
@@ -258,6 +258,6 @@ def check_fetch(fetch_sql:str,fetch_tuple=None):
             else:
                 cursor.close()
                 return True
-    except Exception as e:
-        print(e)
+    except Exception as exception:
+        print(exception)
     return False

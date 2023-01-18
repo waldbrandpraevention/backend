@@ -1,9 +1,8 @@
 from enum import Enum
-import sqlite3
 from typing import List
 
-from api.dependencies.classes import Organization, User, UserWithSensitiveInfo, Permission
-from database.database import database_connection, fetched_match_class
+from api.dependencies.classes import Organization
+from database.database import fetched_match_class
 import database.database as db
 
 CREATE_ORGANISATIONS_TABLE = """ CREATE TABLE IF NOT EXISTS organizations

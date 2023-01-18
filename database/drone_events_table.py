@@ -1,10 +1,8 @@
 import datetime
-from enum import Enum
 import json
-import sqlite3
 from typing import List
 from api.dependencies.classes import DroneEvent, EventType
-from database.database import database_connection, fetched_match_class
+from database.database import fetched_match_class
 import database.database as db
 
 CREATE_DRONE_EVENT_TABLE = '''CREATE TABLE drone_event
@@ -23,12 +21,19 @@ FOREIGN KEY (drone_id) REFERENCES drones (id)
 CREATE INDEX drone_event_FK_1 ON drone_event (drone_id);
 SELECT AddGeometryColumn('drone_event', 'coordinates', 4326, 'POINT', 'XY');'''
 
-CREATE_ENTRY = 'INSERT INTO drone_event (drone_id,timestamp,coordinates,event_type,confidence,picture_path,ai_predictions,csv_file_path) VALUES (? ,?,MakePoint(?, ?, 4326)  ,? ,?,?,?,?);'
-GET_ENTRYS_BY_TIMESTAMP = 'SELECT drone_id,timestamp, X(coordinates), Y(coordinates),event_type,confidence,picture_path,ai_predictions,csv_file_path FROM drone_event WHERE drone_id = ? AND timestamp > ? AND timestamp < ?;'
+CREATE_ENTRY = '''  
+INSERT INTO drone_event (drone_id,timestamp,coordinates,event_type,confidence,picture_path,ai_predictions,csv_file_path) 
+VALUES (? ,?,MakePoint(?, ?, 4326)  ,? ,?,?,?,?);'''
+GET_ENTRYS_BY_TIMESTAMP = '''   
+SELECT drone_id,timestamp, X(coordinates), Y(coordinates),event_type,confidence,picture_path,ai_predictions,csv_file_path
+FROM drone_event 
+WHERE drone_id = ? AND timestamp > ? AND timestamp < ?;'''
 GET_ENTRY ='SELECT * FROM drone_event WHERE drone_id = ?;'
 
-GET_IN_ZONE = '''SELECT drone_id,timestamp, X(coordinates), Y(coordinates),event_type,confidence,picture_path,ai_predictions,csv_file_path FROM drone_event
-                WHERE ST_Intersects(drone_event.coordinates, GeomFromText(?, 4326));'''
+GET_IN_ZONE = '''
+SELECT drone_id,timestamp, X(coordinates), Y(coordinates),event_type,confidence,picture_path,ai_predictions,csv_file_path
+FROM drone_event
+WHERE ST_Intersects(drone_event.coordinates, GeomFromText(?, 4326));'''
 
 
 
@@ -137,8 +142,8 @@ def get_obj_from_fetched(fetched_dronedata) -> DroneEvent| None:
         try:
             longitude=float(fetched_dronedata[2])
             latitude= float(fetched_dronedata[3])
-        except Exception as e:
-            print(e)
+        except Exception as exception:
+            print(exception)
             longitude, latitude= None, None
 
         try:
