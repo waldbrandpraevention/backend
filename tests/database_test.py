@@ -122,6 +122,8 @@ def test_usersettings():
     user_settings_table.set_usersetting(2,user_id=user.id,value=json.dumps({'test':2}))
     usrsetting = user_settings_table.get_usersetting(2,user.id)
     print(usrsetting)
+    usrsetting = user_settings_table.get_usersetting(2,3)
+    print(usrsetting)
 
 
 
