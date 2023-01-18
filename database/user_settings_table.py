@@ -88,7 +88,7 @@ def get_usersetting(setting_id:int, user_id:int) -> UserSetting:
     return user_setting_obj
 
 
-def get_obj_from_fetched(fetched_setting,user_id = None) -> UserSetting:
+def get_obj_from_fetched(fetched_setting) -> UserSetting:
     """generate Setting obj from fetched element.
 
     Args:
@@ -99,21 +99,15 @@ def get_obj_from_fetched(fetched_setting,user_id = None) -> UserSetting:
     """
     if fetched_match_class(UserSetting,fetched_setting):
 
-        if not user_id:
-            user_id=fetched_setting[1]
-            indexoffset = 1
-        else:
-            indexoffset=0
 
-        type = fetched_setting[4+indexoffset]
-
-        value = get_value(fetched_setting[3+indexoffset],type)
+        type = fetched_setting[5]
+        value = get_value(fetched_setting[4],type)
 
         setting_obj = UserSetting(
             id=fetched_setting[0],
-            user_id=user_id,
-            name=fetched_setting[1+indexoffset],
-            description=fetched_setting[2+indexoffset],
+            user_id=fetched_setting[1],
+            name=fetched_setting[2],
+            description=fetched_setting[3],
             value=value,
             type=type
         )
