@@ -46,6 +46,8 @@ user_two = UserWithSensitiveInfo(email=mail,
                 organization= testorga)
 
 def test_usertable():
+    """tests for user table.
+    """
     create_table(CREATE_USER_TABLE)
     create_user(user_one)
     fetched_user = get_user(user_one.email)
@@ -77,6 +79,8 @@ def test_usertable():
 
 
 def test_verifytable():
+    """tests for mail verification table.
+    """
     create_table(CREATE_MAIL_VERIFY_TABLE)
     token = 'ichbineintoken'
     store_token(mail,token)
@@ -88,6 +92,8 @@ def test_verifytable():
     assert get_token_by_mail(mail) == token, "Couldnt update token"
 
 def test_orga():
+    """tests for orga table.
+    """
     create_table(CREATE_ORGANISATIONS_TABLE)
     create_orga(testorga.name,testorga.abbreviation)
     orga = get_orga('testorga')
@@ -98,6 +104,8 @@ def test_orga():
     orga2 = get_orga(new_name)
 
 def test_usersettings():
+    """tests for usersettings and settings table.
+    """
     user = get_user(mail)
     #create tables
     create_table(settings_table.CREATE_SETTINGS_TABLE)
@@ -128,6 +136,8 @@ def test_usersettings():
 
 
 def test_dronetable():
+    """tests for drones table.
+    """
     #create tables
     create_table(drones_table.CREATE_DRONES_TABLE)
     #create drone
@@ -168,6 +178,8 @@ def test_dronetable():
 
 
 def test_dronedatatable():
+    """tests for drone updates and drone events table.
+    """
     #create tables
     create_table(drone_zone_data_table.CREATE_DRONE_DATA_TABLE)
     create_table(drones_event_table.CREATE_DRONE_EVENT_TABLE)
@@ -242,6 +254,8 @@ def test_dronedatatable():
     assert output[0].latitude == testdrone.latitude, 'Something went wrong with creating geo Point for testdrone.'
     
 def test_zone():
+    """tests for zone table.
+    """
     create_table(zone_table.CREATE_ZONE_TABLE)
     zone_one_coord = [[84.23,181.82], [168.32 ,117.5], [103.7 ,58.953], [40.23 ,108.82]]
     zone_table.create_zone('zone_one',zone_one_coord)
