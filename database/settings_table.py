@@ -1,8 +1,7 @@
 from enum import Enum
-import sqlite3
 from typing import List
 from api.dependencies.classes import Setting,SettingsType
-from database.database import database_connection, fetched_match_class
+from database.database import fetched_match_class
 import database.database as db
 
 

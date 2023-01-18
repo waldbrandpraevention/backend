@@ -1,10 +1,8 @@
 import datetime
-from enum import Enum
 import json
-import sqlite3
 from typing import List
 from api.dependencies.classes import DroneEvent, EventType
-from database.database import database_connection, fetched_match_class
+from database.database import fetched_match_class
 import database.database as db
 
 CREATE_DRONE_EVENT_TABLE = '''CREATE TABLE drone_event

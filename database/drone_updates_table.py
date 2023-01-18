@@ -1,11 +1,8 @@
 import datetime
 from enum import Enum
-import json
-import sqlite3
 from typing import List
 from api.dependencies.classes import DroneUpdate
-from database.database import database_connection, fetched_match_class
-from database.spatia import spatiapoint_to_long_lat
+from database.database import fetched_match_class
 import database.database as db
 
 

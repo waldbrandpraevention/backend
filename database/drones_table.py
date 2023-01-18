@@ -1,10 +1,8 @@
 from typing import List
-import datetime
 from enum import Enum
-import sqlite3
 
 from api.dependencies.classes import Drone
-from database.database import database_connection, fetched_match_class
+from database.database import fetched_match_class
 import database.database as db
 
 # "name": "name of the aerial vehicle according to manufacturer",

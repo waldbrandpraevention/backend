@@ -1,9 +1,8 @@
 
 
-import sqlite3
 from typing import List
 from api.dependencies.classes import FireRisk, Zone
-from database.database import database_connection, fetched_match_class
+from database.database import fetched_match_class
 from database.spatia import spatiapoly_to_long_lat_arr, coordinates_to_polygon
 from database.drone_events_table import get_drone_events_in_zone
 import database.database as db
