@@ -105,7 +105,7 @@ def get_obj_from_fetched(fetched_drone):
                 flight_time=fetched_drone[6]
             )
             return drone_obj
-        except Exception as e:
-            print(e)
+        except Exception as exception:
+            print(exception)
 
     return None

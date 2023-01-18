@@ -96,8 +96,8 @@ def get_obj_from_fetched(fetched_dronedata) -> DroneUpdate| None:
         try:
             longitude=float(fetched_dronedata[4])
             latitude= float(fetched_dronedata[5])
-        except Exception as e:
-            print(e)
+        except Exception as exception:
+            print(exception)
             longitude, latitude= None, None
 
         drone_data_obj = DroneUpdate(

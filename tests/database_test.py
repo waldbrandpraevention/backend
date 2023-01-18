@@ -271,8 +271,8 @@ def test_zone():
 
 try:
     os.remove(DATABASE_PATH)
-except Exception as e: 
-    print(e)
+except Exception as exception: 
+    print(exception)
 
 start = time.time()
 test_orga()

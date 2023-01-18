@@ -67,8 +67,8 @@ def get_user(email) -> UserWithSensitiveInfo | None:
     fetched_user = db.fetch_one(GET_USER_WITH_ORGA,(email,))
     try:
         user = get_obj_from_fetched(fetched_user)
-    except Exception as e:
-        print(e)
+    except Exception as exception:
+        print(exception)
         user = None
     return user
 
