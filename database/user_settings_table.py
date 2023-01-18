@@ -6,6 +6,7 @@ from api.dependencies.classes import User, UserSetting, UserWithSensitiveInfo
 from database.database import database_connection, fetched_match_class
 import database.database as db
 from api.dependencies.classes import SettingsType
+from database import settings_table
 
 
 CREATE_USERSETTINGS_TABLE = '''
@@ -27,6 +28,11 @@ GET_USERSETTING = '''   SELECT settings_id, user_id, settings.name, settings.des
                         FROM user_settings
                         JOIN settings ON settings.id = settings_id 
                         WHERE settings_id=? AND user_id=?;'''
+
+GET_DEFAULTUSERSETTING = '''    SELECT settings_id, user_id, settings.name, settings.description, settings.default_val, settings.type
+                                FROM user_settings
+                                JOIN settings ON settings.id = settings_id 
+                                WHERE settings_id=?;'''
 #id           integer NOT NULL ,
 # name         text NOT NULL ,
 # description text NOT NULL ,
@@ -39,38 +45,50 @@ class UsrsettingsAttributes(str,Enum):
     SETTING_ID = 'user_id'
 
 
-def set_usersetting(setting_id:int, user_id:int, value:str):
+def set_usersetting(setting_id:int, user_id:int, value:str)-> bool:
     """Create a setting entry for an user.
 
     Args:
-        user (UserWithSensitiveInfo | User): _description_
-        setting (_type_): _description_
-        newvalue (_type_): _description_
-    """
-    try:
-        with database_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute(SET_USERSETTING,(setting_id, user_id, value))
-            conn.commit()
-            cursor.close()
-    except sqlite3.IntegrityError as e:##TODO
-        print(e)
-
-def get_usersetting(setting_id:int, user_id:int) -> int|None:
-    """_summary_
-
-    Args:
-        setting_id (int): _description_
-        user_id (int): _description_
+        setting_id (int): id of the setting(settings_table).
+        user_id (int): id of the user.
+        value (str): value converted to a str.
 
     Returns:
-        int|None: _description_
+        bool: wether the setting could be stored or not.
+    """
+    inserted_id=db.insert(SET_USERSETTING,(setting_id, user_id, value))
+    if inserted_id:
+        return True
+    return False
+
+def get_usersetting(setting_id:int, user_id:int) -> UserSetting:
+    """get a setting, set for a user.
+
+    Args:
+        setting_id (int): id of the setting(settings_table).
+        user_id (int): id of the user.
+
+    Returns:
+        UserSetting: Usersetting obj, standardvalue if not set.
     """
     fetched_setting = db.fetch_one(GET_USERSETTING,(setting_id, user_id))
-    return get_obj_from_fetched(fetched_setting)
+    user_setting_obj = get_obj_from_fetched(fetched_setting)
+    #if not setting set, use the default value.
+    if not user_setting_obj:
+        setting_obj = settings_table.get_setting(setting_id)
+        value = get_value(setting_obj.default_value,setting_obj.type)
+        user_setting_obj= UserSetting(
+            id = setting_id,
+            user_id=user_id,
+            name=setting_obj.name,
+            description=setting_obj.description,
+            value=value,
+            type=setting_obj.type
+        )
+    return user_setting_obj
 
 
-def get_obj_from_fetched(fetched_setting) -> UserSetting:
+def get_obj_from_fetched(fetched_setting,user_id = None) -> UserSetting:
     """generate Setting obj from fetched element.
 
     Args:
@@ -80,23 +98,46 @@ def get_obj_from_fetched(fetched_setting) -> UserSetting:
         Setting: setting object.
     """
     if fetched_match_class(UserSetting,fetched_setting):
-        type = fetched_setting[5]
 
-        if type == SettingsType.INTEGER:
-            value=int(fetched_setting[4])
-        elif type == SettingsType.STRING:
-            value=str(fetched_setting[4])
-        elif type == SettingsType.JSON:
-            value=json.loads(fetched_setting[4])
+        if not user_id:
+            user_id=fetched_setting[1]
+            indexoffset = 1
+        else:
+            indexoffset=0
+
+        type = fetched_setting[4+indexoffset]
+
+        value = get_value(fetched_setting[3+indexoffset],type)
 
         setting_obj = UserSetting(
             id=fetched_setting[0],
-            user_id=fetched_setting[1],
-            name=fetched_setting[2],
-            description=fetched_setting[3],
+            user_id=user_id,
+            name=fetched_setting[1+indexoffset],
+            description=fetched_setting[2+indexoffset],
             value=value,
             type=type
         )
         return setting_obj
     return None
+
+def get_value(value,type):
+    """_summary_
+
+    Args:
+        value (_type_): _description_
+        type (int): _description_
+
+    Returns:
+        _type_: _description_
+    """
+    if type == SettingsType.INTEGER:
+        type_value=int(value)
+    elif type == SettingsType.STRING:
+        type_value=str(value)
+    elif type == SettingsType.JSON:
+        type_value=json.loads(value)
+    else:
+        type_value = None
+
+    return type_value
 
