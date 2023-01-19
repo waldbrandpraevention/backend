@@ -18,9 +18,11 @@ import database.drones_table as drones_table
 import database.drone_events_table as drones_event_table
 import database.drone_updates_table as drone_zone_data_table
 import database.zones_table as zone_table
+import database.orga_zones_table as oz_table
 from database.organizations_table import CREATE_ORGANISATIONS_TABLE, OrgAttributes, create_orga, get_orga, update_orga
 from database import settings_table, user_settings_table
-import time 
+import time
+from api.routers import zones as api_zones
 
 mail = 'test@mail.de'
 mail2 = 'test2@mail.de'
@@ -257,6 +259,7 @@ def test_zone():
     """tests for zone table.
     """
     create_table(zone_table.CREATE_ZONE_TABLE)
+    create_table(oz_table.CREATE_ORGAZONES_TABLE)
     zone_one_coord = [[84.23,181.82], [168.32 ,117.5], [103.7 ,58.953], [40.23 ,108.82]]
     zone_table.create_zone('zone_one',zone_one_coord)
     zone_table.create_zone('zone_two',[[184.23,281.82], [268.32 ,217.5], [203.7 ,158.953], [140.23 ,208.82]])
@@ -266,22 +269,34 @@ def test_zone():
     assert zone_table.get_zone_of_coordinate(85.156998,61.156998) == None, "Point is not in square"
     assert zone_table.get_zone_of_coordinate(148.156998,119.156998) != None, "Point is in square"
     assert zone_table.get_zone_of_coordinate(159.156998,138.156998) == None, "Point is not in square"
+    oz_table.link_orgazone(1,1)
+    oz_table.link_orgazone(1,2)
+
+async def test_orgazone():
+    outpu=await api_zones.read_zones_all(user_one)
+    print(outpu)
+    out = await api_zones.read_zone('zone_two',user_one)
+    print('\n')
+    print(out)
 
 
 
-try:
-    os.remove(DATABASE_PATH)
-except Exception as exception: 
-    print(exception)
+
+
+# try:
+#     os.remove(DATABASE_PATH)
+# except Exception as exception: 
+#     print(exception)
 
 start = time.time()
-test_orga()
-test_usertable() #for _ in range(500)]
-test_verifytable()
-test_usersettings()
+# test_orga()
+# test_usertable() #for _ in range(500)]
+# test_verifytable()
+# test_usersettings()
 # test_dronetable()
 # test_dronedatatable()
 # test_zone()
 
+asyncio.run(test_orgazone())
 end = time.time()
 print(end - start)

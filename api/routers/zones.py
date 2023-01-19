@@ -3,11 +3,11 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from  ..dependencies.zones import get_all_zones, get_zone, get_zone_count
 from .users import get_current_user
 from ..dependencies.classes import User, Zone
-
+from database import organizations_table
 router = APIRouter()
 
 
-@router.get("/zones/", status_code=status.HTTP_200_OK)
+@router.get("/zones/", status_code=status.HTTP_200_OK, response_model=Zone)
 async def read_zone(name: str, current_user: User = Depends(get_current_user)):
     """API call to get a specific zone
 
@@ -19,7 +19,7 @@ async def read_zone(name: str, current_user: User = Depends(get_current_user)):
         Zone: zone
     """
 
-    zone = get_zone(name)
+    zone = await get_zone(name, current_user.organization.id)
     if zone == None:
         raise HTTPException(
             status_code=status.HTTP_406_NOT_ACCEPTABLE,
@@ -37,7 +37,7 @@ async def read_zones_all(current_user: User = Depends(get_current_user)):
     Returns:
         Zone[]: List of all zones
     """
-    return await get_all_zones()
+    return await get_all_zones(current_user.organization.id)
 
 @router.get("/zones/count/", status_code=status.HTTP_200_OK)
 async def read_zones_count(current_user: User = Depends(get_current_user)):
