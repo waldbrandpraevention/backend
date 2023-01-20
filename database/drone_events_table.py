@@ -1,7 +1,7 @@
 import datetime
 import json
 from typing import List
-from api.dependencies.classes import DroneEvent, EventType
+from api.dependencies.classes import DroneEvent, EventType, FireRisk
 from database.database import fetched_match_class
 import database.database as db
 
@@ -30,10 +30,11 @@ FROM drone_event
 WHERE drone_id = ? AND timestamp > ? AND timestamp < ?;'''
 GET_ENTRY ='SELECT * FROM drone_event WHERE drone_id = ?;'
 
-GET_IN_ZONE = '''
+GET_EVENT_IN_ZONE = '''
 SELECT drone_id,timestamp, X(coordinates), Y(coordinates),event_type,confidence,picture_path,ai_predictions,csv_file_path
 FROM drone_event
-WHERE ST_Intersects(drone_event.coordinates, GeomFromText(?, 4326));'''
+WHERE ST_Intersects(drone_event.coordinates, GeomFromText(?, 4326)) 
+AND timestamp > ? AND timestamp < ?;'''
 
 
 
@@ -70,7 +71,10 @@ def create_drone_event_entry(drone_id:int,
         return True
     return False
 
-def get_drone_event_by_timestamp(drone_id:int,after:datetime.datetime=datetime.datetime.min,before:datetime.datetime=datetime.datetime.max) -> List[DroneEvent]:
+def get_drone_event_by_timestamp(drone_id:int,
+                                 after:datetime.datetime=datetime.datetime.min,
+                                 before:datetime.datetime=datetime.datetime.max
+                                 )-> List[DroneEvent]:
     """fetches all entrys that are within the choosen timeframe.
     If only drone_id is set, every entry will be fetched.
 
@@ -90,17 +94,20 @@ def get_drone_event_by_timestamp(drone_id:int,after:datetime.datetime=datetime.d
             output.append(dronedata_obj)
     return output
 
-def get_drone_events_in_zone(polygon:str) -> List[DroneEvent]:
+def get_drone_events_in_zone(   polygon:str,
+                                after:datetime.datetime=datetime.datetime.max,
+                                before:datetime.datetime=datetime.datetime.max
+                                ) -> List[DroneEvent]:
     """fetches all entrys that are within the choosen polygon.
     Args:
-        drone_id (int): _description_
+        polygon (str): polygon str od the area for which the events should be shown
         after (datetime.datetime): fetches everything after this date (not included)
         before (datetime.datetime): fetches everything before this date (not included)
 
     Returns:
         List[DroneData]: List with the fetched data.
     """
-    fetched_data = db.fetch_all(GET_IN_ZONE,(polygon,))
+    fetched_data = db.fetch_all(GET_EVENT_IN_ZONE,(polygon,after,before))
     output = []
     for drone_data in fetched_data:
         dronedata_obj = get_obj_from_fetched(drone_data)
@@ -164,3 +171,21 @@ def get_obj_from_fetched(fetched_dronedata) -> DroneEvent| None:
         )
         return drone_data_obj
     return None
+
+def calculate_firerisk(events:List[DroneEvent]) -> FireRisk:
+    """calculates the firerisk, based on the events fire/smoke confidences.
+
+    Args:
+        events (List[DroneEvent]): list of drone events.
+
+    Returns:
+        FireRisk: the calculated risk.
+    """
+    firerisk = 20
+    for event in events:#TODO feuer und rauch unterschiedlich bewerten.
+        if firerisk < event.confidence:
+            firerisk = event.confidence
+
+    firerisk = firerisk/100*5
+    firerisk = round(firerisk)
+    return FireRisk(firerisk)
