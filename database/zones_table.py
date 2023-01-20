@@ -1,10 +1,11 @@
 
 
+import datetime
 from typing import List
-from api.dependencies.classes import FireRisk, Zone
+from api.dependencies.classes import DroneEvent, FireRisk, Zone
 from database.database import fetched_match_class
 from database.spatia import spatiapoly_to_long_lat_arr, coordinates_to_polygon
-from database.drone_events_table import get_drone_events_in_zone
+from database import drone_events_table
 import database.database as db
 
 CREATE_ZONE_TABLE = '''CREATE TABLE zones
@@ -77,26 +78,25 @@ def get_zones() -> List[Zone]:
         return output
     return None
 
-def get_obj_from_fetched(fetched_zone) -> Zone | None:
+def get_obj_from_fetched(   fetched_zone,
+                            after:datetime.datetime=datetime.datetime.utcnow()-datetime.timedelta(days=1)
+                        ) -> Zone | None:
     """generate Zone obj from fetched element.
 
     Args:
         fetched_zone (list): fetched attributes from zone.
+        after (datetime): restriction to only select events that where created after this timestamp,
+        defaults to 24h ago.
 
     Returns:
         Zone | None: zone object or None if obj cant be generated.
     """
     if fetched_match_class(Zone,fetched_zone,3):
         coord_array = spatiapoly_to_long_lat_arr(fetched_zone[2])
-        events = get_drone_events_in_zone(fetched_zone[2])
-        firerisk = 20
-        for event in events:#TODO feuer und rauch unterschiedlich bewerten.
-            if firerisk < event.confidence:
-                firerisk = event.confidence
+        
+        events = drone_events_table.get_drone_events_in_zone(fetched_zone[2],after)
 
-        firerisk = firerisk/100*5
-        firerisk = round(firerisk)
-        firerisk_enum = FireRisk(firerisk)
+        firerisk_enum = drone_events_table.calculate_firerisk(events)
 
         zone_obj = Zone(
             id = fetched_zone[0],
@@ -107,4 +107,3 @@ def get_obj_from_fetched(fetched_zone) -> Zone | None:
         )
         return zone_obj
     return None
-
