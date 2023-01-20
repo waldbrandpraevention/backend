@@ -205,6 +205,17 @@ def test_dronedatatable():
         ai_predictions=None,
         csv_file_path=None
     )
+    testevent = DroneEvent(
+        drone_id=1,
+        timestamp=datetime.datetime.utcnow(),
+        longitude=89.156998,
+        latitude=90.156998,
+        event_type=EventType.SMOKE,
+        confidence=69,
+        picture_path=None,
+        ai_predictions=None,
+        csv_file_path=None
+    )
     time.sleep(1)
     testdatatwo = DroneUpdate(
         drone_id=1,
@@ -231,17 +242,23 @@ def test_dronedatatable():
     flight_range=testdatatwo.flight_range,
     flight_time=testdatatwo.flight_time)
 
-    drones_event_table.create_drone_event_entry(
-        drone_id=testevent.drone_id,
-        timestamp=testevent.timestamp,
-        longitude=testevent.longitude,
-        latitude=testevent.latitude,
-        event_type=testevent.event_type.value,
-        confidence=testevent.confidence,
-        picture_path=testevent.picture_path,
-        ai_predictions=testevent.ai_predictions,
-        csv_file_path=testevent.csv_file_path
-    )
+    i=0
+    timestamp =testevent.timestamp
+    while(i<10):
+        
+        drones_event_table.create_drone_event_entry(
+            drone_id=testevent.drone_id,
+            timestamp=timestamp,
+            longitude=testevent.longitude+i*0.000001,
+            latitude=testevent.latitude+i*0.000001,
+            event_type=testevent.event_type.value,
+            confidence=testevent.confidence+i,
+            picture_path=testevent.picture_path,
+            ai_predictions=testevent.ai_predictions,
+            csv_file_path=testevent.csv_file_path
+        )
+        timestamp +=datetime.timedelta(seconds=10)
+        i+=1
 
     output = drone_zone_data_table.get_drone_data_by_timestamp(1,datetime.datetime.utcnow()-datetime.timedelta(minutes=5))
     assert len(output) == 2, 'Something went wrong inserting the Data (2).'
@@ -252,7 +269,7 @@ def test_dronedatatable():
     assert len(output) == 1, 'Something went wrong inserting the Data (1).'
 
     output = drones_event_table.get_drone_event_by_timestamp(1)
-    assert len(output) == 1, 'Something went wrong inserting the Data (2).'
+    assert len(output) == 10, 'Something went wrong inserting the Data (2).'
     assert output[0].latitude == testdrone.latitude, 'Something went wrong with creating geo Point for testdrone.'
     
 def test_zone():
@@ -273,22 +290,27 @@ def test_zone():
     oz_table.link_orgazone(1,2)
 
 async def test_orgazone():
-    outpu=await api_zones.read_zones_all(user_one)
-    print(outpu)
-    out = await api_zones.read_zone('zone_two',user_one)
-    print('\n')
-    print(out)
+    """aasync zone api calls tests
+    """
+    tasks = []
+    tasks.append(asyncio.create_task(api_zones.read_zones_all(user_one)))
+    tasks.append(asyncio.create_task(api_zones.read_zone('zone_one',user_one)))
+    tasks.append(asyncio.create_task(api_zones.read_zone('zone_two',user_one)))
+    gathered = await asyncio.gather(*tasks)
+    for gath in gathered:
+        print(gath)
+        print('\n')
 
 
 
 
-
+start = time.time()
 # try:
 #     os.remove(DATABASE_PATH)
 # except Exception as exception: 
 #     print(exception)
 
-start = time.time()
+
 # test_orga()
 # test_usertable() #for _ in range(500)]
 # test_verifytable()
