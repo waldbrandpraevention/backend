@@ -67,26 +67,6 @@ def get_orgas_by_zone(zone_id:int) -> Zone | None:
         output.append(orga)
     return output
 
-
 def get_orgazones_by_name(name,orga_id) -> Zone | None:
     fetched_zone = db.fetch_one(GET_ZONEBYNAME,(name,orga_id))
     return zones_table.get_obj_from_fetched(fetched_zone)
-
-
-def get_obj_from_fetched(fetched_orga):
-    """generate Organization obj from fetched element.
-
-    Args:
-        fetched_orga (list): fetched attributes from orga.
-
-    Returns:
-        Organization: orga object.
-    """
-    if fetched_match_class(Organization,fetched_orga):
-        orga_obj = Organization(
-            id = fetched_orga[0],
-            name=fetched_orga[1],
-            abbreviation=fetched_orga[2]
-        )
-        return orga_obj
-    return None
