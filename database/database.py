@@ -161,6 +161,31 @@ def insert(insert_sql:str,insert_tuple=None) -> int | None:
     except sqlite3.IntegrityError as exception:##TODO create Item exists exception and raise it here
         print(exception)
         raise exception
+    
+def insertmany(insert_sql:str,insert_tuple=None) -> int | None:
+    """inserts into the db.
+
+    Args:
+        insert_sql (str): the sql used to insert.
+        insert_tuple (tuple): the tuple with the data that should be inserted.
+
+    Returns:
+        int | None: the id of the inserted item.
+    """
+    try:
+        with database_connection() as conn:
+            cursor = conn.cursor()
+            if insert_tuple:
+                cursor.executemany(insert_sql,insert_tuple)
+            else:
+                cursor.executemany(insert_sql)
+            inserted_id = cursor.lastrowid
+            conn.commit()
+            cursor.close()
+            return inserted_id
+    except sqlite3.IntegrityError as exception:##TODO create Item exists exception and raise it here
+        print(exception)
+        raise exception
 
 def update(update_sql:str,update_tuple=None) -> bool:
     """updates an entry in the db.

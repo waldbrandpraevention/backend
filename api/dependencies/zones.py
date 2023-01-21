@@ -1,4 +1,4 @@
-from .classes import Zone
+
 from database import orga_zones_table
 
 async def get_all_zones(orga_id:int):
@@ -22,10 +22,10 @@ async def get_zone(name: str, orga_id:int):
 
     return orga_zones_table.get_orgazones_by_name(name,orga_id)
 
-async def get_zone_count():
+async def get_zone_count(orga_id:int):
     """Returns the amount of drones
 
     Returns:
         int: amount of drones
     """
-    return len(await get_all_zones())
+    return len(await get_all_zones(orga_id))

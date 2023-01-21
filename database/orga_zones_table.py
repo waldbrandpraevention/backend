@@ -20,7 +20,7 @@ CREATE INDEX IF NOT EXISTS organization_zones_FK_2 ON organization_zones (orga_i
 CREATE INDEX IF NOT EXISTS organization_zones_FK_3 ON organization_zones (zone_id);"""
 
 INSERT_ORGAZONE =  "INSERT INTO organization_zones (orga_id,zone_id) VALUES (?,?);"
-GET_ORGAZONES = '''  SELECT id,name,ST_AsText(area)
+GET_ORGAZONES = '''  SELECT id,name,federal_state,district,AsGeoJSON(area)
                     FROM zones
                     JOIN organization_zones 
                     ON zones.id = organization_zones.zone_id
@@ -32,7 +32,7 @@ GET_ZONEORGAS = ''' SELECT *
                     ON organizations.id = organization_zones.orga_id
                     WHERE organization_zones.zone_id=?;'''
 
-GET_ZONEBYNAME ='''SELECT id,name,ST_AsText(area) 
+GET_ZONEBYNAME ='''SELECT id,name,federal_state,district,AsGeoJSON(area)
                     FROM zones
                     JOIN organization_zones 
                     ON zones.id = organization_zones.zone_id

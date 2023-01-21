@@ -1,5 +1,4 @@
 import datetime
-from enum import Enum
 from typing import List
 from api.dependencies.classes import DroneUpdate
 from database.database import fetched_match_class

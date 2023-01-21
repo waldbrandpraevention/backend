@@ -33,7 +33,7 @@ GET_ENTRY ='SELECT * FROM drone_event WHERE drone_id = ?;'
 GET_EVENT_IN_ZONE = '''
 SELECT drone_id,timestamp, X(coordinates), Y(coordinates),event_type,confidence,picture_path,ai_predictions,csv_file_path
 FROM drone_event
-WHERE ST_Intersects(drone_event.coordinates, GeomFromText(?, 4326)) 
+WHERE ST_Intersects(drone_event.coordinates, GeomFromGeoJSON(?)) 
 AND timestamp > ? AND timestamp < ?;'''
 
 
@@ -109,6 +109,8 @@ def get_drone_events_in_zone(   polygon:str,
     """
     fetched_data = db.fetch_all(GET_EVENT_IN_ZONE,(polygon,after,before))
     output = []
+    if not fetched_data:
+        return None
     for drone_data in fetched_data:
         dronedata_obj = get_obj_from_fetched(drone_data)
         if dronedata_obj:

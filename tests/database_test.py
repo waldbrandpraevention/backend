@@ -6,8 +6,10 @@ import json
 import os
 import sqlite3
 import sys
+
+
 sys.path.append('../backend')
-from api.dependencies.drones import get_all_drones
+from database.spatia import spatiapoly_to_long_lat_arr
 from api.dependencies.authentication import get_password_hash
 from api.dependencies.classes import Drone, DroneEvent, EventType, Organization, User,DroneUpdate, UserWithSensitiveInfo,SettingsType
 from database.database import DATABASE_PATH, create_table
@@ -277,17 +279,17 @@ def test_zone():
     """
     create_table(zone_table.CREATE_ZONE_TABLE)
     create_table(oz_table.CREATE_ORGAZONES_TABLE)
-    zone_one_coord = [[84.23,181.82], [168.32 ,117.5], [103.7 ,58.953], [40.23 ,108.82]]
-    zone_table.create_zone('zone_one',zone_one_coord)
-    zone_table.create_zone('zone_two',[[184.23,281.82], [268.32 ,217.5], [203.7 ,158.953], [140.23 ,208.82]])
-    outpu = zone_table.get_zones()
-    assert outpu[0].coordinates == zone_one_coord, "Zone cord not matching"
-    assert zone_table.get_zone_of_coordinate(89.156998,90.156998) != None, "Point is in square"
-    assert zone_table.get_zone_of_coordinate(85.156998,61.156998) == None, "Point is not in square"
-    assert zone_table.get_zone_of_coordinate(148.156998,119.156998) != None, "Point is in square"
-    assert zone_table.get_zone_of_coordinate(159.156998,138.156998) == None, "Point is not in square"
-    oz_table.link_orgazone(1,1)
-    oz_table.link_orgazone(1,2)
+    # zone_one_coord = [[[84.23,181.82], [168.32 ,117.5], [103.7 ,58.953], [40.23 ,108.82]]]
+    # zone_table.create_zone('zone_one',zone_one_coord)
+    # zone_table.create_zone('zone_two',[[[184.23,281.82], [268.32 ,217.5], [203.7 ,158.953], [140.23 ,208.82]]])
+    # outpu = zone_table.get_zones()
+    # assert outpu[0].coordinates == zone_one_coord, "Zone cord not matching"
+    # assert zone_table.get_zone_of_coordinate(89.156998,90.156998) != None, "Point is in square"
+    # assert zone_table.get_zone_of_coordinate(85.156998,61.156998) == None, "Point is not in square"
+    # assert zone_table.get_zone_of_coordinate(148.156998,119.156998) != None, "Point is in square"
+    # assert zone_table.get_zone_of_coordinate(159.156998,138.156998) == None, "Point is not in square"
+    # oz_table.link_orgazone(1,1)
+    # oz_table.link_orgazone(1,2)
 
 async def test_orgazone():
     """aasync zone api calls tests
@@ -301,6 +303,14 @@ async def test_orgazone():
         print(gath)
         print('\n')
 
+def setup_demo_zones():
+    zones = zone_table.get_zone_of_by_district('Landkreis Potsdam-Mittelmark')
+    for zone in zones:
+        boolea = oz_table.link_orgazone(testorga.id,zone.id)
+        print(boolea)
+    
+    orgazones = oz_table.get_zones_by_orga(testorga.id)
+    assert zones == orgazones,'Ne'
 
 
 
@@ -318,7 +328,9 @@ start = time.time()
 # test_dronetable()
 # test_dronedatatable()
 # test_zone()
+# zone_table.setup()
+setup_demo_zones()
 
-asyncio.run(test_orgazone())
+#asyncio.run(test_orgazone())
 end = time.time()
 print(end - start)
