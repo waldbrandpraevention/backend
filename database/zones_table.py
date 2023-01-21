@@ -1,12 +1,10 @@
-
-
+"This module contains functions to create and fetch zones, stored in the db"
 import datetime
 import json
-import os
 from typing import List
-from api.dependencies.classes import DroneEvent, FireRisk, Zone
-from database.database import create_table, fetched_match_class
-from database.spatia import spatiapoly_to_long_lat_arr, coordinates_to_polygon
+from api.dependencies.classes import FireRisk, Zone
+from database.database import fetched_match_class
+from database.spatia import spatiageopoly_to_long_lat_arr, coordinates_to_multipolygonstr
 from database import drone_events_table
 import database.database as db
 
@@ -22,8 +20,10 @@ PRIMARY KEY (id)
 SELECT AddGeometryColumn('zones', 'area', 4326, 'MULTIPOLYGON', 'XY');'''
 #   POLYGON((101.23 171.82, 201.32 101.5, 215.7 201.953, 101.23 171.82))
 #   exterior ring, no interior rings
-CREATE_ENTRY = 'INSERT INTO zones (name,federal_state,district,area) VALUES (?,?,?,GeomFromGeoJSON(?));'#GeomFromText(?,4326)
-CREATE_ENTRY_TEXTGEO = 'INSERT INTO zones (name,federal_state,district,area) VALUES (?,?,?,GeomFromText(?,4326));'
+CREATE_ENTRY = '''INSERT INTO zones (name,federal_state,district,area) 
+                VALUES (?,?,?,GeomFromGeoJSON(?));'''
+CREATE_ENTRY_TEXTGEO = '''INSERT INTO zones (name,federal_state,district,area) 
+                        VALUES (?,?,?,GeomFromText(?,4326));'''
 
 GET_ZONE = '''SELECT id,name,federal_state,district,AsGeoJSON(area) AS area FROM zones
                 JOIN ElementaryGeometries AS e ON (e.f_table_name = 'zones' 
@@ -34,68 +34,61 @@ GET_ZONES = '''SELECT id,name,federal_state,district,AsGeoJSON(area) AS area FRO
                 JOIN ElementaryGeometries AS e ON (e.f_table_name = 'zones' 
                 AND e.origin_rowid = zones.rowid);'''
 
-GET_ZONES_BY_DISTRICT = '''SELECT id,name,federal_state,district,AsGeoJSON(area) FROM zones WHERE district = ?'''
+GET_ZONES_BY_DISTRICT = '''SELECT id,name,federal_state,district,AsGeoJSON(area) 
+                            FROM zones 
+                            WHERE district = ?'''
 
-def setup():
+def load_from_geojson(path_to_geojson):
+    """load data from a geojson file to the db.
+    required fields:
+    'features':{
+        [
+            'geometry': {'coordinates': [...], 'type': 'Polygon'},
+            'properties':{
+                'lan_name':['Bundesland']
+                'krs_name':['Landkreis Name']
+                'gem_name_short':['Name']
+        ],
+    }
 
-    create_table(CREATE_ZONE_TABLE)
-    path = os.path.realpath(os.path.dirname(__file__))
-    with open(path+'/zonedata.json','r') as fin:
-        data = json.load(fin)
-# 'geo_point_2d':
-# {'lon': 12.700551258771842, 'lat': 52.068172604501314}
-# 'geo_shape':
-# {'type': 'Feature', 'geometry': {'coordinates': [...], 'type': 'Polygon'}, 'properties': {}}
-# 'year':'2021'
-# 'lan_code':['12']
-# 'lan_name':['Brandenburg']
-# 'krs_code':['12069']
-# 'krs_name':['Landkreis Potsdam-Mittelmark']
-# 'vwg_code':['120695910']
-# 'vwg_name':['Amt Niemegk']
-# 'gem_code':['120695910448']
-# 'gem_name':['Stadt Niemegk']
-# 'gem_area_code':'DEU'
-# 'gem_type':'Stadt'
-# 'gem_name_short':['Niemegk']
+    Args:
+        path_to_geojson (_type_): path to the geojson that should be imported.
+    """
+    with open(path_to_geojson,'r') as geof:
+        data = json.load(geof)
         to_db = []
-        for local_community in data:
-            geo_json = local_community['geo_shape']
-            
-            new = {}
-            #transform Polygons to Multipolygons
-            new['type'] = 'MultiPolygon'
-            if geo_json['geometry']['type'] == 'Polygon':
-                new['coordinates'] = [geo_json['geometry']['coordinates']]
-            else:
-                new['coordinates'] = geo_json['geometry']['coordinates']
-            
-            #add SRID
-            new['crs'] = {"type":"name","properties":{"name":"EPSG:4326"}}
-            geo_json_str = json.dumps(new)
-            #str = coordinates_to_polygon(new['coordinates'])
-            insertuple = (  local_community['gem_name_short'][0],
-                            local_community['lan_name'][0],
-                            local_community['krs_name'][0],
-                            geo_json_str)
+        for local_community in data['features']:
+            text = coordinates_to_multipolygonstr(local_community['geometry'])
+            insertuple = (  local_community['properties']['gem_name_short'][0],
+                            local_community['properties']['lan_name'][0],
+                            local_community['properties']['krs_name'][0],
+                            text)
             to_db.append(insertuple)
 
-    inserted_id = db.insertmany(CREATE_ENTRY, to_db)
+    inserted_id = db.insertmany(CREATE_ENTRY_TEXTGEO, to_db)
     print(inserted_id)
 
 
-def create_zone(name,coordinates: List[List[float]])->bool:
+def create_zone(name,gemometry: dict)->bool:
     """stores geograhic area of a zone.
     Needs at least 3 coordinates to create a zone.
 
     Args:
         name (str): name of the zone.
-        coordinates (List[tuple[float,float]]): A list containing at least 3 tuples with coordinates that mark the edge of the area.
+        geometry (dict): dict which contains the coordinates and the type. Working with SRID 4326.
+        "geometry": {
+            "type": "Polygon",
+            "coordinates": [[[8.127194650631184, 48.75522682270608], more coordinates], interior rings...]
+        }
+        "geometry": {
+            "type": "MultiPolygon",
+            "coordinates": [[[[8.127194650631184, 48.75522682270608], more coordinates], interior rings...], more Polygons]
+        }
 
     Returns:
         bool: Wether the zone could be created or not.
     """
-    polygon_wkt = coordinates_to_polygon(coordinates)
+    polygon_wkt = coordinates_to_multipolygonstr(gemometry)
     inserted_id = db.insert(CREATE_ENTRY_TEXTGEO,(name,polygon_wkt))
     if inserted_id:
         return True
@@ -164,7 +157,7 @@ def get_obj_from_fetched(   fetched_zone,
         Zone | None: zone object or None if obj cant be generated.
     """
     if fetched_match_class(Zone,fetched_zone,3):
-        coord_array = spatiapoly_to_long_lat_arr(fetched_zone[4])
+        coord_array = spatiageopoly_to_long_lat_arr(fetched_zone[4])
         
         events = drone_events_table.get_drone_events_in_zone(fetched_zone[4],after)
 
