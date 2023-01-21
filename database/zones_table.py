@@ -16,14 +16,14 @@ federal_state    text NOT NULL ,
 district    text NOT NULL ,
 PRIMARY KEY (id)
 );
-
+CREATE INDEX IF NOT EXISTS zones_AK ON zones (name);
 SELECT AddGeometryColumn('zones', 'area', 4326, 'MULTIPOLYGON', 'XY');'''
 #   POLYGON((101.23 171.82, 201.32 101.5, 215.7 201.953, 101.23 171.82))
 #   exterior ring, no interior rings
 CREATE_ENTRY = '''INSERT INTO zones (name,federal_state,district,area) 
                 VALUES (?,?,?,GeomFromGeoJSON(?));'''
-CREATE_ENTRY_TEXTGEO = '''INSERT INTO zones (name,federal_state,district,area) 
-                        VALUES (?,?,?,GeomFromText(?,4326));'''
+CREATE_ENTRY_TEXTGEO = '''INSERT INTO zones (id, name,federal_state,district,area) 
+                        VALUES (?,?,?,?,GeomFromText(?,4326));'''
 
 GET_ZONE = '''SELECT id,name,federal_state,district,AsGeoJSON(area) AS area FROM zones
                 JOIN ElementaryGeometries AS e ON (e.f_table_name = 'zones' 
@@ -48,6 +48,7 @@ def load_from_geojson(path_to_geojson):
                 'lan_name':['Bundesland']
                 'krs_name':['Landkreis Name']
                 'gem_name_short':['Name']
+                'gem_code':['100440114114']
         ],
     }
 
@@ -59,7 +60,8 @@ def load_from_geojson(path_to_geojson):
         to_db = []
         for local_community in data['features']:
             text = coordinates_to_multipolygonstr(local_community['geometry'])
-            insertuple = (  local_community['properties']['gem_name_short'][0],
+            insertuple = (  local_community['properties']['gem_code'][0],
+                            local_community['properties']['gem_name_short'][0],
                             local_community['properties']['lan_name'][0],
                             local_community['properties']['krs_name'][0],
                             text)
@@ -69,7 +71,7 @@ def load_from_geojson(path_to_geojson):
     print(inserted_id)
 
 
-def create_zone(name,gemometry: dict)->bool:
+def create_zone(gem_code, name,federal_state,district,gemometry: dict)->bool:
     """stores geograhic area of a zone.
     Needs at least 3 coordinates to create a zone.
 
@@ -89,7 +91,7 @@ def create_zone(name,gemometry: dict)->bool:
         bool: Wether the zone could be created or not.
     """
     polygon_wkt = coordinates_to_multipolygonstr(gemometry)
-    inserted_id = db.insert(CREATE_ENTRY_TEXTGEO,(name,polygon_wkt))
+    inserted_id = db.insert(CREATE_ENTRY_TEXTGEO,(gem_code, name,federal_state,district,polygon_wkt))
     if inserted_id:
         return True
     return False
