@@ -9,7 +9,6 @@ from database.database import create_table, fetched_match_class
 from database.spatia import spatiapoly_to_long_lat_arr, coordinates_to_polygon
 from database import drone_events_table
 import database.database as db
-import csv
 
 CREATE_ZONE_TABLE = '''CREATE TABLE zones
 (

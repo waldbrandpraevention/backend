@@ -1,7 +1,5 @@
 import json
-import re
 from typing import List
-import geodaisy.converters as convert
 
 geo_types = {'Point', 'MultiPoint', 'LineString', 'MultiLineString',
              'Polygon', 'MultiPolygon'}
