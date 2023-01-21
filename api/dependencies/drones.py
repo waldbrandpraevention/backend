@@ -1,6 +1,3 @@
-from .classes import Drone
-from datetime import datetime, timedelta
-import random
 from database import drones_table
 from database import drone_updates_table as drone_data_table
 
@@ -15,7 +12,7 @@ async def get_all_drones():
     drones = drones_table.get_drones()
 
     for drone in drones:
-        drone_data = drone_data_table.get_latest_by_timestamp(drone.id)
+        drone_data = drone_data_table.get_latest_update(drone.id)
         if drone_data:
             drone.last_update = drone_data.timestamp
             #TODO Get Zone by lat and long
@@ -29,7 +26,7 @@ async def get_drone(name: str):
         Drone: the requestesd drone
     """
     drone = drones_table.get_drone(name)
-    drone_data = drone_data_table.get_latest_by_timestamp(drone.id)
+    drone_data = drone_data_table.get_latest_update(drone.id)
     if drone_data:
         drone.last_update = drone_data.timestamp
         #TODO Get Zone by lat and long

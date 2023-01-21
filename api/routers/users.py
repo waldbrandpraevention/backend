@@ -11,8 +11,9 @@ from database import users_table
 from database import mail_verif_table, organizations_table
 from validation import *
 from datetime import datetime, timedelta
+from api.dependencies.classes import Token
 
-from ..dependencies.authentication import create_access_token, Token, get_password_hash, ACCESS_TOKEN_EXPIRE_MINUTES
+from ..dependencies.authentication import create_access_token, get_password_hash, ACCESS_TOKEN_EXPIRE_MINUTES
 from ..dependencies.users import *
 
 router = APIRouter()
