@@ -8,9 +8,14 @@ from api.dependencies.authentication import get_password_hash
 from api.dependencies.classes import Organization, UserWithSensitiveInfo
 from api.routers import email, users, zones, drones
 from database import users_table, organizations_table
-from database.database import create_table
+from database import drone_events_table
+from database import zones_table
+from database.database import create_table, initialise_spatialite
+from database.drone_events_table import CREATE_DRONE_EVENT_TABLE
+from database import orga_zones_table
 from database.organizations_table import CREATE_ORGANISATIONS_TABLE
 from database.users_table import CREATE_USER_TABLE
+from database.zones_table import CREATE_ZONE_TABLE
 
 app = FastAPI()
 app.include_router(users.router)
@@ -43,12 +48,54 @@ def create_default_user():
                                      disabled=0,
                                      email_verified=1)
         users_table.create_user(user)
-        print("done")
+        print("user done")
+
+def create_drone_events():
+    """ for demo set
+        long=12.68895149
+        lat=52.07454738
+    """
+    if os.getenv("DEMO_LONG") is not None \
+            and os.getenv("DEMO_LAT") is not None:
+        
+        drone_events_table.insert_demo_events(float(os.getenv("DEMO_LONG")),float(os.getenv("DEMO_LAT")))
+    
+    print("drone_events done")
+
+def load_zones_from_geojson():
+    """ for demo set
+        Landkreis Potsdam-Mittelmark
+    """
+    if os.getenv("GEOJSON_PATH") is not None:
+        path = os.path.realpath(os.path.dirname(__file__))
+        path+=os.getenv("GEOJSON_PATH")
+        zones_table.load_from_geojson(path)
+        
+        if os.getenv("DEMO_DISTRICT") is not None \
+                and os.getenv("ADMIN_ORGANIZATION") is not None:
+            zones = zones_table.get_zone_of_by_district(os.getenv("DEMO_DISTRICT"))
+            for zone in zones:
+                orga_zones_table.link_orgazone(1,zone.id)
+
+    print("zones done")
 
 def main():
+    os.environ["ADMIN_MAIL"] = 'admin@kiwa.tech'
+    os.environ["ADMIN_PASSWORD"] = 'adminkiwa'
+    os.environ["ADMIN_ORGANIZATION"] = 'KIWA'
+    os.environ["DEMO_LONG"] = '12.68895149'
+    os.environ["DEMO_LAT"] = '52.07454738'
+    os.environ["GEOJSON_PATH"] = '\\database\\zone_data.geojson'
+    os.environ["DEMO_DISTRICT"] = 'Landkreis Potsdam-Mittelmark'
+    initialise_spatialite()
     create_table(CREATE_ORGANISATIONS_TABLE)
     create_table(CREATE_USER_TABLE)
+    create_table(CREATE_DRONE_EVENT_TABLE)
+    create_table(CREATE_ZONE_TABLE)
+    create_table(orga_zones_table.CREATE_ORGAZONES_TABLE)
     create_default_user()
+    create_drone_events()
+    load_zones_from_geojson()
 
 
 main()
