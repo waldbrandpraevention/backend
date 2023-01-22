@@ -11,7 +11,7 @@ import sys
 sys.path.append('../backend')
 from api.dependencies.authentication import get_password_hash
 from api.dependencies.classes import Drone, DroneEvent, EventType, Organization, User,DroneUpdate, UserWithSensitiveInfo,SettingsType
-from database.database import DATABASE_PATH, create_table
+from database.database import DATABASE_PATH, create_table, initialise_spatialite
 from database.mail_verif_table import check_token, get_mail_by_token, get_token_by_mail, store_token, CREATE_MAIL_VERIFY_TABLE
 from database.users_table import create_user,get_user,CREATE_USER_TABLE
 from database.users_table import UsrAttributes, create_user,get_user,CREATE_USER_TABLE, update_user
@@ -191,32 +191,10 @@ def test_dronedatatable():
     testdrone = DroneUpdate(
         drone_id=1,
         timestamp=datetime.datetime.utcnow(),
-        longitude=89.156998,
-        latitude=90.156998,
+        longitude=12.68895149,
+        latitude=52.07454738,
         flight_range=20.0,
         flight_time=16.4
-    )
-    testevent = DroneEvent(
-        drone_id=1,
-        timestamp=datetime.datetime.utcnow(),
-        longitude=89.156998,
-        latitude=90.156998,
-        event_type=EventType.SMOKE,
-        confidence=78,
-        picture_path=None,
-        ai_predictions=None,
-        csv_file_path=None
-    )
-    testevent = DroneEvent(
-        drone_id=1,
-        timestamp=datetime.datetime.utcnow(),
-        longitude=89.156998,
-        latitude=90.156998,
-        event_type=EventType.SMOKE,
-        confidence=69,
-        picture_path=None,
-        ai_predictions=None,
-        csv_file_path=None
     )
     time.sleep(1)
     testdatatwo = DroneUpdate(
@@ -244,23 +222,7 @@ def test_dronedatatable():
     flight_range=testdatatwo.flight_range,
     flight_time=testdatatwo.flight_time)
 
-    i=0
-    timestamp =testevent.timestamp
-    while(i<10):
-        
-        drones_event_table.create_drone_event_entry(
-            drone_id=testevent.drone_id,
-            timestamp=timestamp,
-            longitude=testevent.longitude+i*0.000001,
-            latitude=testevent.latitude+i*0.000001,
-            event_type=testevent.event_type.value,
-            confidence=testevent.confidence+i,
-            picture_path=testevent.picture_path,
-            ai_predictions=testevent.ai_predictions,
-            csv_file_path=testevent.csv_file_path
-        )
-        timestamp +=datetime.timedelta(seconds=10)
-        i+=1
+    drones_event_table.insert_demo_events()
 
     output = drone_zone_data_table.get_drone_data_by_timestamp(1,datetime.datetime.utcnow()-datetime.timedelta(minutes=5))
     assert len(output) == 2, 'Something went wrong inserting the Data (2).'
@@ -307,15 +269,16 @@ try:
 except Exception as exception: 
     print(exception)
 
+initialise_spatialite()
 #create_table(zone_table.CREATE_ZONE_TABLE)
 start = time.time()
 
-# test_orga()
-# test_usertable() #for _ in range(500)]
-# test_verifytable()
-# test_usersettings()
-# test_dronetable()
-# test_dronedatatable()
+test_orga()
+test_usertable() #for _ in range(500)]
+test_verifytable()
+test_usersettings()
+test_dronetable()
+test_dronedatatable()
 test_zone()
 #print(db.fetch_all('SELECT ASTEXT(area) FROM zones'))
 
