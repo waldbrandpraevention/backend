@@ -73,8 +73,8 @@ def load_zones_from_geojson():
         
         if os.getenv("DEMO_DISTRICT") is not None \
                 and os.getenv("ADMIN_ORGANIZATION") is not None:
-            zones = zones_table.get_zone_of_by_district(os.getenv("DEMO_DISTRICT"))
-            for zone in zones:
+            fetched_zones = zones_table.get_zone_of_by_district(os.getenv("DEMO_DISTRICT"))
+            for zone in fetched_zones:
                 orga_zones_table.link_orgazone(1,zone.id)
 
     print("zones done")
