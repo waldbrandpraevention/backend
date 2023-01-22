@@ -1,5 +1,6 @@
 import datetime
 import json
+import random
 from typing import List
 from api.dependencies.classes import DroneEvent, EventType, FireRisk
 from database.database import fetched_match_class
@@ -36,6 +37,33 @@ FROM drone_event
 WHERE ST_Intersects(drone_event.coordinates, GeomFromGeoJSON(?)) 
 AND timestamp > ? AND timestamp < ?;'''
 
+
+def insert_demo_events(long:float,lat:float):
+    """insert 10 demo drone events.
+
+    Args:
+        long (float): long of the coordinate.
+        lat (float): lat of the coordinate.
+    """
+    timestamp=datetime.datetime.utcnow()
+    i=0
+    while i<10:
+        event_rand = random.randint(0,2)
+        if event_rand > 0:
+            confidence = random.randint(20,90)
+            create_drone_event_entry(
+                    drone_id=1,
+                    timestamp=timestamp,
+                    longitude=long+i*0.000001,
+                    latitude=lat+i*0.000001,
+                    event_type=event_rand,
+                    confidence=confidence,
+                    picture_path=f'demo/path/{i}',
+                    ai_predictions={'test':'test1'},
+                    csv_file_path=f'demo/path/{i}'
+                )
+        timestamp +=datetime.timedelta(seconds=10)
+        i+=1
 
 
 def create_drone_event_entry(drone_id:int,
