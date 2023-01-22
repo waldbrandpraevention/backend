@@ -22,7 +22,7 @@ SELECT AddGeometryColumn('zones', 'area', 4326, 'MULTIPOLYGON', 'XY');'''
 #   exterior ring, no interior rings
 CREATE_ENTRY = '''INSERT INTO zones (name,federal_state,district,area) 
                 VALUES (?,?,?,GeomFromGeoJSON(?));'''
-CREATE_ENTRY_TEXTGEO = '''INSERT INTO zones (id, name,federal_state,district,area) 
+CREATE_ENTRY_TEXTGEO = '''INSERT OR IGNORE INTO zones (id, name,federal_state,district,area) 
                         VALUES (?,?,?,?,GeomFromText(?,4326));'''
 
 GET_ZONE = '''SELECT id,name,federal_state,district,AsGeoJSON(area) AS area FROM zones
@@ -39,7 +39,7 @@ GET_ZONES_BY_DISTRICT = '''SELECT id,name,federal_state,district,AsGeoJSON(area)
                             WHERE district = ?'''
 
 
-def load_from_geojson(path_to_geojson):
+def load_from_geojson(path_to_geojson) -> int:
     """load data from a geojson file to the db.
     required fields:
     'features':{
@@ -55,6 +55,9 @@ def load_from_geojson(path_to_geojson):
 
     Args:
         path_to_geojson (_type_): path to the geojson that should be imported.
+
+    Returns:
+        int: number of inserted zones.
     """
     with open(path_to_geojson, 'r') as geof:
         data = json.load(geof)
@@ -68,8 +71,9 @@ def load_from_geojson(path_to_geojson):
                           text)
             to_db.append(insertuple)
 
-    inserted_id = db.insertmany(CREATE_ENTRY_TEXTGEO, to_db)
-    print(inserted_id)
+    rowcount = db.insertmany(CREATE_ENTRY_TEXTGEO, to_db)
+    
+    return rowcount
 
 
 def create_zone(gem_code, name, federal_state, district, gemometry: dict) -> bool:
