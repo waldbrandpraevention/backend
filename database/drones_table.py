@@ -21,11 +21,9 @@ type           text,
 flight_range   real,
 cc_range       real,
 flight_time    real,
-PRIMARY KEY (id),
-FOREIGN KEY (droneowner_id) REFERENCES drone_owners (id)
+PRIMARY KEY (id)
 );
-CREATE UNIQUE INDEX IF NOT EXISTS drones_AK ON drones (name);
-CREATE INDEX drones_FK_1 ON drones (droneowner_id);'''
+CREATE UNIQUE INDEX IF NOT EXISTS drones_AK ON drones (name);'''
 
 CREATE_DRONE = 'INSERT INTO drones (name,droneowner_id,type,flight_range,cc_range,flight_time) VALUES (? ,? ,? ,? ,? ,?);'
 GET_DRONE = 'SELECT * FROM drones WHERE name=?;'
