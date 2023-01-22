@@ -3,14 +3,12 @@
 import asyncio
 import datetime
 import json
-import os
+import pytest
 import sqlite3
 import sys
-
-
 sys.path.append('../backend')
 from api.dependencies.authentication import get_password_hash
-from api.dependencies.classes import Drone, DroneEvent, EventType, Organization, User,DroneUpdate, UserWithSensitiveInfo,SettingsType
+from api.dependencies.classes import Drone, Organization, DroneUpdate, UserWithSensitiveInfo,SettingsType
 from database.database import DATABASE_PATH, create_table, initialise_spatialite
 from database.mail_verif_table import check_token, get_mail_by_token, get_token_by_mail, store_token, CREATE_MAIL_VERIFY_TABLE
 from database.users_table import create_user,get_user,CREATE_USER_TABLE
@@ -52,7 +50,6 @@ user_two = UserWithSensitiveInfo(email=mail,
 def test_usertable():
     """tests for user table.
     """
-    create_table(CREATE_USER_TABLE)
     create_user(user_one)
     fetched_user = get_user(user_one.email)
     assert fetched_user.first_name == user_one.first_name, "Couldnt create or get user"
@@ -98,7 +95,6 @@ def test_verifytable():
 def test_orga():
     """tests for orga table.
     """
-    create_table(CREATE_ORGANISATIONS_TABLE)
     create_orga(testorga.name,testorga.abbreviation)
     orga = get_orga('testorga')
     update_orga(orga,OrgAttributes.ABBREVIATION,'TEO')
@@ -222,7 +218,7 @@ def test_dronedatatable():
     flight_range=testdatatwo.flight_range,
     flight_time=testdatatwo.flight_time)
 
-    drones_event_table.insert_demo_events()
+    drones_event_table.insert_demo_events(long=12.68895149, lat=52.07454738)
 
     output = drone_zone_data_table.get_drone_data_by_timestamp(1,datetime.datetime.utcnow()-datetime.timedelta(minutes=5))
     assert len(output) == 2, 'Something went wrong inserting the Data (2).'
@@ -239,11 +235,6 @@ def test_dronedatatable():
 def test_zone():
     """tests for zone table.
     """
-    create_table(zone_table.CREATE_ZONE_TABLE)
-    create_table(oz_table.CREATE_ORGAZONES_TABLE)
-    path = os.path.realpath(os.path.dirname(os.path.dirname(__file__)))
-    path+='\\database\\zone_data.geojson'
-    zone_table.load_from_geojson(path)
     zones = zone_table.get_zone_of_by_district('Landkreis Potsdam-Mittelmark')
     for zone in zones:
         oz_table.link_orgazone(testorga.id,zone.id)
@@ -251,6 +242,7 @@ def test_zone():
     orgazones = oz_table.get_zones_by_orga(testorga.id)
     assert zones == orgazones,'Ne'
 
+@pytest.mark.asyncio
 async def test_orgazone():
     """aasync zone api calls tests
     """
@@ -262,26 +254,3 @@ async def test_orgazone():
     for gath in gathered:
         print(gath)
         print('\n')
-
-
-try:
-    os.remove(DATABASE_PATH)
-except Exception as exception: 
-    print(exception)
-
-initialise_spatialite()
-#create_table(zone_table.CREATE_ZONE_TABLE)
-start = time.time()
-
-test_orga()
-test_usertable() #for _ in range(500)]
-test_verifytable()
-test_usersettings()
-test_dronetable()
-test_dronedatatable()
-test_zone()
-#print(db.fetch_all('SELECT ASTEXT(area) FROM zones'))
-
-#asyncio.run(test_orgazone())
-end = time.time()
-print(end - start)
