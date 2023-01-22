@@ -38,6 +38,7 @@ GET_ZONES_BY_DISTRICT = '''SELECT id,name,federal_state,district,AsGeoJSON(area)
                             FROM zones 
                             WHERE district = ?'''
 
+
 def load_from_geojson(path_to_geojson):
     """load data from a geojson file to the db.
     required fields:
@@ -55,23 +56,23 @@ def load_from_geojson(path_to_geojson):
     Args:
         path_to_geojson (_type_): path to the geojson that should be imported.
     """
-    with open(path_to_geojson,'r') as geof:
+    with open(path_to_geojson, 'r') as geof:
         data = json.load(geof)
         to_db = []
         for local_community in data['features']:
             text = coordinates_to_multipolygonstr(local_community['geometry'])
-            insertuple = (  local_community['properties']['gem_code'][0],
-                            local_community['properties']['gem_name_short'][0],
-                            local_community['properties']['lan_name'][0],
-                            local_community['properties']['krs_name'][0],
-                            text)
+            insertuple = (local_community['properties']['gem_code'][0],
+                          local_community['properties']['gem_name_short'][0],
+                          local_community['properties']['lan_name'][0],
+                          local_community['properties']['krs_name'][0],
+                          text)
             to_db.append(insertuple)
 
     inserted_id = db.insertmany(CREATE_ENTRY_TEXTGEO, to_db)
     print(inserted_id)
 
 
-def create_zone(gem_code, name,federal_state,district,gemometry: dict)->bool:
+def create_zone(gem_code, name, federal_state, district, gemometry: dict) -> bool:
     """stores geograhic area of a zone.
     Needs at least 3 coordinates to create a zone.
 
@@ -91,12 +92,14 @@ def create_zone(gem_code, name,federal_state,district,gemometry: dict)->bool:
         bool: Wether the zone could be created or not.
     """
     polygon_wkt = coordinates_to_multipolygonstr(gemometry)
-    inserted_id = db.insert(CREATE_ENTRY_TEXTGEO,(gem_code, name,federal_state,district,polygon_wkt))
+    inserted_id = db.insert(
+        CREATE_ENTRY_TEXTGEO, (gem_code, name, federal_state, district, polygon_wkt))
     if inserted_id:
         return True
     return False
 
-def get_zone_of_coordinate(long,lat) -> Zone | None:
+
+def get_zone_of_coordinate(long, lat) -> Zone | None:
     """fetch the zone, the described point is in.
 
     Args:
@@ -106,10 +109,11 @@ def get_zone_of_coordinate(long,lat) -> Zone | None:
     Returns:
         Zone | None: the Zone if the point is inside a zones area, None if not.
     """
-    fetched_zone = db.fetch_one(GET_ZONE,(long,lat))
+    fetched_zone = db.fetch_one(GET_ZONE, (long, lat))
     return get_obj_from_fetched(fetched_zone)
 
-def get_zone_of_by_district(name:str) -> List[Zone] | None:
+
+def get_zone_of_by_district(name: str) -> List[Zone] | None:
     """fetch the list of zones, in this district.
 
     Args:
@@ -119,7 +123,7 @@ def get_zone_of_by_district(name:str) -> List[Zone] | None:
     Returns:
         Zone | None: the Zone if the point is inside a zones area, None if not.
     """
-    fetched_zones = db.fetch_all(GET_ZONES_BY_DISTRICT,(name,))
+    fetched_zones = db.fetch_all(GET_ZONES_BY_DISTRICT, (name,))
     if fetched_zones:
         output = []
         for zone in fetched_zones:
@@ -128,6 +132,7 @@ def get_zone_of_by_district(name:str) -> List[Zone] | None:
                 output.append(zone_obj)
         return output
     return None
+
 
 def get_zones() -> List[Zone]:
     """get a list of all zones.
@@ -145,9 +150,11 @@ def get_zones() -> List[Zone]:
         return output
     return None
 
-def get_obj_from_fetched(   fetched_zone,
-                            after:datetime.datetime=datetime.datetime.utcnow()-datetime.timedelta(days=1)
-                        ) -> Zone | None:
+
+def get_obj_from_fetched(
+                fetched_zone,
+                after: datetime.datetime = datetime.datetime.utcnow()-datetime.timedelta(days=1)
+                ) -> Zone | None:
     """generate Zone obj from fetched element.
 
     Args:
@@ -158,20 +165,21 @@ def get_obj_from_fetched(   fetched_zone,
     Returns:
         Zone | None: zone object or None if obj cant be generated.
     """
-    if fetched_match_class(Zone,fetched_zone,3):
+    if fetched_match_class(Zone, fetched_zone, 3):
         coord_array = spatiageopoly_to_long_lat_arr(fetched_zone[4])
-        
-        events = drone_events_table.get_drone_events_in_zone(fetched_zone[4],after)
+
+        events = drone_events_table.get_drone_events_in_zone(
+            fetched_zone[4], after)
 
         if events:
             firerisk_enum = drone_events_table.calculate_firerisk(events)
         else:
             firerisk_enum = FireRisk(1)
 
-        zone_obj = Zone(#TODO
-            id = fetched_zone[0],
+        zone_obj = Zone(  #TODO
+            id=fetched_zone[0],
             name=fetched_zone[1],
-            federal_state =fetched_zone[2],
+            federal_state=fetched_zone[2],
             district=fetched_zone[3],
             coordinates=coord_array,
             events=events,
