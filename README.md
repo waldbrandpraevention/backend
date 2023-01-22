@@ -39,7 +39,7 @@ git clone https://github.com/waldbrandpraevention/backend.git
 2. Server starten
 ```
 cd waldbrandpraevention/backend
-uvicorn main:app --reload
+uvicorn main:app --reload --env-file demo.env
 ```
 3. Backend läuft auf http://localhost:8000<br>
 API Documentation auf http://localhost:8000/docs
