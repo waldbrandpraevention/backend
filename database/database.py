@@ -162,7 +162,6 @@ def insert(insert_sql:str,insert_tuple=None) -> int | None:
             cursor.close()
             return inserted_id
     except sqlite3.IntegrityError as exception:##TODO create Item exists exception and raise it here
-        print(exception)
         raise exception
     
 def insertmany(insert_sql:str,insert_tuple=None) -> int | None:
@@ -182,10 +181,10 @@ def insertmany(insert_sql:str,insert_tuple=None) -> int | None:
                 cursor.executemany(insert_sql,insert_tuple)
             else:
                 cursor.executemany(insert_sql)
-            inserted_id = cursor.lastrowid
+            rowcount = cursor.rowcount
             conn.commit()
             cursor.close()
-            return inserted_id
+            return rowcount
     except sqlite3.IntegrityError as exception:##TODO create Item exists exception and raise it here
         print(exception)
         raise exception
