@@ -39,7 +39,7 @@ AND timestamp > ? AND timestamp < ?;'''
 
 
 def insert_demo_events(long:float,lat:float):
-    """insert 10 demo drone events.
+    """insert 5 demo drone events.
 
     Args:
         long (float): long of the coordinate.
@@ -47,21 +47,25 @@ def insert_demo_events(long:float,lat:float):
     """
     timestamp=datetime.datetime.utcnow()
     i=0
-    while i<10:
+    num_inserted=0
+    while num_inserted < 4:
         event_rand = random.randint(0,2)
         if event_rand > 0:
             confidence = random.randint(20,90)
+            long_rand = random.randint(0,100)/1000000
+            lat_rand = random.randint(0,100)/1000000
             create_drone_event_entry(
                     drone_id=1,
                     timestamp=timestamp,
-                    longitude=long+i*0.000001,
-                    latitude=lat+i*0.000001,
+                    longitude=long+long_rand,
+                    latitude=lat+lat_rand,
                     event_type=event_rand,
                     confidence=confidence,
                     picture_path=f'demo/path/{i}',
                     ai_predictions={'test':'test1'},
                     csv_file_path=f'demo/path/{i}'
                 )
+            num_inserted+=1
         timestamp +=datetime.timedelta(seconds=10)
         i+=1
 
