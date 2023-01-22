@@ -16,16 +16,20 @@ async def get_all_zones(orga_id:int):
 async def get_zone(name: str, orga_id:int):
     """Returns a specific zone from the db
 
+    Args:
+        name (_type_): name of the zone.
+        orga_id (_type_): id of the orga that want to access this zones data.
+
     Returns:
-        Zone[]: List of zones
+        Zone | None: zone object.
     """
 
     return orga_zones_table.get_orgazones_by_name(name,orga_id)
 
 async def get_zone_count(orga_id:int):
-    """Returns the amount of drones
+    """Returns the amount of zones of this organization.
 
     Returns:
-        int: amount of drones
+        int: amount of zones
     """
     return len(await get_all_zones(orga_id))
