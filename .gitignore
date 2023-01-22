@@ -6,3 +6,4 @@
 zonedata.json
 zone_data.geojson
 .pylintrc
+test.py
