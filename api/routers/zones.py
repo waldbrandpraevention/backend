@@ -3,7 +3,6 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from  ..dependencies.zones import get_all_zones, get_zone, get_zone_count
 from .users import get_current_user
 from ..dependencies.classes import User, Zone
-from database import organizations_table
 router = APIRouter()
 
 
