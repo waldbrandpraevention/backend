@@ -1,33 +1,31 @@
-from .classes import Zone
 
-async def get_all_zones():
+from database import orga_zones_table
+
+async def get_all_zones(orga_id:int):
     """Returns all zones from the db
+
+    Args:
+        orga_id (int): _description_
 
     Returns:
         Zone[]: List of zones
     """
-    zones = []
-    #TODO real db calls
+    return orga_zones_table.get_zones_by_orga(orga_id)
 
-    zones.append(Zone(name="Zone-123", fire_risk=1, ai=1))
-    zones.append(Zone(name="Zone-456", fire_risk=1, ai=1))
 
-    return zones
-
-async def get_zone(name: str):
+async def get_zone(name: str, orga_id:int):
     """Returns a specific zone from the db
 
     Returns:
         Zone[]: List of zones
     """
-    #TODO real db calls with None if not found
 
-    return Zone(name, 1)
+    return orga_zones_table.get_orgazones_by_name(name,orga_id)
 
-async def get_zone_count():
+async def get_zone_count(orga_id:int):
     """Returns the amount of drones
 
     Returns:
         int: amount of drones
     """
-    return len(await get_all_zones())
+    return len(await get_all_zones(orga_id))

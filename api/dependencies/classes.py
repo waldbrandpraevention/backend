@@ -110,7 +110,9 @@ class DroneEvent(BaseModel):
 class Zone(BaseModel):
     id: int | None = None
     name: str | None = None
+    federal_state: str | None = None
+    district: str | None = None
     events: List[DroneEvent] | None = None
     fire_risk: FireRisk | None = None
     ai: FireRisk | None = None
-    coordinates: List[List[float]] | None = None
+    coordinates: List[List[List[List[float]]]] | None = None
