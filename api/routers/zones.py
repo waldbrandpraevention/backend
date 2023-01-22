@@ -27,7 +27,7 @@ async def read_zone(name: str, current_user: User = Depends(get_current_user)):
         )
     return zone
 
-@router.get("/zones/all/", status_code=status.HTTP_200_OK)
+@router.get("/zones/all/", status_code=status.HTTP_200_OK, response_model=list[Zone])
 async def read_zones_all(current_user: User = Depends(get_current_user)):
     """API call to get the all zones
 
@@ -49,4 +49,4 @@ async def read_zones_count(current_user: User = Depends(get_current_user)):
         int: amount of drones
     """
 
-    return {"count": await get_zone_count()}
+    return {"count": await get_zone_count(current_user.organization.id)}

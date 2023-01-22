@@ -26,7 +26,7 @@ GET_ORGAZONES = '''  SELECT id,name,federal_state,district,AsGeoJSON(area)
                     ON zones.id = organization_zones.zone_id
                     WHERE organization_zones.orga_id=?;'''
 
-GET_ZONEORGAS = ''' SELECT * 
+GET_ZONEORGAS = ''' SELECT *
                     FROM organizations
                     LEFT JOIN organization_zones 
                     ON organizations.id = organization_zones.orga_id
@@ -45,6 +45,15 @@ UPDATE_ATTRIBUTE = 'UPDATE organization_zones SET {} = ? WHERE name = ?;'
 
 
 def link_orgazone(orga_id:int,zone_id:int)->bool:
+    """link an organization with a zone.
+
+    Args:
+        orga_id (int): id of the orga that should be linked.
+        zone_id (int): id of the zone that should be linked.
+
+    Returns:
+        bool: returns if action was successful.
+    """
     inserted_id = db.insert(INSERT_ORGAZONE,(orga_id,zone_id))
     if inserted_id:
         return True
@@ -52,6 +61,14 @@ def link_orgazone(orga_id:int,zone_id:int)->bool:
     return False
 
 def get_zones_by_orga(orga_id:int) -> List[Zone] | None:
+    """fetches all zones, linked to an organization.
+
+    Args:
+        orga_id (int): id of the orga.
+
+    Returns:
+        List[Zone] | None: list of zones.
+    """
     fetched_zones = db.fetch_all(GET_ORGAZONES,(orga_id,))
     output = []
     for fetched in fetched_zones:
@@ -59,8 +76,16 @@ def get_zones_by_orga(orga_id:int) -> List[Zone] | None:
         output.append(zone)
     return output
 
-def get_orgas_by_zone(zone_id:int) -> Zone | None:
-    fetched_orga = db.fetch_all(GET_ORGAZONES,(zone_id,))
+def get_orgas_by_zone(zone_id:int) -> List[Organization] | None:
+    """get orgas that are linked to this zone.
+
+    Args:
+        zone_id (int): id of the zone.
+
+    Returns:
+        List[Organization] | None: list of orgas.
+    """
+    fetched_orga = db.fetch_all(GET_ZONEORGAS,(zone_id,))
     output = []
     for fetched in fetched_orga:
         orga = orgas_table.get_obj_from_fetched(fetched)
@@ -68,5 +93,14 @@ def get_orgas_by_zone(zone_id:int) -> Zone | None:
     return output
 
 def get_orgazones_by_name(name,orga_id) -> Zone | None:
+    """fetch the zone by its name and make sure its a zone that the orga is allowed to see.
+
+    Args:
+        name (_type_): name of the zone.
+        orga_id (_type_): id of the orga that want to access this zones data.
+
+    Returns:
+        Zone | None: zone object.
+    """
     fetched_zone = db.fetch_one(GET_ZONEBYNAME,(name,orga_id))
     return zones_table.get_obj_from_fetched(fetched_zone)
