@@ -1,17 +1,11 @@
 """Tests for the database func"""
 import os
 import sqlite3
-import configparser
 from contextlib import contextmanager
 from pydantic import BaseModel
 
-
-CONFIG_PATH='config.ini'
-config = configparser.ConfigParser()
-config.read(CONFIG_PATH)
-
-DATABASE_PATH = config.get('database','path')
-BACKUP_PATH = config.get('database','backuppath')
+DATABASE_PATH = os.getenv('DB_PATH')
+BACKUP_PATH = os.getenv('DB_BACKUP_PATH')
 
 EMAIL_REGEX = r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)"
 
@@ -26,7 +20,7 @@ os.environ['PATH'] = spatialite_path + ';' + os.environ['PATH']
 conections = []
 
 def create_backup():
-    """Creates a backup in the path specified in the config.ini.
+    """Creates a backup in the path specified in the env variable.
     """
     with database_connection() as database_conn:
         with database_connection(BACKUP_PATH) as backup_conn:
