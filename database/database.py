@@ -1,8 +1,8 @@
+"""Tests for the database func"""
 import os
 import sqlite3
 import configparser
 from contextlib import contextmanager
-from typing import List
 from pydantic import BaseModel
 
 
@@ -76,10 +76,6 @@ def connect(path=DATABASE_PATH) -> sqlite3.Connection | None:
         conn = sqlite3.connect(path, check_same_thread=check_same_thread,detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES)
         conn.enable_load_extension(True)
         conn.load_extension("mod_spatialite")
-        try:
-            conn.execute('SELECT InitSpatialMetaData(1);')
-        except:
-            pass
 
         return conn
     except Exception as exception:
@@ -99,6 +95,19 @@ def close_connection(conn:sqlite3.Connection)->None:
         else:
             conections.append(conn)
 
+    except sqlite3.Error as exception:
+        print(exception)
+
+def initialise_spatialite()-> None:
+    """executes the SELECT InitSpatialMetaData(1); sql in order to initialise
+        the spatialite tables.
+    """
+    try:
+        with database_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute('SELECT InitSpatialMetaData(1);')
+            conn.commit()
+            cursor.close()
     except sqlite3.Error as exception:
         print(exception)
 
