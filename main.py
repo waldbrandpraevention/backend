@@ -80,13 +80,6 @@ def load_zones_from_geojson():
     print("zones done")
 
 def main():
-    os.environ["ADMIN_MAIL"] = 'admin@kiwa.tech'
-    os.environ["ADMIN_PASSWORD"] = 'adminkiwa'
-    os.environ["ADMIN_ORGANIZATION"] = 'KIWA'
-    os.environ["DEMO_LONG"] = '12.68895149'
-    os.environ["DEMO_LAT"] = '52.07454738'
-    os.environ["GEOJSON_PATH"] = '\\database\\zone_data.geojson'
-    os.environ["DEMO_DISTRICT"] = 'Landkreis Potsdam-Mittelmark'
     initialise_spatialite()
     create_table(CREATE_ORGANISATIONS_TABLE)
     create_table(CREATE_USER_TABLE)
