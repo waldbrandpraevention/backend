@@ -1,4 +1,5 @@
 import os
+import sqlite3
 
 from fastapi import Depends, FastAPI, HTTPException, status
 import random
@@ -37,7 +38,10 @@ def create_default_user():
     if os.getenv("ADMIN_MAIL") is not None \
             and os.getenv("ADMIN_PASSWORD") is not None \
             and os.getenv("ADMIN_ORGANIZATION") is not None:
-        organization = organizations_table.create_orga(organame=os.getenv("ADMIN_ORGANIZATION"), orga_abb=os.getenv("ADMIN_ORGANIZATION"))
+        try:
+            organization = organizations_table.create_orga(organame=os.getenv("ADMIN_ORGANIZATION"), orga_abb=os.getenv("ADMIN_ORGANIZATION"))
+        except sqlite3.IntegrityError:
+            organization = organizations_table.get_orga(os.getenv("ADMIN_ORGANIZATION"))
         hashed_pw = get_password_hash(os.getenv("ADMIN_PASSWORD"))
         user = UserWithSensitiveInfo(email=os.getenv("ADMIN_MAIL"),
                                      first_name="Admin",
@@ -47,7 +51,10 @@ def create_default_user():
                                      permission=2,
                                      disabled=0,
                                      email_verified=1)
-        users_table.create_user(user)
+        try:
+            users_table.create_user(user)
+        except sqlite3.IntegrityError:
+            pass
         print("user done")
 
 def create_drone_events():
@@ -69,13 +76,17 @@ def load_zones_from_geojson():
     if os.getenv("GEOJSON_PATH") is not None:
         path = os.path.realpath(os.path.dirname(__file__))
         path+=os.getenv("GEOJSON_PATH")
-        zones_table.load_from_geojson(path)
+        added_zones = zones_table.load_from_geojson(path)
+        print(f'Zones added: {added_zones}')
         
         if os.getenv("DEMO_DISTRICT") is not None \
                 and os.getenv("ADMIN_ORGANIZATION") is not None:
             fetched_zones = zones_table.get_zone_of_by_district(os.getenv("DEMO_DISTRICT"))
             for zone in fetched_zones:
-                orga_zones_table.link_orgazone(1,zone.id)
+                try:
+                    orga_zones_table.link_orgazone(1,zone.id)
+                except sqlite3.IntegrityError:
+                    pass
 
     print("zones done")
 
