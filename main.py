@@ -6,6 +6,7 @@ import random
 from fastapi.middleware.cors import CORSMiddleware
 
 from api.dependencies.authentication import get_password_hash
+from api.dependencies.email import send_email
 from api.dependencies.classes import Organization, UserWithSensitiveInfo
 from api.routers import email, users, zones, drones
 from database import users_table, organizations_table
@@ -116,3 +117,8 @@ async def root():
 @app.get("/test")
 async def test(input: str):
     return {"message": input}
+
+
+@app.get("/test-mail/")
+async def test_mail(reciever: str, subject: str, message: str):
+    return send_email(reciever, subject, message)
