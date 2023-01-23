@@ -40,7 +40,7 @@ async def send_email(reciever: str, subject: str, message: str):
     %s
     """ % (sender, reciever, subject, message)
 
-    email_server = smtplib.SMTP(server, port)
+    email_server = SMTP(server, port)
     email_server.login(user, passsword)
     email_server.sendmail(sender, reciever, message)
     email_server.quit()
