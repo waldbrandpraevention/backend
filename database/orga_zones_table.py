@@ -32,11 +32,11 @@ GET_ZONEORGAS = ''' SELECT *
                     ON organizations.id = organization_zones.orga_id
                     WHERE organization_zones.zone_id=?;'''
 
-GET_ZONEBYNAME ='''SELECT id,name,federal_state,district,AsGeoJSON(area)
+GET_ZONEBY ='''SELECT id,name,federal_state,district,AsGeoJSON(area)
                     FROM zones
                     JOIN organization_zones 
                     ON zones.id = organization_zones.zone_id
-                    WHERE zones.name=? 
+                    WHERE zones.{}=? 
                     AND organization_zones.orga_id=?;'''
 
 GET_ORGAZONES_BY_ORGA = 'SELECT * FROM organization_zones WHERE orga_id=?;'
@@ -102,5 +102,20 @@ def get_orgazones_by_name(name,orga_id) -> Zone | None:
     Returns:
         Zone | None: zone object.
     """
-    fetched_zone = db.fetch_one(GET_ZONEBYNAME,(name,orga_id))
+    sql = GET_ZONEBY.format('name')
+    fetched_zone = db.fetch_one(sql,(name,orga_id))
+    return zones_table.get_obj_from_fetched(fetched_zone)
+
+def get_orgazones_by_id(zone_id,orga_id) -> Zone | None:
+    """fetch the zone by its id and make sure its a zone that the orga is allowed to see.
+
+    Args:
+        zone_id (_type_): id of the zone.
+        orga_id (_type_): id of the orga that want to access this zones data.
+
+    Returns:
+        Zone | None: zone object.
+    """
+    sql = GET_ZONEBY.format('id')
+    fetched_zone = db.fetch_one(sql,(zone_id,orga_id))
     return zones_table.get_obj_from_fetched(fetched_zone)
