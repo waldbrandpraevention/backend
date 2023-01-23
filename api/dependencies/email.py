@@ -1,6 +1,6 @@
 from smtplib import SMTP
 import datetime
-import validation
+from validation import *
 import os
 from fastapi import Depends, FastAPI, HTTPException, status
 
