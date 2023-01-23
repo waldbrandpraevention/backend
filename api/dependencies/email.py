@@ -2,6 +2,7 @@ from smtplib import SMTP
 import datetime
 import validation
 import os
+from fastapi import Depends, FastAPI, HTTPException, status
 
 server = os.getenv("SMTP_HOST")
 port = os.getenv("SMTP_PORT")
