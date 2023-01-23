@@ -2,9 +2,11 @@ from smtplib import SMTP
 import datetime
 import validation
 
-server = "localhost"
-port = 8025
-sender = 'noreply@kiwa.tech'
+server = os.getenv("SMTP_Host")
+port = os.getenv("SMTP_Port")
+user = os.getenv("SMTP_User")
+passsword = os.getenv("SMTP_Password")
+sender = os.getenv("SMTP_Sender")
 
 
 async def send_email(reciever: str, subject: str, message: str):
@@ -37,7 +39,8 @@ async def send_email(reciever: str, subject: str, message: str):
     """ % (sender, reciever, subject, message)
 
     email_server = smtplib.SMTP(server, port)
+    email_server.login(user, passsword)
     email_server.sendmail(sender, reciever, message)
     email_server.quit()
 
-    return True
+    return {"message": "Email code executed"}

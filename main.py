@@ -82,3 +82,7 @@ async def root():
 @app.get("/test")
 async def test(input: str):
     return {"message": input}
+
+@app.get("/email-test/")
+async def test(reciever: str, subject: str, message: str):
+    return send_email(reciever, subject, message)
