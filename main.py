@@ -121,4 +121,4 @@ async def test(input: str):
 
 @app.get("/test-mail/")
 async def test_mail(reciever: str, subject: str, message: str):
-    return send_email(reciever, subject, message)
+    return await send_email(reciever, subject, message)
