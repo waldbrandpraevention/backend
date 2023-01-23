@@ -1,6 +1,7 @@
 from smtplib import SMTP
 import datetime
 import validation
+import os
 
 server = os.getenv("SMTP_HOST")
 port = os.getenv("SMTP_PORT")
