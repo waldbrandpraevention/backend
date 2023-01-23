@@ -2,11 +2,11 @@ from smtplib import SMTP
 import datetime
 import validation
 
-server = os.getenv("SMTP_Host")
-port = os.getenv("SMTP_Port")
-user = os.getenv("SMTP_User")
-passsword = os.getenv("SMTP_Password")
-sender = os.getenv("SMTP_Sender")
+server = os.getenv("SMTP_HOST")
+port = os.getenv("SMTP_PORT")
+user = os.getenv("SMTP_USER")
+passsword = os.getenv("SMTP_PASSWORD")
+sender = os.getenv("SMTP_SENDER")
 
 
 async def send_email(reciever: str, subject: str, message: str):
