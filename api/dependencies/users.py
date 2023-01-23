@@ -1,4 +1,7 @@
-from pydantic import BaseModel
+email_verification_exception = HTTPException(
+        status_code=status.HTTP_406_NOT_ACCEPTABLE,
+        detail="Email is not verified",
+    )from pydantic import BaseModel
 from fastapi import Depends, HTTPException, status
 from enum import Enum
 from .classes import User, UserWithSensitiveInfo, Allert
@@ -59,10 +62,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
         detail="User is disabled",
         headers={"WWW-Authenticate": "Bearer"},
     )
-    email_verification_exception = HTTPException(
-        status_code=status.HTTP_406_NOT_ACCEPTABLE,
-        detail="Email is not verified",
-    )
+    
     email = await get_email_from_token(token)
     user = get_user(email)
     if user is None:
