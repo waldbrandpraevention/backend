@@ -3,7 +3,7 @@ FROM python:3.10-alpine
 
 RUN apk add --no-cache sqlite
 
-RUN apk add --no-cache libspatialite
+RUN apk add --no-cache libspatialite=5.0.1-r5
 
 WORKDIR /api
 
