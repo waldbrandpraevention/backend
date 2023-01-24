@@ -4,7 +4,7 @@ import json
 from typing import List
 from api.dependencies.classes import FireRisk, Zone
 from database.database import fetched_match_class
-from database.spatia import spatiageopoly_to_long_lat_arr, coordinates_to_multipolygonstr
+from database.spatia import coordinates_to_multipolygonstr, spatiageostr_to_geojson
 from database import drone_events_table
 import database.database as db
 
@@ -170,7 +170,7 @@ def get_obj_from_fetched(
         Zone | None: zone object or None if obj cant be generated.
     """
     if fetched_match_class(Zone, fetched_zone, 3):
-        coord_array = spatiageopoly_to_long_lat_arr(fetched_zone[4])
+        geo_json = spatiageostr_to_geojson(fetched_zone[4])
 
         events = drone_events_table.get_drone_events_in_zone(
             fetched_zone[4], after)
@@ -185,7 +185,7 @@ def get_obj_from_fetched(
             name=fetched_zone[1],
             federal_state=fetched_zone[2],
             district=fetched_zone[3],
-            coordinates=coord_array,
+            geo_json=geo_json,
             events=events,
             fire_risk=firerisk_enum
         )
