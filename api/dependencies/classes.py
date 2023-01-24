@@ -115,4 +115,4 @@ class Zone(BaseModel):
     events: List[DroneEvent] | None = None
     fire_risk: FireRisk | None = None
     ai: FireRisk | None = None
-    coordinates: List[List[List[List[float]]]] | None = None
+    geo_json: dict | None = None

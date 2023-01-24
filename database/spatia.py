@@ -27,18 +27,22 @@ def spatiapoint_to_long_lat(spatia_point:str)-> tuple[float, float]:
     lat = float(coord_arr[1])
     return long, lat
 
-def spatiageopoly_to_long_lat_arr(spatia_polygon:str)-> List[List[float]]:
-    """converts an spatia POLYGON str into a long and lat floats tuple list.\n
-    format: Polygon((1.2345 2.3456,1.2345 2.3456,1.2345 2.3456,1.2345 2.3456))
+
+def spatiageostr_to_geojson(spatia_polygon:str)-> dict:
+    """converts an spatia geojson str into a geodict.\n
 
     Args:
-        spatia_polygon (str): the spatia polygon as text.
+        spatia_polygon (str): the geodict geometry as text.
 
     Returns:
-        List[List[float]]: the cooridantes to the point as float value tuple list.
+        dict: the geojson.
     """
-    polygon = json.loads(spatia_polygon)
-    return polygon['coordinates']
+    geometry = json.loads(spatia_polygon)
+    geo_json = {
+                "type": "Feature",
+                "geometry": geometry
+                }
+    return geo_json
 
 def coordinates_to_multipolygonstr(geometry: dict) -> str:
     """generates the spatia polygon str.\n
