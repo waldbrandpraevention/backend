@@ -1,4 +1,5 @@
 from enum import Enum
+from typing import List
 
 from api.dependencies.classes import User, UserWithSensitiveInfo, Permission
 from database.database import fetched_match_class
@@ -33,6 +34,7 @@ class UsrAttributes(str,Enum):
     ORGA_ID = 'organization_id'
 
 UPDATE_ATTRIBUTE = 'UPDATE users SET {} = ? WHERE id = ?;'
+UPDATE_STR = 'UPDATE users SET {} WHERE id = ?;'
 
 INSERT_USER = 'INSERT INTO users (email,first_name,last_name,organization_id,password,permission,disabled,email_verified) VALUES (? ,? ,?,?,?,?,?,?);'
 GET_USER_WITH_ORGA = '''SELECT users.id,email,first_name,last_name,password,permission,disabled,email_verified,orga.id,orga.name,orga.abbreviation
@@ -82,6 +84,21 @@ def update_user(user_id:int, attribute:UsrAttributes, new_value):
     """
     update_str = UPDATE_ATTRIBUTE.format(attribute)
     return db.update(update_str,(new_value, user_id))
+
+def update_user_withsql(user_id:int, col_str: str, update_arr:List):
+    """updates the user with the given sql str.
+
+    Args:
+        user_id (int): _description_
+        set_sql (str): _description_
+
+    Returns:
+        _type_: _description_
+    """
+    update_str = UPDATE_STR.format(col_str)
+    update_arr.append(user_id)
+    update_tuple = tuple(update_arr)
+    return db.update(update_str,update_tuple)
 
 
 def check_creds(mail:str,hashed_pass:str) -> bool:

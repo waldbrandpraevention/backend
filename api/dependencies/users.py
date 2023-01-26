@@ -1,10 +1,9 @@
-from pydantic import BaseModel
+
+from datetime import datetime
 from fastapi import Depends, HTTPException, status
-from enum import Enum
+from database import users_table
 from .classes import User, UserWithSensitiveInfo, Allert
 from .authentication import oauth2_scheme, verify_password, get_email_from_token
-from database import users_table
-from datetime import datetime, timedelta
 
 def get_user(email: str) -> UserWithSensitiveInfo | None:
     """Creates a user object from the information in the db

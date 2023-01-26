@@ -1,6 +1,8 @@
 
 import re
 
+from api.dependencies.classes import Permission
+
 #return list of errors on each function
 
 EMAIL_REGEX = re.compile(r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)")
@@ -35,8 +37,14 @@ def validate_last_name(last_name: str):
         err.append("First name can't be empty")
     return err
 
-def validate_organization(last_name: str):
+def validate_organization(org_name: str):
     err = []
-    if len(last_name) == 0:
+    if len(org_name) == 0:
         err.append("Organization can't be empty")
+    return err
+
+def validate_permission(permission_int: int):
+    err = []
+    if not permission_int in list(Permission):
+         err.append("Permission doesnt exist.")
     return err
