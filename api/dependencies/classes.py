@@ -116,3 +116,4 @@ class Zone(BaseModel):
     fire_risk: FireRisk | None = None
     ai: FireRisk | None = None
     geo_json: dict | None = None
+    geo_point: tuple[float,float] | None = None

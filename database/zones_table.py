@@ -17,41 +17,67 @@ district    text NOT NULL ,
 PRIMARY KEY (id)
 );
 CREATE INDEX IF NOT EXISTS zones_AK ON zones (name);
-SELECT AddGeometryColumn('zones', 'area', 4326, 'MULTIPOLYGON', 'XY');'''
+SELECT AddGeometryColumn('zones', 'area', 4326, 'MULTIPOLYGON', 'XY');
+SELECT AddGeometryColumn('zones', 'geo_point', 4326, 'POINT', 'XY');'''
 #   POLYGON((101.23 171.82, 201.32 101.5, 215.7 201.953, 101.23 171.82))
 #   exterior ring, no interior rings
-CREATE_ENTRY = '''INSERT INTO zones (name,federal_state,district,area) 
-                VALUES (?,?,?,GeomFromGeoJSON(?));'''
-CREATE_ENTRY_TEXTGEO = '''INSERT OR IGNORE INTO zones (id, name,federal_state,district,area) 
-                        VALUES (?,?,?,?,GeomFromText(?,4326));'''
+CREATE_ENTRY = '''INSERT INTO zones (name,federal_state,district,area,geo_point)
+                VALUES (?,?,?,GeomFromGeoJSON(?),MakePoint(?, ?, 4326));'''
 
-GET_ZONE = '''SELECT id,name,federal_state,district,AsGeoJSON(area) AS area FROM zones
+CREATE_ENTRY_TEXTGEO = '''INSERT OR IGNORE
+                        INTO zones (id, name,federal_state,district,area,geo_point) 
+                        VALUES (?,?,?,?,GeomFromText(?,4326),MakePoint(?, ?, 4326));'''
+
+GET_ZONE = '''SELECT id,name,federal_state,district,AsGeoJSON(area),
+                X(geo_point),Y(geo_point) FROM zones
                 JOIN ElementaryGeometries AS e ON (e.f_table_name = 'zones' 
                 AND e.origin_rowid = zones.rowid)
                 WHERE ST_Intersects(area, MakePoint(?, ?, 4326));'''
 
-GET_ZONES = '''SELECT id,name,federal_state,district,AsGeoJSON(area) AS area FROM zones
+GET_ZONES = '''SELECT id,name,federal_state,district,AsGeoJSON(area),
+                X(geo_point),Y(geo_point) FROM zones
                 JOIN ElementaryGeometries AS e ON (e.f_table_name = 'zones' 
                 AND e.origin_rowid = zones.rowid);'''
 
-GET_ZONES_BY_DISTRICT = '''SELECT id,name,federal_state,district,AsGeoJSON(area) 
+GET_ZONES_BY_DISTRICT = '''SELECT id,name,federal_state,district,AsGeoJSON(area),
+                            X(geo_point),Y(geo_point)
                             FROM zones 
                             WHERE district = ?'''
+
+GET_ORGAZONES = '''  SELECT id,name,federal_state,district,AsGeoJSON(area),
+                        X(geo_point),Y(geo_point)
+                    FROM zones
+                    JOIN organization_zones 
+                    ON zones.id = organization_zones.zone_id
+                    WHERE organization_zones.orga_id=?;'''
+
+GET_ZONEBY ='''SELECT id,name,federal_state,district,AsGeoJSON(area),
+                        X(geo_point),Y(geo_point)
+                    FROM zones
+                    JOIN organization_zones 
+                    ON zones.id = organization_zones.zone_id
+                    WHERE zones.{}=? 
+                    AND organization_zones.orga_id=?;'''
 
 
 def load_from_geojson(path_to_geojson) -> int:
     """load data from a geojson file to the db.
     required fields:
-    'features':{
-        [
+    'features':[
+        {
             'geometry': {'coordinates': [...], 'type': 'Polygon'},
             'properties':{
                 'lan_name':['Bundesland']
                 'krs_name':['Landkreis Name']
                 'gem_name_short':['Name']
                 'gem_code':['100440114114']
-        ],
-    }
+                'geo_point_2d':{
+                    'lon':12.947508749154961,
+                    'lat':52.22729704994886
+                }
+            }
+        },...
+    ]
 
     Args:
         path_to_geojson (_type_): path to the geojson that should be imported.
@@ -68,7 +94,9 @@ def load_from_geojson(path_to_geojson) -> int:
                           local_community['properties']['gem_name_short'][0],
                           local_community['properties']['lan_name'][0],
                           local_community['properties']['krs_name'][0],
-                          text)
+                          text,
+                          local_community['properties']['geo_point_2d']['lon'],
+                          local_community['properties']['geo_point_2d']['lat'])
             to_db.append(insertuple)
 
     rowcount = db.insertmany(CREATE_ENTRY_TEXTGEO, to_db)
@@ -76,7 +104,7 @@ def load_from_geojson(path_to_geojson) -> int:
     return rowcount
 
 
-def create_zone(gem_code, name, federal_state, district, gemometry: dict) -> bool:
+def create_zone(gem_code, name, federal_state, district, gemometry: dict, geo_point: tuple) -> bool:
     """stores geograhic area of a zone.
     Needs at least 3 coordinates to create a zone.
 
@@ -97,7 +125,7 @@ def create_zone(gem_code, name, federal_state, district, gemometry: dict) -> boo
     """
     polygon_wkt = coordinates_to_multipolygonstr(gemometry)
     inserted_id = db.insert(
-        CREATE_ENTRY_TEXTGEO, (gem_code, name, federal_state, district, polygon_wkt))
+        CREATE_ENTRY_TEXTGEO, (gem_code, name, federal_state, district, polygon_wkt,geo_point[0],geo_point[1]))
     if inserted_id:
         return True
     return False
@@ -169,7 +197,7 @@ def get_obj_from_fetched(
     Returns:
         Zone | None: zone object or None if obj cant be generated.
     """
-    if fetched_match_class(Zone, fetched_zone, 3):
+    if fetched_match_class(Zone, fetched_zone, 2):
         geo_json = spatiageostr_to_geojson(fetched_zone[4])
 
         events = drone_events_table.get_drone_events_in_zone(
@@ -180,14 +208,20 @@ def get_obj_from_fetched(
         else:
             firerisk_enum = FireRisk(1)
 
-        zone_obj = Zone(  #TODO
+        try:
+            geo_tuple = (fetched_zone[5],fetched_zone[6])
+        except IndexError:
+            geo_tuple = None
+
+        zone_obj = Zone(
             id=fetched_zone[0],
             name=fetched_zone[1],
             federal_state=fetched_zone[2],
             district=fetched_zone[3],
             geo_json=geo_json,
             events=events,
-            fire_risk=firerisk_enum
+            fire_risk=firerisk_enum,
+            geo_point=geo_tuple
         )
         return zone_obj
     return None
