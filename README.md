@@ -31,17 +31,56 @@
 
 
 ## Development
+#### Vorrausetzungen
+- Python 3.10+
 
-1. GitHub Repo clonen
+*Anleitung getestet auf WSL/Ubuntu.*
+
+[ 1 ] 
 ```
 git clone https://github.com/waldbrandpraevention/backend.git
 ```
-
-2. Server starten
+[ 2 ] 
 ```
 cd waldbrandpraevention/backend
+```
+[ 3 ] 
+```
+pip install -r requirements.txt
+```
+[ 4 ] 
+```
+pip install python-dotenv
+```
+[ 5 ] 
+
+ Spatialite installieren
+https://www.gaia-gis.it/fossil/libspatialite/home
+##### Windows
+???
+##### Ubuntu / Debian / WSL
+```
+sudo apt install libspatialite7 libspatialite-dev libsqlite3-mod-spatialite
+```
+##### MacOS (nicht getestet)
+```
+brew install sqlite3 libspatialite
+```
+##### Alpine
+```
+apk add libspatialite=5.0.1-r5
+```
+
+[ 6 ] 
+
+Bei Linux/MacOS muss noch in der `demo.env` die `\\` auf `/` geändert werden.
+
+Eventuell vorhandene Datenbank löschen `rm -f testing.db`
+
+[ 7 ]
+```
 uvicorn main:app --reload --env-file demo.env
 ```
-3. Backend läuft auf http://localhost:8000<br>
+Backend läuft auf http://localhost:8000<br>
 API Documentation auf http://localhost:8000/docs
 
