@@ -45,6 +45,6 @@ def validate_organization(org_name: str):
 
 def validate_permission(permission_int: int):
     err = []
-    if not permission_int in list(Permission):
+    if not permission_int in Permission.list():
          err.append("Permission doesnt exist.")
     return err

@@ -5,6 +5,12 @@ from pydantic import BaseModel
 from enum import Enum
 from datetime import datetime
 
+class ExtendedEnum(Enum):
+
+    @classmethod
+    def list(cls):
+        return list(map(lambda c: c.value, cls))
+    
 class Token(BaseModel):
     access_token: str
     token_type: str
@@ -12,7 +18,7 @@ class Token(BaseModel):
 class TokenData(BaseModel):
     email: str | None = None
 
-class Permission(Enum):
+class Permission(ExtendedEnum):
     USER = 1
     ADMIN = 2
     THIRD_PARTY = 3

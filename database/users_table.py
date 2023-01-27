@@ -40,7 +40,7 @@ INSERT_USER = 'INSERT INTO users (email,first_name,last_name,organization_id,pas
 GET_USER_WITH_ORGA = '''SELECT users.id,email,first_name,last_name,password,permission,disabled,email_verified,orga.id,orga.name,orga.abbreviation
                         FROM users 
                         JOIN organizations orga ON orga.id = organization_id 
-                        WHERE EMAIL=?;'''
+                        WHERE {}=?;'''
 CHECK_CREDS = "SELECT password FROM users WHERE EMAIL=? AND PASSWORD = ?;"
 
 def create_user(user:UserWithSensitiveInfo) -> bool:
@@ -57,7 +57,7 @@ def create_user(user:UserWithSensitiveInfo) -> bool:
         return True
     return False
 
-def get_user(email) -> UserWithSensitiveInfo | None:
+def get_user(email, with_sensitive_info:bool=True) -> UserWithSensitiveInfo | None:
     """Get the user object by email.
 
     Args:
@@ -66,9 +66,28 @@ def get_user(email) -> UserWithSensitiveInfo | None:
     Returns:
         user: User object or None.
     """
-    fetched_user = db.fetch_one(GET_USER_WITH_ORGA,(email,))
+    sql = GET_USER_WITH_ORGA.format(UsrAttributes.EMAIL)
+    fetched_user = db.fetch_one(sql,(email,))
     try:
-        user = get_obj_from_fetched(fetched_user)
+        user = get_obj_from_fetched(fetched_user,with_sensitive_info)
+    except Exception as exception:
+        print(exception)
+        user = None
+    return user
+
+def get_user_by_id(user_id:int, with_sensitive_info:bool=False) -> UserWithSensitiveInfo | None:
+    """Get the user object by email.
+
+    Args:
+        email (str): email adress of the user.
+
+    Returns:
+        user: User object or None.
+    """
+    sql = GET_USER_WITH_ORGA.format('users.id')
+    fetched_user = db.fetch_one(sql,(user_id,))
+    try:
+        user = get_obj_from_fetched(fetched_user,with_sensitive_info)
     except Exception as exception:
         print(exception)
         user = None
@@ -93,7 +112,7 @@ def update_user_withsql(user_id:int, col_str: str, update_arr:List):
         set_sql (str): _description_
 
     Returns:
-        _type_: _description_
+        bool: if the update was successful.
     """
     update_str = UPDATE_STR.format(col_str)
     update_arr.append(user_id)
@@ -114,7 +133,7 @@ def check_creds(mail:str,hashed_pass:str) -> bool:
     return db.check_fetch(CHECK_CREDS, (mail, hashed_pass))
 
 
-def get_obj_from_fetched(fetched_user) -> UserWithSensitiveInfo | None:
+def get_obj_from_fetched(fetched_user,with_sensitive_info:bool) -> User | UserWithSensitiveInfo | None:
     """generate User obj from fetched element.
 
     Args:
@@ -129,14 +148,15 @@ def get_obj_from_fetched(fetched_user) -> UserWithSensitiveInfo | None:
 
     try:
         permission = Permission(fetched_user[5])
-    except:
+    except Exception:
         permission = None
     try:
         orga = organizations.get_obj_from_fetched(fetched_user[-3:])
-    except:
+    except Exception:
         orga = None
     
-    user = UserWithSensitiveInfo(
+    if with_sensitive_info:
+        user = UserWithSensitiveInfo(
                             id=fetched_user[0],
                             email=fetched_user[1],
                             first_name=fetched_user[2],
@@ -146,5 +166,15 @@ def get_obj_from_fetched(fetched_user) -> UserWithSensitiveInfo | None:
                             disabled=fetched_user[6],
                             email_verified=fetched_user[7],
                             organization=orga)
+    else:
+        user = User(
+                    id=fetched_user[0],
+                    email=fetched_user[1],
+                    first_name=fetched_user[2],
+                    last_name=fetched_user[3],
+                    permission=permission,
+                    disabled=fetched_user[6],
+                    email_verified=fetched_user[7],
+                    organization=orga)
     
     return user
