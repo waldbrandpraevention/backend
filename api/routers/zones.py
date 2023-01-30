@@ -1,5 +1,5 @@
-from fastapi import Depends, APIRouter, FastAPI, HTTPException, status, Request, Form
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+"""Api calls for Zones."""
+from fastapi import Depends, APIRouter, HTTPException, status
 from  ..dependencies.zones import get_all_zones, get_zone_by_id, get_zone_count
 from .users import get_current_user
 from ..dependencies.classes import User, Zone

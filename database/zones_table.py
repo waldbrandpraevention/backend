@@ -85,7 +85,7 @@ def load_from_geojson(path_to_geojson) -> int:
     Returns:
         int: number of inserted zones.
     """
-    with open(path_to_geojson, 'r') as geof:
+    with open(path_to_geojson, 'r',encoding="utf-8") as geof:
         data = json.load(geof)
         to_db = []
         for local_community in data['features']:
@@ -100,7 +100,7 @@ def load_from_geojson(path_to_geojson) -> int:
             to_db.append(insertuple)
 
     rowcount = db.insertmany(CREATE_ENTRY_TEXTGEO, to_db)
-    
+
     return rowcount
 
 
@@ -125,7 +125,17 @@ def create_zone(gem_code, name, federal_state, district, gemometry: dict, geo_po
     """
     polygon_wkt = coordinates_to_multipolygonstr(gemometry)
     inserted_id = db.insert(
-        CREATE_ENTRY_TEXTGEO, (gem_code, name, federal_state, district, polygon_wkt,geo_point[0],geo_point[1]))
+        CREATE_ENTRY_TEXTGEO,
+            (
+            gem_code,
+            name,
+            federal_state,
+            district,
+            polygon_wkt,
+            geo_point[0],
+            geo_point[1]
+            )
+        )
     if inserted_id:
         return True
     return False

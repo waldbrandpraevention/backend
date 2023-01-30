@@ -1,4 +1,4 @@
-
+"""functions for api zones."""
 from database import orga_zones_table
 
 async def get_all_zones(orga_id:int):
