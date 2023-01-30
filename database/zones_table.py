@@ -5,7 +5,7 @@ from typing import List
 from api.dependencies.classes import FireRisk, Zone
 from database.database import fetched_match_class
 from database.spatia import coordinates_to_multipolygonstr, spatiageostr_to_geojson
-from database import drone_events_table
+from database import drone_events_table, drone_updates_table
 import database.database as db
 
 CREATE_ZONE_TABLE = '''CREATE TABLE zones
@@ -207,16 +207,25 @@ def get_obj_from_fetched(
     Returns:
         Zone | None: zone object or None if obj cant be generated.
     """
-    if fetched_match_class(Zone, fetched_zone, 2):
+    if fetched_match_class(Zone, fetched_zone,4):
         geo_json = spatiageostr_to_geojson(fetched_zone[4])
 
         events = drone_events_table.get_drone_events_in_zone(
             fetched_zone[4], after)
+           
+        last_update = drone_updates_table.get_lastest_update_in_zone(
+                        fetched_zone[4])
+        
+        active_drones = drone_updates_table.get_active_drones(fetched_zone[4])
+        if active_drones is None:
+            drone_count = 0
+        else:
+            drone_count= len(active_drones)
 
         if events:
-            firerisk_enum = drone_events_table.calculate_firerisk(events)
+            ai_firerisk_enum = drone_events_table.calculate_firerisk(events)
         else:
-            firerisk_enum = FireRisk(1)
+            ai_firerisk_enum = FireRisk(1)
 
         try:
             geo_tuple = (fetched_zone[5],fetched_zone[6])
@@ -230,8 +239,10 @@ def get_obj_from_fetched(
             district=fetched_zone[3],
             geo_json=geo_json,
             events=events,
-            fire_risk=firerisk_enum,
-            geo_point=geo_tuple
+            ai_fire_risk=ai_firerisk_enum,
+            geo_point=geo_tuple,
+            last_update=last_update,
+            drone_count=drone_count
         )
         return zone_obj
     return None

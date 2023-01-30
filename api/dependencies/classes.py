@@ -119,7 +119,6 @@ class DroneEvent(BaseModel):
     event_type: EventType | None = None
     confidence: int | None = None
     picture_path :str| None = None
-    ai_predictions :dict| None = None
     csv_file_path :str| None = None
 
 class Zone(BaseModel):
@@ -130,6 +129,8 @@ class Zone(BaseModel):
     district: str | None = None
     events: List[DroneEvent] | None = None
     fire_risk: FireRisk | None = None
-    ai: FireRisk | None = None
+    ai_fire_risk: FireRisk | None = None
     geo_json: dict | None = None
     geo_point: tuple[float,float] | None = None
+    drone_count: int | None = None
+    last_update: DroneUpdate | None = None

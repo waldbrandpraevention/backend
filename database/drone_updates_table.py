@@ -21,7 +21,16 @@ SELECT AddGeometryColumn('drone_data', 'coordinates', 4326, 'POINT', 'XY');'''
 CREATE_ENTRY = 'INSERT INTO drone_data (drone_id,timestamp,coordinates,flight_range,flight_time) VALUES (? ,?,MakePoint(?, ?, 4326) ,? ,?);'
 GET_ENTRYS_BY_TIMESTAMP = 'SELECT drone_id,timestamp,flight_range,flight_time, X(coordinates), Y(coordinates) FROM drone_data WHERE drone_id = ? AND timestamp > ? AND timestamp < ?;'
 GET_ENTRY ='SELECT * FROM drone_data WHERE drone_id = ?;'
-
+GET_UPDATE_IN_ZONE = '''
+SELECT drone_id,timestamp,flight_range,flight_time, X(coordinates), Y(coordinates)
+FROM drone_data
+WHERE ST_Intersects(drone_data.coordinates, GeomFromGeoJSON(?)) 
+AND timestamp > ? AND timestamp < ?
+ORDER BY timestamp DESC;'''
+ACTIVE_DRONES = ''' SELECT DISTINCT	drone_id
+                    FROM drone_data
+                    WHERE ST_Intersects(drone_data.coordinates, GeomFromGeoJSON(?))
+                    AND timestamp > ?;'''
 
 
 def create_drone_update(drone_id:int,
@@ -43,12 +52,24 @@ def create_drone_update(drone_id:int,
     Returns:
         bool: True for success, False if something went wrong.
     """
-    inserted_id = db.insert(CREATE_ENTRY,(drone_id,timestamp,longitude,latitude,flight_range,flight_time))
+    inserted_id = db.insert(CREATE_ENTRY,
+                                (
+                                drone_id,
+                                timestamp,
+                                longitude,
+                                latitude,
+                                flight_range,
+                                flight_time
+                                )
+                            )
     if inserted_id:
         return True
     return False
 
-def get_drone_data_by_timestamp(drone_id:int,after:datetime.datetime=datetime.datetime.min,before:datetime.datetime=datetime.datetime.max) -> List[DroneUpdate]:
+def get_drone_data_by_timestamp(drone_id:int,
+                                after:datetime.datetime=datetime.datetime.min,
+                                before:datetime.datetime=datetime.datetime.max
+                                ) -> List[DroneUpdate]:
     """fetches all entrys that are within the choosen timeframe.
     If only drone_id is set, every entry will be fetched.
 
@@ -61,7 +82,7 @@ def get_drone_data_by_timestamp(drone_id:int,after:datetime.datetime=datetime.da
         List[DroneData]: List with the fetched data.
     """
     fetched_data = db.fetch_all(GET_ENTRYS_BY_TIMESTAMP,(drone_id,after,before))
-    
+
     output = []
     for drone_data in fetched_data:
         dronedata_obj = get_obj_from_fetched(drone_data)
@@ -80,6 +101,61 @@ def get_latest_update(drone_id:int) -> DroneUpdate:
     """
     fetched_data = db.fetch_one(GET_ENTRY,(drone_id,))
     return get_obj_from_fetched(fetched_data)
+
+def get_updates_in_zone(polygon: str,
+                        after: datetime.datetime = datetime.datetime.min,
+                        before: datetime.datetime = datetime.datetime.max
+                        ) -> List[DroneUpdate]:
+    """fetches all entrys that are within the choosen polygon.
+    Args:
+        polygon (str): polygon str od the area for which the events should be shown
+        after (datetime.datetime): fetches everything after this date (not included)
+        before (datetime.datetime): fetches everything before this date (not included)
+
+    Returns:
+        List[DroneData]: List with the fetched data.
+    """
+    fetched_data = db.fetch_all(GET_UPDATE_IN_ZONE, (polygon, after, before))
+    output = []
+    if not fetched_data:
+        return None
+    for drone_data in fetched_data:
+        dronedata_obj = get_obj_from_fetched(drone_data)
+        if dronedata_obj:
+            output.append(dronedata_obj)
+    return output
+
+def get_lastest_update_in_zone(polygon: str) -> DroneUpdate | None:
+    """fetches the latest update within the provided polygon area.
+    Args:
+        polygon (str): geojson polygon str od the area for which the events should be shown
+
+    Returns:
+        DroneData: latest update.
+    """
+    fetched_data = db.fetch_one(GET_UPDATE_IN_ZONE,
+                                    (
+                                        polygon,
+                                        datetime.datetime.min,
+                                        datetime.datetime.utcnow()
+                                    )
+                                )
+    return get_obj_from_fetched(fetched_data)
+
+def get_active_drones(polygon: str,
+                      after: datetime.datetime = None) -> List[int]:
+    """fetched the ids of all active drones in this zone.
+
+    Args:
+        polygon (str): _description_
+        after (datetime.datetime, optional): _description_. Defaults to None.
+
+    Returns:
+        List[int]: _description_
+    """
+    if after is None:
+        after = datetime.datetime.now() - datetime.timedelta(hours=1)
+    return db.fetch_all(ACTIVE_DRONES,(polygon,after))
 
 
 def get_obj_from_fetched(fetched_dronedata) -> DroneUpdate| None:

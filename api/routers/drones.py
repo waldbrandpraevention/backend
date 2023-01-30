@@ -1,8 +1,8 @@
-from fastapi import Depends, APIRouter, FastAPI, HTTPException, status, Request, Form
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+"""api calls for drones."""
+from fastapi import Depends, APIRouter, HTTPException, status
 from .users import get_current_user
 from ..dependencies.drones import get_all_drones, get_drone, get_drone_count
-from ..dependencies.classes import User, Drone
+from ..dependencies.classes import User
 
 router = APIRouter()
 
@@ -39,9 +39,12 @@ async def read_drones_all(current_user: User = Depends(get_current_user)):
     """
     return await get_all_drones()
 
-@router.get("/drones/count/", status_code=status.HTTP_200_OK)
-async def read_drones_count(current_user: User = Depends(get_current_user)):
-    """API call to get the amount of drones
+@router.get("/drones/count", status_code=status.HTTP_200_OK)
+async def read_drones_count(
+                            zone_id: int,
+                            current_user: User = Depends(get_current_user)
+                            ):
+    """API call to get the amount of drones in a zone
 
     Args:
         current_user (User, optional): User. Defaults to Depends(get_current_user).
