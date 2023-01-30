@@ -1,3 +1,4 @@
+"""funcs to read and write on the drone_event table in database."""
 import datetime
 import json
 import random
@@ -22,14 +23,14 @@ FOREIGN KEY (drone_id) REFERENCES drones (id)
 CREATE INDEX drone_event_FK_1 ON drone_event (drone_id);
 SELECT AddGeometryColumn('drone_event', 'coordinates', 4326, 'POINT', 'XY');'''
 
-CREATE_ENTRY = '''  
+CREATE_ENTRY = '''
 INSERT INTO drone_event (drone_id,timestamp,coordinates,event_type,confidence,picture_path,ai_predictions,csv_file_path) 
 VALUES (? ,?,MakePoint(?, ?, 4326)  ,? ,?,?,?,?);'''
-GET_ENTRYS_BY_TIMESTAMP = '''   
+GET_ENTRYS_BY_TIMESTAMP = '''
 SELECT drone_id,timestamp, X(coordinates), Y(coordinates),event_type,confidence,picture_path,ai_predictions,csv_file_path
 FROM drone_event 
 WHERE drone_id = ? AND timestamp > ? AND timestamp < ?;'''
-GET_ENTRY ='SELECT * FROM drone_event WHERE drone_id = ?;'
+GET_ENTRY = 'SELECT * FROM drone_event WHERE drone_id = ?;'
 
 GET_EVENT_IN_ZONE = '''
 SELECT drone_id,timestamp, X(coordinates), Y(coordinates),event_type,confidence,picture_path,ai_predictions,csv_file_path
@@ -38,47 +39,47 @@ WHERE ST_Intersects(drone_event.coordinates, GeomFromGeoJSON(?))
 AND timestamp > ? AND timestamp < ?;'''
 
 
-def insert_demo_events(long:float,lat:float):
+def insert_demo_events(long: float, lat: float):
     """insert 5 demo drone events.
 
     Args:
         long (float): long of the coordinate.
         lat (float): lat of the coordinate.
     """
-    timestamp=datetime.datetime.utcnow()
-    i=0
-    num_inserted=0
+    timestamp = datetime.datetime.utcnow()
+    i = 0
+    num_inserted = 0
     while num_inserted < 4:
-        event_rand = random.randint(0,2)
+        event_rand = random.randint(0, 2)
         if event_rand > 0:
-            confidence = random.randint(20,90)
-            long_rand = random.randint(0,100)/1000000
-            lat_rand = random.randint(0,100)/1000000
+            confidence = random.randint(20, 90)
+            long_rand = random.randint(0, 100)/1000000
+            lat_rand = random.randint(0, 100)/1000000
             create_drone_event_entry(
-                    drone_id=1,
-                    timestamp=timestamp,
-                    longitude=long+long_rand,
-                    latitude=lat+lat_rand,
-                    event_type=event_rand,
-                    confidence=confidence,
-                    picture_path=f'demo/path/{i}',
-                    ai_predictions={'test':'test1'},
-                    csv_file_path=f'demo/path/{i}'
-                )
-            num_inserted+=1
-        timestamp +=datetime.timedelta(seconds=10)
-        i+=1
+                drone_id=1,
+                timestamp=timestamp,
+                longitude=long+long_rand,
+                latitude=lat+lat_rand,
+                event_type=event_rand,
+                confidence=confidence,
+                picture_path=f'demo/path/{i}',
+                ai_predictions={'test': 'test1'},
+                csv_file_path=f'demo/path/{i}'
+            )
+            num_inserted += 1
+        timestamp += datetime.timedelta(seconds=10)
+        i += 1
 
 
-def create_drone_event_entry(drone_id:int,
-                            timestamp:datetime.datetime,
-                            longitude:float,
-                            latitude:float,
-                            event_type:int,
-                            confidence:int,
-                            picture_path:str|None,
-                            ai_predictions:dict|None,
-                            csv_file_path:str|None)-> bool:
+def create_drone_event_entry(drone_id: int,
+                             timestamp: datetime.datetime,
+                             longitude: float,
+                             latitude: float,
+                             event_type: int,
+                             confidence: int,
+                             picture_path: str | None,
+                             ai_predictions: dict | None,
+                             csv_file_path: str | None) -> bool:
     """store the data sent by the drone.
 
     Args:
@@ -98,15 +99,25 @@ def create_drone_event_entry(drone_id:int,
     else:
         dumped_ai_predictions = None
 
-    inserted_id = db.insert(CREATE_ENTRY,(drone_id,timestamp,longitude,latitude,event_type,confidence,picture_path,dumped_ai_predictions,csv_file_path))
+    inserted_id = db.insert(CREATE_ENTRY,
+                            (drone_id,
+                            timestamp,
+                            longitude,
+                            latitude,
+                            event_type,
+                            confidence,
+                            picture_path,
+                            dumped_ai_predictions,
+                            csv_file_path))
     if inserted_id:
         return True
     return False
 
-def get_drone_event_by_timestamp(drone_id:int,
-                                 after:datetime.datetime=datetime.datetime.min,
-                                 before:datetime.datetime=datetime.datetime.max
-                                 )-> List[DroneEvent]:
+
+def get_drone_event_by_timestamp(drone_id: int,
+                                 after: datetime.datetime = datetime.datetime.min,
+                                 before: datetime.datetime = datetime.datetime.max
+                                 ) -> List[DroneEvent]:
     """fetches all entrys that are within the choosen timeframe.
     If only drone_id is set, every entry will be fetched.
 
@@ -118,7 +129,8 @@ def get_drone_event_by_timestamp(drone_id:int,
     Returns:
         List[DroneData]: List with the fetched data.
     """
-    fetched_data = db.fetch_all(GET_ENTRYS_BY_TIMESTAMP,(drone_id,after,before))
+    fetched_data = db.fetch_all(
+        GET_ENTRYS_BY_TIMESTAMP, (drone_id, after, before))
     output = []
     for drone_data in fetched_data:
         dronedata_obj = get_obj_from_fetched(drone_data)
@@ -126,10 +138,11 @@ def get_drone_event_by_timestamp(drone_id:int,
             output.append(dronedata_obj)
     return output
 
-def get_drone_events_in_zone(   polygon:str,
-                                after:datetime.datetime=datetime.datetime.max,
-                                before:datetime.datetime=datetime.datetime.max
-                                ) -> List[DroneEvent]:
+
+def get_drone_events_in_zone(polygon: str,
+                             after: datetime.datetime = datetime.datetime.max,
+                             before: datetime.datetime = datetime.datetime.max
+                             ) -> List[DroneEvent]:
     """fetches all entrys that are within the choosen polygon.
     Args:
         polygon (str): polygon str od the area for which the events should be shown
@@ -139,7 +152,7 @@ def get_drone_events_in_zone(   polygon:str,
     Returns:
         List[DroneData]: List with the fetched data.
     """
-    fetched_data = db.fetch_all(GET_EVENT_IN_ZONE,(polygon,after,before))
+    fetched_data = db.fetch_all(GET_EVENT_IN_ZONE, (polygon, after, before))
     output = []
     if not fetched_data:
         return None
@@ -149,7 +162,8 @@ def get_drone_events_in_zone(   polygon:str,
             output.append(dronedata_obj)
     return output
 
-def get_latest_event(drone_id:int) -> DroneEvent:
+
+def get_latest_event(drone_id: int) -> DroneEvent:
     """fetch latest event, this dron has recorded.
 
     Args:
@@ -158,13 +172,13 @@ def get_latest_event(drone_id:int) -> DroneEvent:
     Returns:
         DroneEvent
     """
-    fetched_data = db.fetch_one(GET_ENTRY,(drone_id,))
+    fetched_data = db.fetch_one(GET_ENTRY, (drone_id,))
     if fetched_data:
-        return get_obj_from_fetched(fetched_data) 
+        return get_obj_from_fetched(fetched_data)
     return None
 
 
-def get_obj_from_fetched(fetched_dronedata) -> DroneEvent| None:
+def get_obj_from_fetched(fetched_dronedata) -> DroneEvent | None:
     """generating DroneData objects with the fetched data.
 
     Args:
@@ -173,40 +187,39 @@ def get_obj_from_fetched(fetched_dronedata) -> DroneEvent| None:
     Returns:
         DroneData| None: the generated object.
     """
-    if fetched_match_class(DroneEvent,fetched_dronedata):
+    if fetched_match_class(DroneEvent, fetched_dronedata):
         try:
             ai_predictions = json.loads(fetched_dronedata[7])
-        except:
-            print('couldnt load ai_predictions')
+        except json.JSONDecodeError:
             ai_predictions = None
 
         try:
-            longitude=float(fetched_dronedata[2])
-            latitude= float(fetched_dronedata[3])
-        except Exception as exception:
-            print(exception)
-            longitude, latitude= None, None
+            longitude = float(fetched_dronedata[2])
+            latitude = float(fetched_dronedata[3])
+        except ValueError:
+            longitude, latitude = None, None
 
         try:
             eventtype = EventType(fetched_dronedata[4])
-        except:
+        except ValueError:
             eventtype = None
 
         drone_data_obj = DroneEvent(
-            drone_id = fetched_dronedata[0],
-            timestamp = fetched_dronedata[1],
-            longitude = longitude,
-            latitude = latitude,
+            drone_id=fetched_dronedata[0],
+            timestamp=fetched_dronedata[1],
+            longitude=longitude,
+            latitude=latitude,
             event_type=eventtype,
             confidence=fetched_dronedata[5],
-            picture_path = fetched_dronedata[6],
-            ai_predictions = ai_predictions,
-            csv_file_path = fetched_dronedata[8]
+            picture_path=fetched_dronedata[6],
+            ai_predictions=ai_predictions,
+            csv_file_path=fetched_dronedata[8]
         )
         return drone_data_obj
     return None
 
-def calculate_firerisk(events:List[DroneEvent]) -> FireRisk:
+
+def calculate_firerisk(events: List[DroneEvent]) -> FireRisk:
     """calculates the firerisk, based on the events fire/smoke confidences.
 
     Args:
@@ -216,7 +229,7 @@ def calculate_firerisk(events:List[DroneEvent]) -> FireRisk:
         FireRisk: the calculated risk.
     """
     firerisk = 20
-    for event in events:#TODO feuer und rauch unterschiedlich bewerten.
+    for event in events:  # TODO feuer und rauch unterschiedlich bewerten.
         if firerisk < event.confidence:
             firerisk = event.confidence
 
