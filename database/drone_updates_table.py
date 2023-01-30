@@ -18,8 +18,24 @@ FOREIGN KEY (drone_id) REFERENCES drones (id)
 CREATE INDEX drone_data_FK_1 ON drone_data (drone_id);
 SELECT AddGeometryColumn('drone_data', 'coordinates', 4326, 'POINT', 'XY');'''
 
-CREATE_ENTRY = 'INSERT INTO drone_data (drone_id,timestamp,coordinates,flight_range,flight_time) VALUES (? ,?,MakePoint(?, ?, 4326) ,? ,?);'
-GET_ENTRYS_BY_TIMESTAMP = 'SELECT drone_id,timestamp,flight_range,flight_time, X(coordinates), Y(coordinates) FROM drone_data WHERE drone_id = ? AND timestamp > ? AND timestamp < ?;'
+CREATE_ENTRY = '''INSERT INTO drone_data
+                (drone_id,
+                timestamp,
+                coordinates,
+                flight_range,
+                flight_time) 
+                VALUES (? ,?,MakePoint(?, ?, 4326) ,? ,?);'''
+GET_ENTRYS_BY_TIMESTAMP = '''SELECT
+                            drone_id,
+                            timestamp,
+                            flight_range,
+                            flight_time,
+                            X(coordinates),
+                            Y(coordinates)
+                            FROM drone_data 
+                            WHERE drone_id = ?
+                            AND timestamp > ?
+                            AND timestamp < ?;'''
 GET_ENTRY ='SELECT * FROM drone_data WHERE drone_id = ?;'
 GET_UPDATE_IN_ZONE = '''
 SELECT drone_id,timestamp,flight_range,flight_time, X(coordinates), Y(coordinates)

@@ -1,6 +1,5 @@
 """funcs to read and write on the drone_event table in database."""
 import datetime
-import json
 import random
 from typing import List
 from api.dependencies.classes import DroneEvent, EventType, FireRisk
