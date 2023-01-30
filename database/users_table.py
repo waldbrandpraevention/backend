@@ -38,6 +38,8 @@ class UsrAttributes(str,Enum):
 UPDATE_ATTRIBUTE = 'UPDATE users SET {} = ? WHERE id = ?;'
 UPDATE_STR = 'UPDATE users SET {} WHERE id = ?;'
 
+DELETE = "DELETE from users WHERE id = ?"
+
 INSERT_USER = """INSERT INTO users
                 (email,first_name,last_name,organization_id,password,permission,disabled,email_verified) 
                 VALUES (? ,? ,?,?,?,?,?,?);"""
@@ -116,6 +118,27 @@ def get_user_by_id(user_id:int, with_sensitive_info:bool=False) -> UserWithSensi
         user = None
     return user
 
+def get_all_users(orga_id:int)-> List[User]:
+    """fetches all user in this orga.
+
+    Args:
+        orga_id (int): id of the organization.
+
+    Returns:
+        List[User]: list of users of this orga.
+    """
+    sql = GET_USER_WITH_ORGA.format(UsrAttributes.ORGA_ID)
+    fetched_users = db.fetch_all(sql,(orga_id,))
+    output = []
+    for fetched in fetched_users:
+        try:
+            user = get_obj_from_fetched(fetched,False)
+            output.append(user)
+        except ValueError as exception:
+            print(exception)
+
+    return output
+
 def update_user(user_id:int, attribute:UsrAttributes, new_value):
     """update an attribute of an user.
 
@@ -126,6 +149,17 @@ def update_user(user_id:int, attribute:UsrAttributes, new_value):
     """
     update_str = UPDATE_ATTRIBUTE.format(attribute)
     return db.update(update_str,(new_value, user_id))
+
+def delete_user(user_id:int)->bool:
+    """remove user from db.
+
+    Args:
+        user_id (int): user to delete.
+
+    Returns:
+        bool: True if removal was successful.
+    """
+    return db.update(DELETE,(user_id,))
 
 def update_user_withsql(user_id:int, col_str: str, update_arr:List):
     """updates the user with the given sql str.
