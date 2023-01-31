@@ -30,7 +30,17 @@ async def test_users():
     first_name = f'{user.first_name}s'
     last_name = f'{user.last_name}s'
     email = 'Hans@admin.org'
-  
+
+    newmail = 'mailtest66@mail.de'
+
+    await users.register(email=newmail,
+                         password='test09Tpw',
+                         first_name='testusers',
+                         last_name='huhududu',
+                         organization=os.getenv("ADMIN_ORGANIZATION"))
+    newuser = users.get_user(newmail)
+    await users.delete_users(newuser.id,user)
+
     await users.update_user_info(current_user=user,first_name=first_name,last_name=last_name)
     updated = users.get_user(adminmail)
     assert updated.first_name == first_name

@@ -44,7 +44,7 @@ def database_connection(path=DATABASE_PATH):
         yield conn
     finally:
         close_connection(conn)
-    
+
 
 def connect(path=DATABASE_PATH) -> sqlite3.Connection | None:
     """creates a connection to the database specified in the congig.ini.
@@ -67,16 +67,17 @@ def connect(path=DATABASE_PATH) -> sqlite3.Connection | None:
 
     conn = None
     try:
-        conn = sqlite3.connect(path, check_same_thread=check_same_thread,detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES)
+        conn = sqlite3.connect(path,
+                               check_same_thread=check_same_thread,
+                               detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES)
         conn.enable_load_extension(True)
         if os.name == 'nt':
             conn.load_extension("mod_spatialite") # windows
         else:
             conn.load_extension("mod_spatialite.so.7.1.0") # fix for alpine docker image
 
-        return conn
-    except Exception as exception:
-        print(exception)
+    except sqlite3.Error as error:
+        print(error)
 
     return conn
 
@@ -134,13 +135,10 @@ def fetched_match_class(klasse:BaseModel, fetched_object, subtract:int=0,add:int
     Returns:
         bool: wether the numbers match.
     """
-    try:
-        if fetched_object:
-            if len(klasse.__fields__) - subtract + add == len(fetched_object):
-                return True
-    except Exception as exception:
-        print(exception)
-    
+    if fetched_object:
+        if len(klasse.__fields__) - subtract + add == len(fetched_object):
+            return True
+
     return False
 
 def insert(insert_sql:str,insert_tuple=None) -> int | None:
@@ -164,9 +162,9 @@ def insert(insert_sql:str,insert_tuple=None) -> int | None:
             conn.commit()
             cursor.close()
             return inserted_id
-    except sqlite3.IntegrityError as exception:##TODO create Item exists exception and raise it here
+    except sqlite3.IntegrityError as exception:
         raise exception
-    
+
 def insertmany(insert_sql:str,insert_tuple=None) -> int | None:
     """inserts into the db.
 
@@ -188,12 +186,12 @@ def insertmany(insert_sql:str,insert_tuple=None) -> int | None:
             conn.commit()
             cursor.close()
             return rowcount
-    except sqlite3.IntegrityError as exception:##TODO create Item exists exception and raise it here
+    except sqlite3.IntegrityError as exception:
         print(exception)
         raise exception
 
 def update(update_sql:str,update_tuple=None) -> bool:
-    """updates an entry in the db.
+    """updates or deletes an entry in the db.
 
     Args:
         update_sql (str): the sql used to update.
@@ -236,7 +234,7 @@ def fetch_one(fetch_sql:str,fetch_tuple=None):
             fetched_user = cursor.fetchone()
             cursor.close()
             return fetched_user
-    except Exception as exception:
+    except sqlite3.Error as exception:
         print(exception)
     return None
 
@@ -260,7 +258,7 @@ def fetch_all(fetch_sql:str,fetch_tuple=None):
             fetched_user = cursor.fetchall()
             cursor.close()
             return fetched_user
-    except Exception as exception:
+    except sqlite3.Error as exception:
         print(exception)
 
     return None
@@ -285,9 +283,8 @@ def check_fetch(fetch_sql:str,fetch_tuple=None):
             if not cursor.fetchone():  # An empty result evaluates to False.
                 cursor.close()
                 return False
-            else:
-                cursor.close()
-                return True
-    except Exception as exception:
+            cursor.close()
+            return True
+    except sqlite3.Error as exception:
         print(exception)
     return False

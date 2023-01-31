@@ -1,5 +1,6 @@
 """API calls for User specific stuff"""
 from datetime import timedelta
+from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status, Form
 from fastapi.security import OAuth2PasswordRequestForm
 from database import users_table
@@ -9,7 +10,7 @@ from validation import (validate_email,
                         validate_last_name,
                         validate_organization,
                         validate_password)
-from api.dependencies.classes import Token,User,UserWithSensitiveInfo, Permission
+from api.dependencies.classes import Token,User,UserWithSensitiveInfo
 
 from ..dependencies.authentication import (
     create_access_token,
@@ -17,7 +18,9 @@ from ..dependencies.authentication import (
     ACCESS_TOKEN_EXPIRE_MINUTES
     )
 from ..dependencies.users import (
+    get_all_users,
     get_user_by_id,
+    is_admin,
     update_user as update_user_func,
     get_current_user,
     authenticate_user,
@@ -41,6 +44,23 @@ async def read_users_me(current_user: User = Depends(get_current_user)):
     """
     return current_user
 
+@router.post("/users/delete/", status_code=status.HTTP_200_OK)
+async def delete_users( user_id:int,
+                        current_user: User = Depends(get_current_user)):
+    """API call to get the curret user we are communicating with
+
+    Args:
+        current_user (User, optional): User. Defaults to Depends(get_current_user).
+
+    Returns:
+        User: Current user with only the basic infos (no password)
+    """
+    await is_admin(current_user)
+    if users_table.delete_user(user_id):
+        return {"message": "success"}
+
+    return {"message": "couldnt create user."}
+
 @router.get("/users/me/allerts/", status_code=status.HTTP_200_OK)
 async def read_users_me_allerts(current_user: User = Depends(get_current_user)):
     """API call to get the curret users allerts
@@ -52,6 +72,19 @@ async def read_users_me_allerts(current_user: User = Depends(get_current_user)):
         str[]: List of allerts
     """
     return await get_user_allerts(current_user)
+
+@router.get("/users/all/", response_model=List[User])
+async def read_users(current_user: User = Depends(get_current_user)):
+    """_summary_
+
+    Args:
+        current_user (User, optional): _description_. Defaults to Depends(get_current_user).
+
+    Returns:
+        _type_: _description_
+    """
+    await is_admin(current_user)
+    return get_all_users(current_user.organization.id)
 
 @router.post("/users/login/", response_model=Token)
 async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
@@ -119,8 +152,14 @@ async def register( email: str = Form(),
             detail="This email is already assosiated with an existing account",
         )
 
-    hashed_pw = get_password_hash(password)
     organization_obj = organizations_table.get_orga(organization)
+    if organization_obj is None:
+        raise HTTPException(
+            status_code=status.HTTP_406_NOT_ACCEPTABLE,
+            detail="Organization doesnt exist.",
+        )
+
+    hashed_pw = get_password_hash(password)
     user = UserWithSensitiveInfo(   email=email,
                                     first_name=first_name,
                                     last_name=last_name,
@@ -130,8 +169,10 @@ async def register( email: str = Form(),
                                     disabled=0,
                                     email_verified=0)
 
-    users_table.create_user(user)
-    return {"message": "success"}
+    if users_table.create_user(user):
+        return {"message": "success"}
+
+    return {"message": "couldnt create user."}
 
 
 @router.post("/users/me/update", status_code=status.HTTP_200_OK)
@@ -184,12 +225,7 @@ async def admin_update_user_info(
     Returns:
         bool: if the update was successful.
     """
-    #check if current user is admin.
-    if current_user.permission != Permission.ADMIN:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You dont have the permission to do this (Not an admin).",
-        )
+    await is_admin(current_user)
     user_to_update = get_user_by_id(update_user_id)
 
     #check if the user is in the organization of the admin.

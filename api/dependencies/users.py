@@ -1,5 +1,6 @@
 """functions for user api"""
 from datetime import datetime
+from typing import List
 from fastapi import Depends, HTTPException, status
 from database import users_table, organizations_table
 from validation import (validate_email,
@@ -8,7 +9,7 @@ from validation import (validate_email,
                         validate_organization,
                         validate_password,
                         validate_permission)
-from .classes import User, UserWithSensitiveInfo, Allert
+from .classes import Permission, User, UserWithSensitiveInfo, Allert
 from .authentication import get_password_hash, oauth2_scheme, verify_password, get_email_from_token
 
 def get_user(email: str) -> UserWithSensitiveInfo | None:
@@ -23,6 +24,18 @@ def get_user(email: str) -> UserWithSensitiveInfo | None:
     """
 
     return users_table.get_user(email)
+
+def get_all_users(orga_id: int) -> List[User]:
+    """Creates a list of user objects from the information in the db
+
+    Args:
+        orga_id (int): orga the users are linked to.
+
+    Returns:
+        List[User]: list of User objects filled with the user information
+    """
+
+    return users_table.get_all_users(orga_id)
 
 def get_user_by_id(user_id: int) -> UserWithSensitiveInfo | None:
     """fetches the user object by its id.
@@ -198,6 +211,26 @@ async def update_user(user_to_update:User,
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail='Couldnt update the user.',
+        )
+
+    return True
+
+async def is_admin(user:User)->bool:
+    """checks wether user has admin rights.
+
+    Args:
+        user (User): user that wants to do admin stuff.
+
+    Raises:
+        HTTPException: if not an admin.
+
+    Returns:
+        bool: True if is admin.
+    """
+    if user.permission != Permission.ADMIN:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You dont have the permission to do this (Not an admin).",
         )
 
     return True
