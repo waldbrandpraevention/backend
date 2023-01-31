@@ -8,7 +8,47 @@ router = APIRouter()
 
 
 @router.get("/drones/", status_code=status.HTTP_200_OK)
-async def read_drone(name: str, current_user: User = Depends(get_current_user)):
+async def read_drone(id: int, current_user: User = Depends(get_current_user)):
+    """API call to get a specific drone
+
+    Args:
+        name (str): Name of the drone
+        current_user (User, optional): User. Defaults to Depends(get_current_user).
+
+    Returns:
+        Drone: drone
+    """
+
+    drone = get_drone(name)
+    if drone == None:
+        raise HTTPException(
+            status_code=status.HTTP_406_NOT_ACCEPTABLE,
+            detail="Drone does not exist ",
+        )
+    return drone
+
+@router.get("/drones/events", status_code=status.HTTP_200_OK)
+async def read_drone_events(id: int, current_user: User = Depends(get_current_user)):
+    """API call to get a specific drone
+
+    Args:
+        name (str): Name of the drone
+        current_user (User, optional): User. Defaults to Depends(get_current_user).
+
+    Returns:
+        Drone: drone
+    """
+
+    drone = get_drone(name)
+    if drone == None:
+        raise HTTPException(
+            status_code=status.HTTP_406_NOT_ACCEPTABLE,
+            detail="Drone does not exist ",
+        )
+    return drone
+
+@router.get("/drones/route", status_code=status.HTTP_200_OK)
+async def read_drone_route(id: int, current_user: User = Depends(get_current_user)):
     """API call to get a specific drone
 
     Args:

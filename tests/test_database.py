@@ -156,17 +156,15 @@ def test_dronetable():
     #create tables
     create_table(drones_table.CREATE_DRONES_TABLE)
     #create drone
-    testdrone = Drone(  id = 1,
+    testdrone = Drone(  id = 4,
                         name="Trinity F90+",
-                        droneowner_id= None,
                         type = "Unmanned Aerial Vehicle",
                         flight_range = 100,
                         cc_range = 7.5,
                         flight_time= 90,
                         )
-    testdrtwo = Drone(id = 2,
+    testdrtwo = Drone(id = 6,
             name='XR-201',
-            droneowner_id= None,
             type = "Unmanned Aerial Vehicle",
             flight_range = 50.7,
             cc_range = 10,
@@ -174,7 +172,6 @@ def test_dronetable():
             #sensors=["Qube 240 LiDAR", "Sony RX1 RII", "MicaSense RedEdge-P", "MicaSense Altum-PT"]
             )
     drone_one = drones_table.create_drone(testdrone.name,
-                                          testdrone.droneowner_id,
                                           testdrone.type,
                                           testdrone.flight_range,
                                           testdrone.cc_range,
@@ -182,13 +179,12 @@ def test_dronetable():
     for key, value in testdrone.__dict__.items():
         assert drone_one.__dict__[key] == value, 'Objects not matching'
     try:
-        drones_table.create_drone(testdrone.name,None,None,None,None,None)
+        drones_table.create_drone(testdrone.name,None,None,None,None)
         print('IntegrityError should be thrown')
     except sqlite3.IntegrityError:
         pass
 
     drone_two = drones_table.create_drone(testdrtwo.name,
-                                          testdrtwo.droneowner_id,
                                           testdrtwo.type,
                                           testdrtwo.flight_range,
                                           testdrtwo.cc_range,
@@ -196,7 +192,7 @@ def test_dronetable():
     for key, value in testdrtwo.__dict__.items():
         assert drone_two.__dict__[key] == value, 'Objects not matching'
 
-    drones = drones_table.get_drones()
+    drones = drones_table.get_drones(1)
     assert len(drones) == 2, 'Something went wrong inserting the Drones.'
     assert drones[0].name == testdrone.name, 'Names not matching. Order wrong?'
 

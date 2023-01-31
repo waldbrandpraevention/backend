@@ -93,8 +93,7 @@ class Drone(BaseModel):
     cc_range: float | None = None
     flight_time: float | None = None
     last_update: datetime | None = None
-    zone: str | None = None
-    droneowner_id: int | None = None
+    zone_id: int | None = None
 
 class DroneUpdate(BaseModel):
     """DroneUpdate class"""

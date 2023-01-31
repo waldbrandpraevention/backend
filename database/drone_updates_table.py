@@ -36,6 +36,7 @@ GET_ENTRYS_BY_TIMESTAMP = '''SELECT
                             WHERE drone_id = ?
                             AND timestamp > ?
                             AND timestamp < ?;'''
+
 GET_ENTRY ='SELECT * FROM drone_data WHERE drone_id = ?;'
 
 GET_UPDATE_IN_ZONE = '''
@@ -189,7 +190,7 @@ def get_obj_from_fetched(fetched_dronedata) -> DroneUpdate| None:
         try:
             longitude=float(fetched_dronedata[4])
             latitude= float(fetched_dronedata[5])
-        except Exception as exception:
+        except ValueError as exception:
             print(exception)
             longitude, latitude= None, None
 
