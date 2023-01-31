@@ -5,7 +5,7 @@ from typing import List
 from api.dependencies.classes import DroneEvent, EventType, FireRisk
 from database.database import fetched_match_class
 import database.database as db
-from database.drone_updates_table import create_drone_update
+from database import drone_updates_table
 
 CREATE_DRONE_EVENT_TABLE = '''CREATE TABLE drone_event
 (
@@ -39,13 +39,17 @@ WHERE ST_Intersects(drone_event.coordinates, GeomFromGeoJSON(?))
 AND timestamp > ? AND timestamp < ?;'''
 
 
-def insert_demo_events(long: float, lat: float):
+def insert_demo_events(long: float, lat: float, droneid = 1):
     """insert 5 demo drone events.
 
     Args:
         long (float): long of the coordinate.
         lat (float): lat of the coordinate.
     """
+    updates = drone_updates_table.get_drone_data_by_timestamp(droneid)
+    if updates is not None and len(updates)>0:
+        print('already created drone events.')
+        return
     timestamp = datetime.datetime.utcnow()
     i = 0
     num_inserted = 0
@@ -59,8 +63,8 @@ def insert_demo_events(long: float, lat: float):
         lat = lat+lat_rand
         flight_range-=2
         flight_time+=10
-        create_drone_update(
-            drone_id=1,
+        drone_updates_table.create_drone_update(
+            drone_id=droneid,
             timestamp=timestamp,
             longitude=long,
             latitude=lat,
@@ -71,7 +75,7 @@ def insert_demo_events(long: float, lat: float):
             confidence = random.randint(20, 90)
             
             create_drone_event_entry(
-                drone_id=1,
+                drone_id=droneid,
                 timestamp=timestamp,
                 longitude=long,
                 latitude=lat,

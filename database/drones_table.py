@@ -25,7 +25,8 @@ PRIMARY KEY (id)
 );
 CREATE UNIQUE INDEX IF NOT EXISTS drones_AK ON drones (name);'''
 
-CREATE_DRONE = 'INSERT INTO drones (name,droneowner_id,type,flight_range,cc_range,flight_time) VALUES (? ,? ,? ,? ,? ,?);'
+CREATE_DRONE = '''  INSERT INTO drones (name,droneowner_id,type,flight_range,cc_range,flight_time)
+                    VALUES (? ,? ,? ,? ,? ,?);'''
 GET_DRONE = 'SELECT * FROM drones WHERE name=?;'
 
 def create_drone(name:str,droneowner_id:int|None,type:str|None,flight_range:int|None,cc_range:int|None,flight_time:int|None):

@@ -37,12 +37,14 @@ GET_ENTRYS_BY_TIMESTAMP = '''SELECT
                             AND timestamp > ?
                             AND timestamp < ?;'''
 GET_ENTRY ='SELECT * FROM drone_data WHERE drone_id = ?;'
+
 GET_UPDATE_IN_ZONE = '''
 SELECT drone_id,timestamp,flight_range,flight_time, X(coordinates), Y(coordinates)
 FROM drone_data
 WHERE ST_Intersects(drone_data.coordinates, GeomFromGeoJSON(?)) 
 AND timestamp > ? AND timestamp < ?
 ORDER BY timestamp DESC;'''
+
 ACTIVE_DRONES = ''' SELECT DISTINCT	drone_id
                     FROM drone_data
                     WHERE ST_Intersects(drone_data.coordinates, GeomFromGeoJSON(?))
@@ -164,13 +166,13 @@ def get_active_drones(polygon: str,
 
     Args:
         polygon (str): _description_
-        after (datetime.datetime, optional): _description_. Defaults to None.
+        after (datetime.datetime, optional): _description_. Defaults to now - 1 hour.
 
     Returns:
         List[int]: _description_
     """
     if after is None:
-        after = datetime.datetime.now() - datetime.timedelta(hours=1)
+        after = datetime.datetime.utcnow() - datetime.timedelta(hours=1)
     return db.fetch_all(ACTIVE_DRONES,(polygon,after))
 
 

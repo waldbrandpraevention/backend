@@ -29,35 +29,63 @@ CREATE_ENTRY_TEXTGEO = '''INSERT OR IGNORE
                         VALUES (?,?,?,?,GeomFromText(?,4326),MakePoint(?, ?, 4326));'''
 
 GET_ZONE = '''SELECT id,name,federal_state,district,AsGeoJSON(area),
-                X(geo_point),Y(geo_point) FROM zones
+                X(geo_point),Y(geo_point),Count(DISTINCT drone_id) FROM zones
                 JOIN ElementaryGeometries AS e ON (e.f_table_name = 'zones' 
                 AND e.origin_rowid = zones.rowid)
-                WHERE ST_Intersects(area, MakePoint(?, ?, 4326));'''
+                LEFT JOIN drone_data ON ST_Intersects(drone_data.coordinates, area)
+                WHERE ST_Intersects(area, MakePoint(?, ?, 4326))
+                GROUP BY name;'''
 
 GET_ZONES = '''SELECT id,name,federal_state,district,AsGeoJSON(area),
-                X(geo_point),Y(geo_point) FROM zones
+                X(geo_point),Y(geo_point),Count(DISTINCT drone_id) FROM zones
                 JOIN ElementaryGeometries AS e ON (e.f_table_name = 'zones' 
-                AND e.origin_rowid = zones.rowid);'''
+                AND e.origin_rowid = zones.rowid)
+                LEFT JOIN drone_data ON ST_Intersects(drone_data.coordinates, area)
+                GROUP BY name;'''
 
 GET_ZONES_BY_DISTRICT = '''SELECT id,name,federal_state,district,AsGeoJSON(area),
-                            X(geo_point),Y(geo_point)
+                            X(geo_point),Y(geo_point),Count(DISTINCT drone_id)
                             FROM zones 
-                            WHERE district = ?'''
+                            LEFT JOIN drone_data ON ST_Intersects(drone_data.coordinates, area)
+                            WHERE district = ?
+                            GROUP BY name;'''
 
 GET_ORGAZONES = '''  SELECT id,name,federal_state,district,AsGeoJSON(area),
-                        X(geo_point),Y(geo_point)
+                        X(geo_point),Y(geo_point),Count(DISTINCT drone_id)
                     FROM zones
                     JOIN organization_zones 
                     ON zones.id = organization_zones.zone_id
-                    WHERE organization_zones.orga_id=?;'''
+                    LEFT JOIN drone_data ON ST_Intersects(drone_data.coordinates, area)
+                    WHERE organization_zones.orga_id=?
+                    GROUP BY name;'''
 
 GET_ZONEBY ='''SELECT id,name,federal_state,district,AsGeoJSON(area),
-                        X(geo_point),Y(geo_point)
+                        X(geo_point),Y(geo_point),Count(DISTINCT drone_id)
                     FROM zones
                     JOIN organization_zones 
                     ON zones.id = organization_zones.zone_id
+                    LEFT JOIN drone_data ON ST_Intersects(drone_data.coordinates, area)
                     WHERE zones.{}=? 
-                    AND organization_zones.orga_id=?;'''
+                    AND organization_zones.orga_id=?
+                    GROUP BY name;'''
+
+GET_ORGA_AREA = """   Select AsGeoJSON(GUnion(area)) as oarea,
+ST_AsText(ST_Centroid(GUnion(area)))as center, 
+Count(Distinct drone_id)
+from zones
+JOIN organization_zones on organization_zones.zone_id = zones.id
+LEFT JOIN drone_data ON ST_Intersects(drone_data.coordinates, area)
+WHERE organization_zones.orga_id = ?;"""
+
+
+GETWITHDRONECOUNT = """ SELECT id,name,federal_state,district,AsGeoJSON(area),
+                        X(geo_point),Y(geo_point),Count(DISTINCT drone_id)
+                        FROM zones
+                        join organization_zones on organization_zones.zone_id = zones.id
+                        LEFT JOIN drone_data ON ST_Intersects(drone_data.coordinates, area)
+                        where organization_zones.orga_id = 1
+                        GROUP BY zones.id
+                        ORDER BY zones.name"""
 
 
 def load_from_geojson(path_to_geojson) -> int:
@@ -154,6 +182,11 @@ def get_zone_of_coordinate(long, lat) -> Zone | None:
     fetched_zone = db.fetch_one(GET_ZONE, (long, lat))
     return get_obj_from_fetched(fetched_zone)
 
+def get_orga_area(orga_id) -> str | None:
+    """returns geojson.
+    """
+    return db.fetch_one(GET_ORGA_AREA, (orga_id,))
+
 
 def get_zone_of_by_district(name: str) -> List[Zone] | None:
     """fetch the list of zones, in this district.
@@ -192,6 +225,24 @@ def get_zones() -> List[Zone]:
         return output
     return None
 
+def get_active_drone_count(polygon: str,
+                           after: datetime.datetime = None) -> int:
+    """counts the number of actives drones in a area.
+
+    Args:
+        polygon (str): _description_
+        after (datetime.datetime, optional): _description_. Defaults to None.
+
+    Returns:
+        int: _description_
+    """
+    drones = drone_updates_table.get_active_drones(polygon,after)
+
+    if drones is None:
+        return 0
+
+    return len(drones)
+
 
 def get_obj_from_fetched(
                 fetched_zone,
@@ -207,20 +258,14 @@ def get_obj_from_fetched(
     Returns:
         Zone | None: zone object or None if obj cant be generated.
     """
-    if fetched_match_class(Zone, fetched_zone,4):
+    if fetched_match_class(Zone, fetched_zone,3):
         geo_json = spatiageostr_to_geojson(fetched_zone[4])
 
         events = drone_events_table.get_drone_events_in_zone(
             fetched_zone[4], after)
-           
+
         last_update = drone_updates_table.get_lastest_update_in_zone(
                         fetched_zone[4])
-        
-        active_drones = drone_updates_table.get_active_drones(fetched_zone[4])
-        if active_drones is None:
-            drone_count = 0
-        else:
-            drone_count= len(active_drones)
 
         if events:
             ai_firerisk_enum = drone_events_table.calculate_firerisk(events)
@@ -242,7 +287,7 @@ def get_obj_from_fetched(
             ai_fire_risk=ai_firerisk_enum,
             geo_point=geo_tuple,
             last_update=last_update,
-            drone_count=drone_count
+            drone_count=fetched_zone[7]
         )
         return zone_obj
     return None

@@ -268,7 +268,10 @@ def test_zone():
     """
     zones = zone_table.get_zone_of_by_district('Landkreis Potsdam-Mittelmark')
     for zone in zones:
-        oz_table.link_orgazone(testorga.id,zone.id)
+        try:
+            oz_table.link_orgazone(testorga.id,zone.id)
+        except sqlite3.IntegrityError:
+            break
 
     orgazones = oz_table.get_zones_by_orga(testorga.id)
     assert zones == orgazones,'Ne'

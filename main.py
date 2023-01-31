@@ -67,6 +67,8 @@ def create_drone_events():
     if os.getenv("DEMO_LONG") is not None \
             and os.getenv("DEMO_LAT") is not None:
         
+        drone_events_table.insert_demo_events(12.559776306152344,52.189299066349946,2)
+        drone_events_table.insert_demo_events(12.559776306152344,50.189299066349946,3)
         drone_events_table.insert_demo_events(float(os.getenv("DEMO_LONG")),float(os.getenv("DEMO_LAT")))
     
     print("drone_events done")
