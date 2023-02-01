@@ -1,20 +1,32 @@
-from fastapi import APIRouter
-
-from datetime import datetime, timedelta
-from enum import Enum
-from fastapi import Depends, FastAPI, HTTPException, status, Request, Form
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from jose import JWTError, jwt
-from passlib.context import CryptContext
-from pydantic import BaseModel
+"""API calls for User specific stuff"""
+from datetime import timedelta
+from typing import List
+from fastapi import APIRouter, Depends, HTTPException, status, Form
+from fastapi.security import OAuth2PasswordRequestForm
 from database import users_table
-from database import mail_verif_table, organizations_table
-from validation import *
-from datetime import datetime, timedelta
-from api.dependencies.classes import Token
+from database import organizations_table
+from validation import (validate_email,
+                        validate_first_name,
+                        validate_last_name,
+                        validate_organization,
+                        validate_password)
+from api.dependencies.classes import Token,User,UserWithSensitiveInfo
 
-from ..dependencies.authentication import create_access_token, get_password_hash, ACCESS_TOKEN_EXPIRE_MINUTES
-from ..dependencies.users import *
+from ..dependencies.authentication import (
+    create_access_token,
+    get_password_hash,
+    ACCESS_TOKEN_EXPIRE_MINUTES
+    )
+from ..dependencies.users import (
+    get_all_users,
+    get_user_by_id,
+    is_admin,
+    update_user as update_user_func,
+    get_current_user,
+    authenticate_user,
+    get_user_allerts,
+    get_user
+    )
 
 router = APIRouter()
 
@@ -32,6 +44,23 @@ async def read_users_me(current_user: User = Depends(get_current_user)):
     """
     return current_user
 
+@router.post("/users/delete/", status_code=status.HTTP_200_OK)
+async def delete_users( user_id:int,
+                        current_user: User = Depends(get_current_user)):
+    """API call to get the curret user we are communicating with
+
+    Args:
+        current_user (User, optional): User. Defaults to Depends(get_current_user).
+
+    Returns:
+        User: Current user with only the basic infos (no password)
+    """
+    await is_admin(current_user)
+    if users_table.delete_user(user_id):
+        return {"message": "success"}
+
+    return {"message": "couldnt create user."}
+
 @router.get("/users/me/allerts/", status_code=status.HTTP_200_OK)
 async def read_users_me_allerts(current_user: User = Depends(get_current_user)):
     """API call to get the curret users allerts
@@ -43,6 +72,19 @@ async def read_users_me_allerts(current_user: User = Depends(get_current_user)):
         str[]: List of allerts
     """
     return await get_user_allerts(current_user)
+
+@router.get("/users/all/", response_model=List[User])
+async def read_users(current_user: User = Depends(get_current_user)):
+    """_summary_
+
+    Args:
+        current_user (User, optional): _description_. Defaults to Depends(get_current_user).
+
+    Returns:
+        _type_: _description_
+    """
+    await is_admin(current_user)
+    return get_all_users(current_user.organization.id)
 
 @router.post("/users/login/", response_model=Token)
 async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
@@ -57,7 +99,7 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
     Returns:
         dict: Token information in json format
     """
-    
+
     #note: username is the reserved name for the login name, must be used even if we are using email
     user = authenticate_user(form_data.username, form_data.password)
     if not user:
@@ -73,7 +115,11 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
     return {"access_token": access_token, "token_type": "bearer"}
 
 @router.post("/users/signup/", status_code=status.HTTP_201_CREATED)
-async def register(email: str = Form(), password: str = Form(), first_name: str = Form(), last_name: str = Form(), organization: str = Form()):
+async def register( email: str = Form(),
+                    password: str = Form(),
+                    first_name: str = Form(),
+                    last_name: str = Form(),
+                    organization: str = Form()):
     """API call to create a new account
 
     Args:
@@ -105,9 +151,15 @@ async def register(email: str = Form(), password: str = Form(), first_name: str 
             status_code=status.HTTP_406_NOT_ACCEPTABLE,
             detail="This email is already assosiated with an existing account",
         )
-    
+
+    organization_obj = organizations_table.get_orga(organization)
+    if organization_obj is None:
+        raise HTTPException(
+            status_code=status.HTTP_406_NOT_ACCEPTABLE,
+            detail="Organization doesnt exist.",
+        )
+
     hashed_pw = get_password_hash(password)
-    organization_obj = organizations_table.get_orga(organization) 
     user = UserWithSensitiveInfo(   email=email,
                                     first_name=first_name,
                                     last_name=last_name,
@@ -116,15 +168,17 @@ async def register(email: str = Form(), password: str = Form(), first_name: str 
                                     permission=1,
                                     disabled=0,
                                     email_verified=0)
-    users_table.create_user(user)
-    return {"message": "success"}
+
+    if users_table.create_user(user):
+        return {"message": "success"}
+
+    return {"message": "couldnt create user."}
 
 
 @router.post("/users/me/update", status_code=status.HTTP_200_OK)
-async def change_user_info(current_user: User = Depends(get_current_user), 
+async def update_user_info(current_user: User = Depends(get_current_user),
                            email: str | None = None, password: str | None = None,
-                           first_name: str | None = None, last_name: str | None = None,
-                           organization: str | None = None):
+                           first_name: str | None = None, last_name: str | None = None)-> bool:
     """API call to update the current user
 
     Args:
@@ -132,14 +186,63 @@ async def change_user_info(current_user: User = Depends(get_current_user),
         email (str | None, optional): new email. Defaults to None.
         password (str | None, optional): password. Defaults to None.
         first_name (str | None, optional): new first name. Defaults to None.
-        last_name (str | None, optional): new ast name. Defaults to None.
-        organization (str | None, optional): new organization. Defaults to None.
+        last_name (str | None, optional): new last name. Defaults to None.
 
     Returns:
-        _type_: _description_
+        bool: _description_
     """
-    #TODO DB calls to update
-    #update_password_hash(current_user, get_password_hash(password))
-    #...
 
-    return {"message:", "not implemented yet"}
+    success = await update_user_func(current_user,email,password,first_name,last_name)
+
+    return success
+
+@router.post("/users/update", status_code=status.HTTP_200_OK)
+async def admin_update_user_info(
+                                update_user_id: int,
+                                current_user: User = Depends(get_current_user),
+                                email: str | None = None, password: str | None = None,
+                                first_name: str | None = None, last_name: str | None = None,
+                                organization_name: str | None = None, permission: int | None=None,
+                                disabled: bool |None=None, email_verified:bool|None=None) -> bool:
+    """API call to update the selected user.
+
+    Args:
+        update_user_email (str): _description_
+        current_user (User, optional): _description_. Defaults to Depends(get_current_user).
+        email (str | None, optional): _description_. Defaults to None.
+        password (str | None, optional): _description_. Defaults to None.
+        first_name (str | None, optional): _description_. Defaults to None.
+        last_name (str | None, optional): _description_. Defaults to None.
+        organization_name (str | None, optional): _description_. Defaults to None.
+        permission (int | None, optional): _description_. Defaults to None.
+        disabled (bool | None, optional): _description_. Defaults to None.
+        email_verified (bool | None, optional): _description_. Defaults to None.
+
+    Raises:
+        HTTPException: if you dont have the permission to do this (youre not an admin).
+        HTTPException: if youre not part of the orga, the user is part of.
+
+    Returns:
+        bool: if the update was successful.
+    """
+    await is_admin(current_user)
+    user_to_update = get_user_by_id(update_user_id)
+
+    #check if the user is in the organization of the admin.
+    if user_to_update.organization.id != current_user.organization.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You dont have the permission to do this (Not part of the orga).",
+        )
+
+    updated_user = await update_user_func(user_to_update,
+                               email,
+                               password,
+                               first_name,
+                               last_name,
+                               organization_name,
+                               permission,
+                               disabled,
+                               email_verified)
+
+    return updated_user

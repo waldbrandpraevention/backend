@@ -1,6 +1,5 @@
 from fastapi import Depends, APIRouter, FastAPI, HTTPException, status, Request, Form
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from  ..dependencies.zones import get_all_zones, get_zone
 from .users import get_current_user
 from ..dependencies.drones import get_all_drones, get_drone, get_drone_count
 from ..dependencies.classes import User, Drone

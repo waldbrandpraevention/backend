@@ -3,7 +3,5 @@
 *.ini
 *mod_spatialite-5.0.1-win-amd64
 *old_stuff.py
-zonedata.json
-zone_data.geojson
 .pylintrc
 .env
