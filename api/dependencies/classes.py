@@ -133,3 +133,13 @@ class Zone(BaseModel):
     ai: FireRisk | None = None
     geo_json: dict | None = None
     geo_point: tuple[float,float] | None = None
+
+class DroneForSimulation(BaseModel):
+    """Drone for the simulation"""
+    drone: Drone,
+    geo_json: dict,
+    speed: float,
+    direction: tuple[float,float],
+    token: str
+    lat: float,
+    long: float

@@ -1,55 +1,42 @@
 import requests
+import json
+from shapely.geometry import shape, Point
+import time
 
 URL = "kiwa.tech/api/"
-NUM_DRONES = 3
+tickrate
 
-class drone:
-    speed: float,
-    lat: float,
-    long: float,
-    id: int,
-    name: str,
-    type: str,
-    flight_range: float,
-    cc_range: float,
-    flight_time: float,
-    last_update: datetime,
-    zone: str,
-    droneowner_id:,  
-    
+#load drones
+print d['glossary']['title']
+drones_json = requests.get(URL + "simulation/get-drones/")
+drones_dict = json.loads(drones_json)
 
+last_execution = time.time()
 
-drones = [
-    {
-        "name": "bob",
-        "type": "type a",
-        "flight_range": 1000000,
-        "cc_range": 100000,
-        "flight_time": 100000,
-        "last_update": None,
-        "zone": "insert zone",
-        "droneowner_id": None  
-    },
-]
+while True:
+    dt = time.time() - last_execution
+    last_execution = time.time()
+    for i in range(len(drones_dict)):
+        drone = drones_dict[i]["drone"]
+        geo_json = drones_dict[i]["geo_json"]
+        vel = drones_dict[i]["direction"]
+        speed = drones_dict[i]["speed"]
+        new_x = drones_dict[i]["lat"] + vel[0] * speed * dt
+        new_y = drones_dict[i]["long"] + vel[1] * speed * dt
 
-token_list = []
-zones_list = []
+        drones_dict[i]["lat"] = new_x
+        drones_dict[i]["long"] = new_y
 
+        point = Point(new_y new_x)
 
-#login
-for i in range(NUM_DRONES):
-    token = requests.post(URL + "drones/login/", data=drones[i]) 
-    token_list.append(token)
-    zone = requests.get(URL + "zones/"drones[i][zone])
+        found = False
 
+        for feature in geo_json['features']:
+            polygon = shape(feature['geometry'])
+            if polygon.contains(point):
+                found = True
 
+        if not found:
+            new_vel = (random(), random())
 
-#simulate
-for i in range(NUM_DRONES):
-    token = requests.post(URL + "drones/login/", data=drones[i]) 
-    token_list.append(token)
-
-#simulate
-for i in range(NUM_DRONES):
-    token = requests.post(URL + "drones/login/", data=drones[i]) 
-    token_list.append(token)
+        #responses.post()

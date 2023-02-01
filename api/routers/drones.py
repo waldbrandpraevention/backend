@@ -53,6 +53,11 @@ async def read_drones_count(current_user: User = Depends(get_current_user)):
     """
     return await get_drone_count()
 
+@router.post("/drones/send-update/", status_code=status.HTTP_200_OK)
+async def drone_login():
+    return {"message": "todo"}
+
+
 @router.post("/drones/login/", status_code=status.HTTP_200_OK)
 async def drone_login(
     name: str | None = None
