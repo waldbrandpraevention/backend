@@ -20,6 +20,7 @@ SECRET_KEY = "cbdc851fece93e7b1a3bf9ca16c9ce62939e22f668866c875d294363e2530b27"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 EMAIL_VERIFICATION_TOKEN_EXPIRE_HOURS = 24
+DRONE_TOKEN_EXPIRE_WEEKS = 100
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -68,7 +69,7 @@ def create_access_token(data: dict, expires_delta: timedelta):
     return encoded_jwt
 
 async def get_email_from_token(token: str = Depends(oauth2_scheme)):
-    """Returns the email in the token
+    """Returns the email in the token (works for drone name as well)
 
     Args:
         token str: Usertoken to decode
