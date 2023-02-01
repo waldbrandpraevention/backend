@@ -82,7 +82,7 @@ class Drone(BaseModel):
     flight_time: float | None = None
     last_update: datetime | None = None
     zone: str | None = None
-    droneowner_id: int | None = None    
+    droneowner_id: int | None = None
 
 class DroneUpdate(BaseModel):
     drone_id :int | None = None
