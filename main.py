@@ -11,7 +11,7 @@ from api.dependencies.authentication import get_password_hash
 from api.dependencies.emails import send_email
 from api.dependencies.weather import wind_update
 from api.dependencies.classes import Organization, UserWithSensitiveInfo
-from api.routers import emails, users, zones, drones
+from api.routers import emails, users, zones, drones, weather, simulation
 from database import users_table, organizations_table
 from database import drone_events_table
 from database import zones_table
@@ -27,6 +27,8 @@ app.include_router(users.router)
 app.include_router(email.router)
 app.include_router(zones.router)
 app.include_router(drones.router)
+app.include_router(weather.router)
+app.include_router(simulation.router)
 
 # CORS https://fastapi.tiangolo.com/tutorial/cors/
 app.add_middleware(

@@ -31,8 +31,8 @@ async def verify_email(token: str):
         token_email = await get_email_from_token(token, False)
     except HTTPException as e:
         if e.status_code == status.HTTP_406_NOT_ACCEPTABLE: #expired
-            mail_from_token = get_email_from_token(token, True)
-            send_token_email(mail_from_token)
+            mail_from_token = await get_email_from_token(token, True)
+            await send_token_email(mail_from_token)
             raise HTTPException(
                 status_code=status.HTTP_406_NOT_ACCEPTABLE,
                 detail="Token expired. A new email is on it's way",

@@ -7,7 +7,6 @@ URL = "kiwa.tech/api/"
 tickrate
 
 #load drones
-print d['glossary']['title']
 drones_json = requests.get(URL + "simulation/get-drones/")
 drones_dict = json.loads(drones_json)
 
@@ -36,7 +35,11 @@ while True:
             if polygon.contains(point):
                 found = True
 
-        if not found:
-            new_vel = (random(), random())
+        if not found: #not in polygon
+            new_angle = random.uniform(0, 6.28318530718)
+            x = 1 * cos(new_angle)
+            y = 1 * sin(new_angle)
 
-        #responses.post()
+            new_vel = (x, y)
+
+        #responses.post(URL + drones/......) #todo
