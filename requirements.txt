@@ -3,3 +3,5 @@ passlib==1.7.4
 python_jose==3.3.0
 uvicorn
 python-multipart
+tensorflow==2.11.0
+shapely==2.0.1
