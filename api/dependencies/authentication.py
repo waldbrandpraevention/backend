@@ -68,7 +68,7 @@ def create_access_token(data: dict, expires_delta: timedelta):
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
-async def get_email_from_token(token: str = Depends(oauth2_scheme)):
+async def get_email_from_token(token: str = Depends(oauth2_scheme), allow_expired: bool = False):
     """Returns the email in the token (works for drone name as well)
 
     Args:
@@ -81,7 +81,8 @@ async def get_email_from_token(token: str = Depends(oauth2_scheme)):
         str: email that is embedded in the token
     """
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM], options={"verify_signature": not allow_expired})
+
         email: str = payload.get("sub")
         if email is None:
             raise HTTPException(
