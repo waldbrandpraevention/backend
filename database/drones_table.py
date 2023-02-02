@@ -26,7 +26,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS drones_AK ON drones (name);'''
 
 CREATE_DRONE = '''  INSERT INTO drones (name,type,flight_range,cc_range,flight_time)
                     VALUES (? ,? ,? ,? ,?);'''
-GET_DRONE = '''SELECT 
+GET_DRONE = '''SELECT
 drones.id, 
 drones.name, 
 drones.type, 
@@ -55,7 +55,7 @@ FROM drones
 JOIN drone_data ON drone_data.drone_id = drones.id
 JOIN zones ON ST_Intersects(drone_data.coordinates, zones.area)
 JOIN organization_zones ON organization_zones.zone_id = zones.id
-AND organization_zones.orga_id = ?
+WHERE organization_zones.orga_id = ?
 Group by drones.id
 Order by drone_data.timestamp;'''
 

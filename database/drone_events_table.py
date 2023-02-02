@@ -1,5 +1,6 @@
 """funcs to read and write on the drone_event table in database."""
 import datetime
+from enum import Enum
 import random
 from typing import List
 from api.dependencies.classes import DroneEvent, EventType, FireRisk
@@ -7,30 +8,40 @@ from database.database import fetched_match_class
 import database.database as db
 from database import drone_updates_table
 
-CREATE_DRONE_EVENT_TABLE = '''CREATE TABLE drone_event
+class DEAtr(str,Enum):
+    """Enum class containing all possible drone_event attributes."""
+    DRONE_ID = 'drone_id'
+    TIMESTAMP = 'timestamp'
+    EVENT_TYPE = 'event_type'
+    CONFIDENCE = 'confidence'
+    PICTURE_PATH='picture_path'
+    CSV_FILE_PATH= 'csv_file_path'
+    COORDINATES= 'coordinates'
+    
+CREATE_DRONE_EVENT_TABLE = f'''CREATE TABLE drone_event
 (
-drone_id       integer NOT NULL ,
-timestamp    timestamp NOT NULL ,
-event_type   integer NOT NULL,
-confidence   integer NOT NULL,
-picture_path   text,
-csv_file_path  text ,
-PRIMARY KEY (drone_id, timestamp),
-FOREIGN KEY (drone_id) REFERENCES drones (id)
+{DEAtr.DRONE_ID}     integer NOT NULL ,
+{DEAtr.TIMESTAMP}    timestamp NOT NULL ,
+{DEAtr.EVENT_TYPE}   integer NOT NULL,
+{DEAtr.CONFIDENCE}   integer NOT NULL,
+{DEAtr.PICTURE_PATH}   text,
+{DEAtr.CSV_FILE_PATH}  text ,
+PRIMARY KEY ({DEAtr.DRONE_ID}, {DEAtr.TIMESTAMP}),
+FOREIGN KEY ({DEAtr.DRONE_ID}) REFERENCES drones (id)
 );
 
-CREATE INDEX drone_event_FK_1 ON drone_event (drone_id);
-SELECT AddGeometryColumn('drone_event', 'coordinates', 4326, 'POINT', 'XY');'''
+CREATE INDEX drone_event_FK_1 ON drone_event ({DEAtr.DRONE_ID});
+SELECT AddGeometryColumn('drone_event', '{DEAtr.COORDINATES}', 4326, 'POINT', 'XY');'''
 
 CREATE_ENTRY = '''
 INSERT INTO drone_event (drone_id,timestamp,coordinates,event_type,confidence,picture_path,csv_file_path) 
 VALUES (? ,?,MakePoint(?, ?, 4326)  ,? ,?,?,?);'''
-GET_ENTRYS_BY_TIMESTAMP = '''
+
+GET_ENTRY = '''
 SELECT drone_id,timestamp, X(coordinates), Y(coordinates),event_type,confidence,picture_path,csv_file_path
 FROM drone_event 
-WHERE drone_id = ? AND timestamp > ? AND timestamp < ?;'''
-GET_ENTRY = ''' SELECT * FROM drone_event WHERE drone_id = ?
-                ORDER BY timestamp DESC;'''
+{}
+ORDER BY timestamp DESC;'''
 
 GET_EVENT_IN_ZONE = '''
 SELECT drone_id,timestamp, X(coordinates), Y(coordinates),event_type,confidence,picture_path,csv_file_path
@@ -125,10 +136,11 @@ def create_drone_event_entry(drone_id: int,
     return False
 
 
-def get_drone_event_by_timestamp(drone_id: int,
-                                 after: datetime.datetime = datetime.datetime.min,
-                                 before: datetime.datetime = datetime.datetime.max
-                                 ) -> List[DroneEvent]:
+def get_drone_event(drone_id: int = None,
+                    polygon: str=None,
+                    after: datetime.datetime = None,
+                    before: datetime.datetime = None
+                    ) -> List[DroneEvent]:
     """fetches all entrys that are within the choosen timeframe.
     If only drone_id is set, every entry will be fetched.
 
@@ -140,54 +152,35 @@ def get_drone_event_by_timestamp(drone_id: int,
     Returns:
         List[DroneData]: List with the fetched data.
     """
+    sql_arr = []
+    tuple_arr = []
+    if drone_id is not None:
+        sql_arr.append(db.create_where_clause_statement(f'{DEAtr.DRONE_ID}','='))
+        tuple_arr.append(drone_id)
+
+    if polygon is not None:
+        sql_arr.append(db.create_where_clause_statement(f'ST_Intersects({DEAtr.COORDINATES}',',', 'GeomFromGeoJSON(?))'))
+        tuple_arr.append(polygon)
+
+    if after is not None:
+        sql_arr.append(db.create_where_clause_statement(f'{DEAtr.TIMESTAMP}','>'))
+        tuple_arr.append(after)
+
+    if before is not None:
+        sql_arr.append(db.create_where_clause_statement(f'{DEAtr.TIMESTAMP}','<'))
+        tuple_arr.append(before)
+
+    sql = db.add_where_clause(GET_ENTRY, sql_arr)
+
     fetched_data = db.fetch_all(
-        GET_ENTRYS_BY_TIMESTAMP, (drone_id, after, before))
+        sql, tuple(tuple_arr)
+        )
     output = []
     for drone_data in fetched_data:
         dronedata_obj = get_obj_from_fetched(drone_data)
         if dronedata_obj:
             output.append(dronedata_obj)
     return output
-
-
-def get_drone_events_in_zone(polygon: str,
-                             after: datetime.datetime = datetime.datetime.max,
-                             before: datetime.datetime = datetime.datetime.max
-                             ) -> List[DroneEvent]:
-    """fetches all entrys that are within the choosen polygon.
-    Args:
-        polygon (str): polygon str od the area for which the events should be shown
-        after (datetime.datetime): fetches everything after this date (not included)
-        before (datetime.datetime): fetches everything before this date (not included)
-
-    Returns:
-        List[DroneData]: List with the fetched data.
-    """
-    fetched_data = db.fetch_all(GET_EVENT_IN_ZONE, (polygon, after, before))
-    output = []
-    if not fetched_data:
-        return None
-    for drone_data in fetched_data:
-        dronedata_obj = get_obj_from_fetched(drone_data)
-        if dronedata_obj:
-            output.append(dronedata_obj)
-    return output
-
-
-def get_latest_event(drone_id: int) -> DroneEvent:
-    """fetch latest event, this dron has recorded.
-
-    Args:
-        drone_id (int): id of the drone.
-
-    Returns:
-        DroneEvent
-    """
-    fetched_data = db.fetch_one(GET_ENTRY, (drone_id,))
-    if fetched_data:
-        return get_obj_from_fetched(fetched_data)
-    return None
-
 
 def get_obj_from_fetched(fetched_dronedata) -> DroneEvent | None:
     """generating DroneData objects with the fetched data.

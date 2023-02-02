@@ -3,7 +3,8 @@ import os
 import sys
 import pytest
 sys.path.append('../backend')
-from api.routers import zones,users
+from api.routers import zones,users,drones
+from fastapi import HTTPException
 
 @pytest.mark.asyncio
 async def test_zones():
@@ -19,6 +20,21 @@ async def test_zones():
     assert zone == zones_arr[index]
     count = await zones.get_zone_count(user.organization.id)
     assert len(zones_arr) == count
+
+@pytest.mark.asyncio
+async def test_drones():
+    """zone api tests.
+    """
+    user = users.get_user(os.getenv("ADMIN_MAIL"))
+    drone = await drones.read_drone(drone_id=1,current_user=user)
+    with pytest.raises(HTTPException):
+        await drones.read_drone_events(current_user=user,zone_id=-1)
+    zone_events = await drones.read_drone_events(current_user=user,zone_id=drone.zone_id)
+    d1events = await drones.read_drone_events(current_user=user,drone_id=1)
+    allevents = await drones.read_drone_events(current_user=user)
+
+    assert len(d1events) < len(allevents)
+    
 
 
 @pytest.mark.asyncio

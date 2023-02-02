@@ -1,9 +1,10 @@
 "This module contains functions to create and fetch zones, stored in the db"
 import datetime
+from enum import Enum
 import json
 from typing import List
 from api.dependencies.classes import FireRisk, Zone
-from database.database import fetched_match_class
+from database.database import add_where_clause, create_where_clause_statement, fetched_match_class
 from database.spatia import coordinates_to_multipolygonstr, spatiageostr_to_geojson
 from database import drone_events_table, drone_updates_table
 import database.database as db
@@ -21,6 +22,12 @@ SELECT AddGeometryColumn('zones', 'area', 4326, 'MULTIPOLYGON', 'XY');
 SELECT AddGeometryColumn('zones', 'geo_point', 4326, 'POINT', 'XY');'''
 #   POLYGON((101.23 171.82, 201.32 101.5, 215.7 201.953, 101.23 171.82))
 #   exterior ring, no interior rings
+
+class ZoneWhereClause(str, Enum):
+    MAKEPOINTINTERSECT = 'ST_Intersects(area, MakePoint(?, ?, 4326))'
+    GEOJSONINTERSECT = 'ST_Intersects(area, GeomFromGeoJSON(?))'
+    ZONE_ID = 'id'
+
 CREATE_ENTRY = '''INSERT INTO zones (name,federal_state,district,area,geo_point)
                 VALUES (?,?,?,GeomFromGeoJSON(?),MakePoint(?, ?, 4326));'''
 
@@ -28,13 +35,27 @@ CREATE_ENTRY_TEXTGEO = '''INSERT OR IGNORE
                         INTO zones (id, name,federal_state,district,area,geo_point) 
                         VALUES (?,?,?,?,GeomFromText(?,4326),MakePoint(?, ?, 4326));'''
 
-GET_ZONE = '''SELECT id,name,federal_state,district,AsGeoJSON(area),
+GET_ZONE = """SELECT id,name,federal_state,district,AsGeoJSON(area),
                 X(geo_point),Y(geo_point),Count(DISTINCT drone_id) FROM zones
                 JOIN ElementaryGeometries AS e ON (e.f_table_name = 'zones' 
                 AND e.origin_rowid = zones.rowid)
                 LEFT JOIN drone_data ON ST_Intersects(drone_data.coordinates, area)
-                WHERE ST_Intersects(area, MakePoint(?, ?, 4326))
-                GROUP BY name;'''
+                {}
+                GROUP BY name;"""
+
+GET_ZONEPOLYGON = """   SELECT AsGeoJSON(area)
+                        FROM zones
+                        {}"""
+
+GET_ZONEJOINORGA ='''SELECT id,name,federal_state,district,AsGeoJSON(area),
+                        X(geo_point),Y(geo_point),Count(DISTINCT drone_id)
+                    FROM zones
+                    JOIN organization_zones 
+                    ON zones.id = organization_zones.zone_id
+                    LEFT JOIN drone_data ON ST_Intersects(drone_data.coordinates, area)
+                    WHERE zones.{}=? 
+                    AND organization_zones.orga_id=?
+                    GROUP BY name;'''
 
 GET_ZONES = '''SELECT id,name,federal_state,district,AsGeoJSON(area),
                 X(geo_point),Y(geo_point),Count(DISTINCT drone_id) FROM zones
@@ -57,16 +78,6 @@ GET_ORGAZONES = '''  SELECT id,name,federal_state,district,AsGeoJSON(area),
                     ON zones.id = organization_zones.zone_id
                     LEFT JOIN drone_data ON ST_Intersects(drone_data.coordinates, area)
                     WHERE organization_zones.orga_id=?
-                    GROUP BY name;'''
-
-GET_ZONEBY ='''SELECT id,name,federal_state,district,AsGeoJSON(area),
-                        X(geo_point),Y(geo_point),Count(DISTINCT drone_id)
-                    FROM zones
-                    JOIN organization_zones 
-                    ON zones.id = organization_zones.zone_id
-                    LEFT JOIN drone_data ON ST_Intersects(drone_data.coordinates, area)
-                    WHERE zones.{}=? 
-                    AND organization_zones.orga_id=?
                     GROUP BY name;'''
 
 GET_ORGA_AREA = """   Select AsGeoJSON(GUnion(area)) as oarea,
@@ -168,6 +179,35 @@ def create_zone(gem_code, name, federal_state, district, gemometry: dict, geo_po
         return True
     return False
 
+def get_zone(zone_id:int) -> Zone | None:
+    """fetch the zone.
+
+    Args:
+        zone_id (int): id of the zone.
+
+    Returns:
+        Zone | None: the Zone.
+    """
+    sql = add_where_clause(GET_ZONE,[ZoneWhereClause.ZONE_ID])
+    fetched_zone = db.fetch_one(sql, (zone_id,))
+    return get_obj_from_fetched(fetched_zone)
+
+def get_zone_polygon(zone_id:int) -> str:
+    """fetch the zone.
+
+    Args:
+        zone_id (int): id of the zone.
+
+    Returns:
+        Zone | None: the Zone.
+    """
+    stm = create_where_clause_statement(ZoneWhereClause.ZONE_ID,'=')
+    sql = add_where_clause(GET_ZONEPOLYGON,[stm])
+    fetched_polygon = db.fetch_one(sql, (zone_id,))
+    if fetched_polygon is not None:
+        return fetched_polygon[0]
+    return None
+
 
 def get_zone_of_coordinate(long, lat) -> Zone | None:
     """fetch the zone, the described point is in.
@@ -179,7 +219,8 @@ def get_zone_of_coordinate(long, lat) -> Zone | None:
     Returns:
         Zone | None: the Zone if the point is inside a zones area, None if not.
     """
-    fetched_zone = db.fetch_one(GET_ZONE, (long, lat))
+    sql = add_where_clause(GET_ZONE,[ZoneWhereClause.MAKEPOINTINTERSECT])
+    fetched_zone = db.fetch_one(sql, (long, lat))
     return get_obj_from_fetched(fetched_zone)
 
 def get_orga_area(orga_id) -> str | None:
@@ -261,8 +302,9 @@ def get_obj_from_fetched(
     if fetched_match_class(Zone, fetched_zone,3):
         geo_json = spatiageostr_to_geojson(fetched_zone[4])
 
-        events = drone_events_table.get_drone_events_in_zone(
-            fetched_zone[4], after)
+        events = drone_events_table.get_drone_event(
+                                    polygon=fetched_zone[4], 
+                                    after=after)
 
         last_update = drone_updates_table.get_lastest_update_in_zone(
                         fetched_zone[4])
