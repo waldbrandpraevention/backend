@@ -5,10 +5,13 @@ from fastapi import Depends, FastAPI, HTTPException, status
 import random
 from fastapi.middleware.cors import CORSMiddleware
 
+from threading import Thread
+
 from api.dependencies.authentication import get_password_hash
-from api.dependencies.email import send_email
+from api.dependencies.emails import send_email
+from api.dependencies.weather import wind_update
 from api.dependencies.classes import Organization, UserWithSensitiveInfo
-from api.routers import email, users, zones, drones
+from api.routers import emails, users, zones, drones
 from database import users_table, organizations_table
 from database import drone_events_table
 from database import zones_table
@@ -101,6 +104,10 @@ def main():
     create_default_user()
     create_drone_events()
     load_zones_from_geojson()
+
+    #make sure this actually works
+    weather_thread = Thread(target = wind_update, args = (10, ))
+    weather_thread.start()
 
 
 main()

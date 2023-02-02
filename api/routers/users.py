@@ -28,6 +28,11 @@ from ..dependencies.users import (
     get_user
     )
 
+from ..dependencies.users import (
+    send_token_email
+)
+
+
 router = APIRouter()
 
 
@@ -61,7 +66,7 @@ async def delete_users( user_id:int,
 
     return {"message": "couldnt create user."}
 
-@router.get("/users/me/allerts/", status_code=status.HTTP_200_OK)
+@router.get("/users/me/alerts/", status_code=status.HTTP_200_OK)
 async def read_users_me_allerts(current_user: User = Depends(get_current_user)):
     """API call to get the curret users allerts
 
@@ -108,6 +113,13 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
+    if user.verified_email == False:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Email is not verified",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
         data={"sub": user.email}, expires_delta=access_token_expires
@@ -170,6 +182,7 @@ async def register( email: str = Form(),
                                     email_verified=0)
 
     if users_table.create_user(user):
+        send_token_email(email)
         return {"message": "success"}
 
     return {"message": "couldnt create user."}
