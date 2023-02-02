@@ -1,5 +1,7 @@
 from database import drones_table
 from database import drone_updates_table as drone_data_table
+from .authentication import create_access_token, DRONE_TOKEN_EXPIRE_WEEKS
+from datetime import datetime
 
 async def get_all_drones():
     """Returns all drones from the db
@@ -18,6 +20,20 @@ async def get_all_drones():
             #TODO Get Zone by lat and long
 
     return drones
+
+
+async def generate_drone_token(id: int):
+    """Returns a new drone token
+
+    Returns:
+        Token: new token
+    """
+    access_token_expires = timedelta(minutes=DRONE_TOKEN_EXPIRE_WEEKS)
+    access_token = create_access_token(
+        data={"sub": id}, expires_delta=access_token_expires
+    )
+
+    return access_token
 
 async def get_drone(name: str):
     """Returns a specific drone from the db
