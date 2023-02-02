@@ -153,3 +153,4 @@ class DroneForSimulation(BaseModel):
     token: str
     lat: float
     lon: float
+    last_update: DroneUpdate
