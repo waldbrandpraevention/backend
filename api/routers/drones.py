@@ -1,8 +1,8 @@
 from fastapi import Depends, APIRouter, FastAPI, HTTPException, status, Request, Form
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from .users import get_current_user
-from ..dependencies.drones import get_all_drones, get_drone, get_drone_count
-from ..dependencies.classes import User, Drone
+from ..dependencies.drones import get_all_drones, get_drone, get_drone_count, get_current_drone
+from ..dependencies.classes import User, Drone, DroneUpdate, DroneEvent
 from ..dependencies.authentication import create_access_token, DRONE_TOKEN_EXPIRE_WEEKS
 from datetime import datetime, timedelta
 
@@ -60,7 +60,11 @@ async def drone_signup(drone: Drone):
     return {"message": "todo"}
 
 
-@router.post("/drones/login/", status_code=status.HTTP_200_OK)
-async def drone_login(current_user: User = Depends(get_current_drone)):
+@router.post("/drones/send-update/", status_code=status.HTTP_200_OK)
+async def drone_login(current_drone: Drone = Depends(get_current_drone), update: DroneUpdate):
+    return {"message": "todo"}
 
-    
+
+@app.post("/drones/send-event/")
+async def create_upload_file(current_user: Drone = Depends(get_current_drone), event: DroneEvent):
+    return {"message": "todo"}

@@ -6,6 +6,7 @@ import os, random
 from datetime import datetime
 
 from api.dependencies.classes import DroneUpdate, DroneEvent, EventType
+from .cv import ai_evaluation
 
 ASSETS = "./assets/"
 URL = "kiwa.tech/api/"
@@ -18,11 +19,6 @@ drones_dict = json.loads(drones_json)
 last_execution = time.time()
 
 last_update = time.time()
-
-def evaluate_image(path):
-    return EventType.FIRE
-
-
 
 
 while True:
@@ -68,24 +64,24 @@ while True:
                 flight_time: drones_dict[i]["drone"]["flight_time"] + time_differenze
                 )
 
+            #responses.post(URL + drones/send-update/......) #todo    
+
             if random() <= CHANCE_OF_EVENT: #event happens as well
                 #pick random file
                 file_name = random.choice(os.listdir(ASSETS))
                 path = os.path.join(ASSETS, filename)
 
-            DroneEvent(
+            result = ai_evaluation(path)
+
+            event = DroneEvent(
                 drone_id = drones_dict[i]["drone"]["id"],
                 timestamp datetime.now(),
                 longitude = drones_dict[i]["lon"],
                 latitude = drones_dict[i]["lat"],
-                event_type = evaluate_image(path)
-                confidence: int | None = None
-                picture_path = path
-                ai_predictions :dict| None = None
-                csv_file_path :str| None = None
+                event_type = evaluate_image(path),
+                confidence = result.confidence,
+                picture_path = path,
+                ai_predictions = result.ai_predictions,
+                csv_file_path = result.csv_file_path,
                 )
-
-
-
-
-        #responses.post(URL + drones/......) #todo
+            #responses.post(URL + drones/send-event......) #todo
