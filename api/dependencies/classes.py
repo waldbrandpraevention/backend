@@ -142,12 +142,14 @@ class WindInfo(BaseModel):
     wind_speed: float | None = None
     wind_direction: float | None = None
 
+
 class DroneForSimulation(BaseModel):
     """Drone for the simulation"""
     drone: Drone | None = None
+    token: str
     geo_json: dict
     speed: float
-    direction: tuple[float,float]
+    direction: tuple[float,float] #vector with length 1
     token: str
     lat: float
-    long: float
+    lon: float
