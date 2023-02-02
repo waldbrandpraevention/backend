@@ -42,4 +42,5 @@ while True:
 
             new_vel = (x, y)
 
+        
         #responses.post(URL + drones/......) #todo
