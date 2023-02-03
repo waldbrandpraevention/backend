@@ -84,3 +84,6 @@ uvicorn main:app --reload --env-file demo.env
 Backend läuft auf http://localhost:8000<br>
 API Documentation auf http://localhost:8000/docs
 
+#### Tools
+
+Spatialite GUI Editor https://www.gaia-gis.it/fossil/spatialite_gui/index
