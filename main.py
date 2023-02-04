@@ -7,15 +7,18 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from api.dependencies.authentication import get_password_hash
 from api.dependencies.email import send_email
-from api.dependencies.classes import Organization, UserWithSensitiveInfo
+from api.dependencies.classes import UserWithSensitiveInfo
 from api.routers import email, users, zones, drones
-from database import users_table, organizations_table
-from database import drone_events_table
-from database import zones_table
+from database import (users_table, 
+                      organizations_table,
+                      drones_table,
+                      drone_events_table,
+                      zones_table)
 from database.database import create_table, initialise_spatialite
 from database.drone_events_table import CREATE_DRONE_EVENT_TABLE
 from database import orga_zones_table
 from database.drone_updates_table import CREATE_DRONE_DATA_TABLE
+from database.drones_table import CREATE_DRONES_TABLE
 from database.organizations_table import CREATE_ORGANISATIONS_TABLE
 from database.users_table import CREATE_USER_TABLE
 from database.zones_table import CREATE_ZONE_TABLE
@@ -67,6 +70,14 @@ def create_drone_events():
     if os.getenv("DEMO_LONG") is not None \
             and os.getenv("DEMO_LAT") is not None:
         
+        for i in range(3):
+            drones_table.create_drone(
+                name=f'Trinity F0{i}',
+                drone_type="Unmanned Aerial Vehicle",
+                cc_range=7.5,
+                flight_range=100.0,
+                flight_time=90
+            )
         drone_events_table.insert_demo_events(12.559776306152344,52.189299066349946,2)
         drone_events_table.insert_demo_events(12.559776306152344,50.189299066349946,3)
         drone_events_table.insert_demo_events(float(os.getenv("DEMO_LONG")),float(os.getenv("DEMO_LAT")))
@@ -98,9 +109,10 @@ def main():
     initialise_spatialite()
     create_table(CREATE_ORGANISATIONS_TABLE)
     create_table(CREATE_USER_TABLE)
-    create_table(CREATE_DRONE_EVENT_TABLE)
     create_table(CREATE_ZONE_TABLE)
+    create_table(CREATE_DRONES_TABLE)
     create_table(CREATE_DRONE_DATA_TABLE)
+    create_table(CREATE_DRONE_EVENT_TABLE)
     create_table(orga_zones_table.CREATE_ORGAZONES_TABLE)
     create_default_user()
     create_drone_events()

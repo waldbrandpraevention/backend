@@ -2,6 +2,8 @@
 import os
 import sys
 import pytest
+
+from database import zones_table
 sys.path.append('../backend')
 from api.routers import zones,users,drones
 from fastapi import HTTPException
@@ -10,6 +12,7 @@ from fastapi import HTTPException
 async def test_zones():
     """zone api tests.
     """
+    fetched = zones_table.get_zones()
     user = users.get_user(os.getenv("ADMIN_MAIL"))
     zones_arr = await zones.get_all_zones(user.organization.id)
     demo_distr = os.getenv("DEMO_DISTRICT")
@@ -30,6 +33,7 @@ async def test_drones():
     with pytest.raises(HTTPException):
         await drones.read_drone_events(current_user=user,zone_id=-1)
     zone_events = await drones.read_drone_events(current_user=user,zone_id=drone.zone_id)
+    zone_updates = await drones.read_drone_route(current_user=user,zone_id=drone.zone_id)
     d1events = await drones.read_drone_events(current_user=user,drone_id=1)
     allevents = await drones.read_drone_events(current_user=user)
 

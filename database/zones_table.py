@@ -37,8 +37,6 @@ CREATE_ENTRY_TEXTGEO = '''INSERT OR IGNORE
 
 GET_ZONE = """SELECT id,name,federal_state,district,AsGeoJSON(area),
                 X(geo_point),Y(geo_point),Count(DISTINCT drone_id) FROM zones
-                JOIN ElementaryGeometries AS e ON (e.f_table_name = 'zones' 
-                AND e.origin_rowid = zones.rowid)
                 LEFT JOIN drone_data ON ST_Intersects(drone_data.coordinates, area)
                 {}
                 GROUP BY name;"""
@@ -57,12 +55,15 @@ GET_ZONEJOINORGA ='''SELECT id,name,federal_state,district,AsGeoJSON(area),
                     AND organization_zones.orga_id=?
                     GROUP BY name;'''
 
+# GET_ZONES = '''SELECT id,name,federal_state,district,AsGeoJSON(area),
+#                 X(geo_point),Y(geo_point),Count(DISTINCT drone_id) FROM zones
+#                 JOIN ElementaryGeometries AS e ON (e.f_table_name = 'zones' 
+#                 AND e.origin_rowid = zones.rowid)
+#                 LEFT JOIN drone_data ON ST_Intersects(drone_data.coordinates, area)
+#                 GROUP BY name;'''
+
 GET_ZONES = '''SELECT id,name,federal_state,district,AsGeoJSON(area),
-                X(geo_point),Y(geo_point),Count(DISTINCT drone_id) FROM zones
-                JOIN ElementaryGeometries AS e ON (e.f_table_name = 'zones' 
-                AND e.origin_rowid = zones.rowid)
-                LEFT JOIN drone_data ON ST_Intersects(drone_data.coordinates, area)
-                GROUP BY name;'''
+   X(geo_point),Y(geo_point) FROM zones'''
 
 GET_ZONES_BY_DISTRICT = '''SELECT id,name,federal_state,district,AsGeoJSON(area),
                             X(geo_point),Y(geo_point),Count(DISTINCT drone_id)
@@ -299,7 +300,7 @@ def get_obj_from_fetched(
     Returns:
         Zone | None: zone object or None if obj cant be generated.
     """
-    if fetched_match_class(Zone, fetched_zone,3):
+    if fetched_match_class(Zone, fetched_zone,4):
         geo_json = spatiageostr_to_geojson(fetched_zone[4])
 
         events = drone_events_table.get_drone_event(
@@ -308,6 +309,10 @@ def get_obj_from_fetched(
 
         last_update = drone_updates_table.get_lastest_update_in_zone(
                         fetched_zone[4])
+        if last_update is not None:
+            la_timestam = last_update.timestamp
+        else:
+            la_timestam = None
 
         if events:
             ai_firerisk_enum = drone_events_table.calculate_firerisk(events)
@@ -315,9 +320,11 @@ def get_obj_from_fetched(
             ai_firerisk_enum = FireRisk(1)
 
         try:
-            geo_tuple = (fetched_zone[5],fetched_zone[6])
+            lon = fetched_zone[5]
+            lat= fetched_zone[6]
         except IndexError:
-            geo_tuple = None
+            lon = None
+            lat= None
 
         zone_obj = Zone(
             id=fetched_zone[0],
@@ -327,8 +334,9 @@ def get_obj_from_fetched(
             geo_json=geo_json,
             events=events,
             ai_fire_risk=ai_firerisk_enum,
-            geo_point=geo_tuple,
-            last_update=last_update,
+            lon=lon,
+            lat=lat,
+            last_update=la_timestam,
             drone_count=fetched_zone[7]
         )
         return zone_obj

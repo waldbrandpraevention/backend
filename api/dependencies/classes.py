@@ -95,14 +95,30 @@ class Drone(BaseModel):
     last_update: datetime | None = None
     zone_id: int | None = None
 
+class DroneWithRoute(Drone):
+    """Done including its route.
+
+    Args:
+        Drone (geojson): geojsnon including the points.
+    """
+    route : dict | None = None
+
 class DroneUpdate(BaseModel):
     """DroneUpdate class"""
     drone_id :int | None = None
     timestamp :datetime | None = None
-    longitude :float | None = None
-    latitude :float | None = None
+    lon :float | None = None
+    lat:float | None = None
     flight_range: float | None = None
     flight_time: float | None = None
+
+class DroneUpdateWithRoute(DroneUpdate):
+    """Done including its route.
+
+    Args:
+        Drone (geojson): geojsnon including the points.
+    """
+    geojson : dict | None = None
 
 class EventType(Enum):
     """EventType class. Either fire or smoke."""
@@ -113,8 +129,8 @@ class DroneEvent(BaseModel):
     """DroneEvent class."""
     drone_id :int | None = None
     timestamp :datetime | None = None
-    longitude :float | None = None
-    latitude :float | None = None
+    lon :float | None = None
+    lat :float | None = None
     event_type: EventType | None = None
     confidence: int | None = None
     picture_path :str| None = None
@@ -127,9 +143,10 @@ class Zone(BaseModel):
     federal_state: str | None = None
     district: str | None = None
     events: List[DroneEvent] | None = None
-    fire_risk: FireRisk | None = None
+    dwd_fire_risk: FireRisk | None = None
     ai_fire_risk: FireRisk | None = None
     geo_json: dict | None = None
-    geo_point: tuple[float,float] | None = None
+    lon :float | None = None
+    lat :float | None = None
     drone_count: int | None = None
-    last_update: DroneUpdate | None = None
+    last_update: datetime | None = None

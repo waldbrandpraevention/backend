@@ -1,9 +1,10 @@
 """api calls for drones."""
 import datetime
+from typing import List
 from fastapi import Depends, APIRouter, HTTPException, status
 from .users import get_current_user
 from ..dependencies import drones
-from ..dependencies.classes import Drone, User
+from ..dependencies.classes import Drone, DroneEvent, DroneUpdateWithRoute, User
 
 router = APIRouter()
 
@@ -24,17 +25,18 @@ async def read_drone(drone_id: int, current_user: User = Depends(get_current_use
     if drone is None:
         raise HTTPException(
             status_code=status.HTTP_406_NOT_ACCEPTABLE,
-            detail="Drone does not exist ",
+            detail="Drone does not exist.",
         )
     return drone
 
-@router.get("/drones/events/", status_code=status.HTTP_200_OK)
+@router.get("/drones/events/", status_code=status.HTTP_200_OK, response_model=List[DroneEvent])
 async def read_drone_events(drone_id: int=None,
                             zone_id:int =None,
                             days:int =0,
                             hours:int =0,
                             minutes:int =0,
                             current_user: User = Depends(get_current_user)):
+    #TODO
     """_summary_
 
     Args:
@@ -52,23 +54,31 @@ async def read_drone_events(drone_id: int=None,
         _type_: _description_
     """
 
-    timestamp = timestamphelper(days,hours,minutes)
+    timestamp = timestamp_helper(days,hours,minutes)
     drone_events = await drones.get_drone_events(orga_id=current_user.organization.id,
                                            timestamp=timestamp,
                                            drone_id=drone_id,
                                            zone_id=zone_id)
-    
-    print(drone_events)
     return drone_events
 
-def timestamphelper(days,hours,minutes):
+def timestamp_helper(days:int,hours:int,minutes:int) -> datetime.datetime | None:
+    """generates a timestamp x days, y hours and z minutes before now.
+
+    Args:
+        days (int): number of days.
+        hours (int): number of hours.
+        minutes (int): number of minutes.
+
+    Returns:
+        datetime: the calculated timestamp.
+    """
     timedelta = datetime.timedelta(days=days,minutes=minutes,hours=hours)
     if timedelta.total_seconds() == 0:
         return None
 
     return datetime.datetime.utcnow() - timedelta
 
-@router.get("/drones/route", status_code=status.HTTP_200_OK)
+@router.get("/drones/route", status_code=status.HTTP_200_OK, response_model=DroneUpdateWithRoute)
 async def read_drone_route( drone_id: int=None,
                             zone_id:int =None,
                             days:int =0,
@@ -85,12 +95,12 @@ async def read_drone_route( drone_id: int=None,
         Drone: drone
     """
 
-    timestamp = timestamphelper(days,hours,minutes)
-    drone_events = await drones.get_drone_events(orga_id=current_user.organization.id,
+    timestamp = timestamp_helper(days,hours,minutes)
+    drone_events = await drones.get_drone_with_route(orga_id=current_user.organization.id,
                                            timestamp=timestamp,
                                            drone_id=drone_id,
                                            zone_id=zone_id)
-    
+
     print(drone_events)
     return drone_events
 

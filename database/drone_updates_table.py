@@ -1,6 +1,8 @@
+
 import datetime
 from typing import List
-from api.dependencies.classes import DroneUpdate
+from shapely.geometry import Point, LineString, mapping
+from api.dependencies.classes import DroneUpdate, DroneUpdateWithRoute
 from database.database import fetched_match_class
 import database.database as db
 
@@ -25,19 +27,17 @@ CREATE_ENTRY = '''INSERT INTO drone_data
                 flight_range,
                 flight_time) 
                 VALUES (? ,?,MakePoint(?, ?, 4326) ,? ,?);'''
-GET_ENTRYS_BY_TIMESTAMP = '''SELECT
-                            drone_id,
-                            timestamp,
-                            flight_range,
-                            flight_time,
-                            X(coordinates),
-                            Y(coordinates)
-                            FROM drone_data 
-                            WHERE drone_id = ?
-                            AND timestamp > ?
-                            AND timestamp < ?;'''
 
-GET_ENTRY ='SELECT * FROM drone_data WHERE drone_id = ?;'
+GET_ENTRY ='''SELECT
+                drone_id,
+                timestamp,
+                flight_range,
+                flight_time,
+                X(coordinates),
+                Y(coordinates)
+                FROM drone_data 
+                {}
+                ORDER BY timestamp DESC;'''
 
 GET_UPDATE_IN_ZONE = '''
 SELECT drone_id,timestamp,flight_range,flight_time, X(coordinates), Y(coordinates)
@@ -85,10 +85,12 @@ def create_drone_update(drone_id:int,
         return True
     return False
 
-def get_drone_data_by_timestamp(drone_id:int,
-                                after:datetime.datetime=datetime.datetime.min,
-                                before:datetime.datetime=datetime.datetime.max
-                                ) -> List[DroneUpdate]:
+def get_drone_updates(  polygon:str,
+                        drone_id:int=None,
+                        after:datetime.datetime=None,
+                        before:datetime.datetime=None,
+                        get_coords_only:bool = False
+                        ) -> List[DroneUpdate] | DroneUpdateWithRoute:
     """fetches all entrys that are within the choosen timeframe.
     If only drone_id is set, every entry will be fetched.
 
@@ -100,13 +102,36 @@ def get_drone_data_by_timestamp(drone_id:int,
     Returns:
         List[DroneData]: List with the fetched data.
     """
-    fetched_data = db.fetch_all(GET_ENTRYS_BY_TIMESTAMP,(drone_id,after,before))
+    sql_arr = []
+    tuple_arr = []
+    if drone_id is not None:
+        sql_arr.append(db.create_where_clause_statement('drone_id','='))
+        tuple_arr.append(drone_id)
+
+    if polygon is not None:
+        sql_arr.append(db.create_intersection_clause('coordinates'))
+        tuple_arr.append(polygon)
+
+    if after is not None:
+        sql_arr.append(db.create_where_clause_statement('timestamp','>'))
+        tuple_arr.append(after)
+
+    if before is not None:
+        sql_arr.append(db.create_where_clause_statement('timestamp','<'))
+        tuple_arr.append(before)
+
+    sql = db.add_where_clause(GET_ENTRY, sql_arr)
+
+    fetched_data = db.fetch_all(sql,tuple(tuple_arr))
 
     output = []
+    if get_coords_only:
+        return get_routeobj_from_fetched(fetched_data)
+    
     for drone_data in fetched_data:
-        dronedata_obj = get_obj_from_fetched(drone_data)
-        if dronedata_obj:
-            output.append(dronedata_obj)
+        dronedata = get_obj_from_fetched(drone_data)
+        if dronedata:
+            output.append(dronedata)
     return output
 
 def get_latest_update(drone_id:int) -> DroneUpdate:
@@ -118,7 +143,8 @@ def get_latest_update(drone_id:int) -> DroneUpdate:
     Returns:
         DroneUpdate
     """
-    fetched_data = db.fetch_one(GET_ENTRY,(drone_id,))
+    sql = db.add_where_clause(GET_ENTRY, [db.create_where_clause_statement('drone_id','=')])
+    fetched_data = db.fetch_one(sql,(drone_id,))
     return get_obj_from_fetched(fetched_data)
 
 def get_updates_in_zone(polygon: str,
@@ -197,10 +223,57 @@ def get_obj_from_fetched(fetched_dronedata) -> DroneUpdate| None:
         drone_data_obj = DroneUpdate(
             drone_id = fetched_dronedata[0],
             timestamp = fetched_dronedata[1],
-            longitude = longitude,
-            latitude = latitude,
+            lon= longitude,
+            lat = latitude,
             flight_range = fetched_dronedata[2],
             flight_time = fetched_dronedata[3]
         )
         return drone_data_obj
     return None
+
+def get_routeobj_from_fetched(fetched_dronedataarr) -> DroneUpdate| None:
+    """generating DroneUpdate object with the fetched data.
+
+    Args:
+        fetched_dronedata: the fetched data from the sqlite cursor.
+
+    Returns:
+        DroneData| None: the generated object.
+    """
+    if fetched_dronedataarr is None:
+        return None
+    
+    route_arr = []
+    drone_update = get_obj_from_fetched(fetched_dronedataarr[0])
+    for fetched_dronedata in fetched_dronedataarr:
+        if fetched_match_class(DroneUpdate,fetched_dronedata):
+            try:
+                longitude=float(fetched_dronedata[4])
+                latitude= float(fetched_dronedata[5])
+                route_arr.append(Point(longitude, latitude))
+            except ValueError as exception:
+                print(exception)
+
+
+    return create_drone_with_route(drone_update,route_arr)
+
+def create_drone_with_route(drone_update:DroneUpdate,route:List[Point]) -> DroneUpdateWithRoute:
+
+    if drone_update is None:
+        return None
+
+    if len(route) > 0:
+        geojson = {'type': 'Feature',
+                    'properties': {},
+                    'geometry': mapping(LineString(route))}
+    else:
+        geojson = None
+
+    return DroneUpdateWithRoute(
+                    drone_id=drone_update.drone_id,
+                    timestamp=drone_update.timestamp,
+                    lon=drone_update.lon,
+                    lat=drone_update.lat,
+                    flight_range=drone_update.flight_range,
+                    flight_time=drone_update.flight_time,
+                    geojson=geojson)

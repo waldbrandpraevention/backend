@@ -323,3 +323,15 @@ def create_where_clause_statement(clmname:str,eqator:str='',questionmark:str='?'
         _type_: _description_
     """
     return f'{clmname} {eqator} {questionmark}'
+
+def create_intersection_clause(first_geom:str,second_geom:str='GeomFromGeoJSON(?)'):
+    """creates sql that checks for an intersection of the given geoms.
+
+    Args:
+        first_geom (str): _description_
+        second_geom (str, optional): _description_. Defaults to 'GeomFromGeoJSON(?)'.
+
+    Returns:
+        _type_: _description_
+    """
+    return f'ST_Intersects({first_geom},{second_geom})'

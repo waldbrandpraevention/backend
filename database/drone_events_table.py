@@ -8,30 +8,28 @@ from database.database import fetched_match_class
 import database.database as db
 from database import drone_updates_table
 
-class DEAtr(str,Enum):
-    """Enum class containing all possible drone_event attributes."""
-    DRONE_ID = 'drone_id'
-    TIMESTAMP = 'timestamp'
-    EVENT_TYPE = 'event_type'
-    CONFIDENCE = 'confidence'
-    PICTURE_PATH='picture_path'
-    CSV_FILE_PATH= 'csv_file_path'
-    COORDINATES= 'coordinates'
-    
+DRONE_ID = 'drone_id'
+TIMESTAMP = 'timestamp'
+EVENT_TYPE = 'event_type'
+CONFIDENCE = 'confidence'
+PICTURE_PATH='picture_path'
+CSV_FILE_PATH= 'csv_file_path'
+COORDINATES= 'coordinates'
+
 CREATE_DRONE_EVENT_TABLE = f'''CREATE TABLE drone_event
 (
-{DEAtr.DRONE_ID}     integer NOT NULL ,
-{DEAtr.TIMESTAMP}    timestamp NOT NULL ,
-{DEAtr.EVENT_TYPE}   integer NOT NULL,
-{DEAtr.CONFIDENCE}   integer NOT NULL,
-{DEAtr.PICTURE_PATH}   text,
-{DEAtr.CSV_FILE_PATH}  text ,
-PRIMARY KEY ({DEAtr.DRONE_ID}, {DEAtr.TIMESTAMP}),
-FOREIGN KEY ({DEAtr.DRONE_ID}) REFERENCES drones (id)
+{DRONE_ID}     integer NOT NULL ,
+{TIMESTAMP}    timestamp NOT NULL ,
+{EVENT_TYPE}   integer NOT NULL,
+{CONFIDENCE}   integer NOT NULL,
+{PICTURE_PATH}   text,
+{CSV_FILE_PATH}  text ,
+PRIMARY KEY ({DRONE_ID}, {TIMESTAMP}),
+FOREIGN KEY ({DRONE_ID}) REFERENCES drones (id)
 );
 
-CREATE INDEX drone_event_FK_1 ON drone_event ({DEAtr.DRONE_ID});
-SELECT AddGeometryColumn('drone_event', '{DEAtr.COORDINATES}', 4326, 'POINT', 'XY');'''
+CREATE INDEX drone_event_FK_1 ON drone_event ({DRONE_ID});
+SELECT AddGeometryColumn('drone_event', '{COORDINATES}', 4326, 'POINT', 'XY');'''
 
 CREATE_ENTRY = '''
 INSERT INTO drone_event (drone_id,timestamp,coordinates,event_type,confidence,picture_path,csv_file_path) 
@@ -57,8 +55,8 @@ def insert_demo_events(long: float, lat: float, droneid = 1):
         long (float): long of the coordinate.
         lat (float): lat of the coordinate.
     """
-    updates = drone_updates_table.get_drone_data_by_timestamp(droneid)
-    if updates is not None and len(updates)>0:
+    update = drone_updates_table.get_latest_update(droneid)
+    if update is not None:
         print('already created drone events.')
         return
     timestamp = datetime.datetime.utcnow()
@@ -155,19 +153,20 @@ def get_drone_event(drone_id: int = None,
     sql_arr = []
     tuple_arr = []
     if drone_id is not None:
-        sql_arr.append(db.create_where_clause_statement(f'{DEAtr.DRONE_ID}','='))
+        sql_arr.append(db.create_where_clause_statement(f'{DRONE_ID}','='))
         tuple_arr.append(drone_id)
 
     if polygon is not None:
-        sql_arr.append(db.create_where_clause_statement(f'ST_Intersects({DEAtr.COORDINATES}',',', 'GeomFromGeoJSON(?))'))
+
+        sql_arr.append(db.create_intersection_clause(COORDINATES))
         tuple_arr.append(polygon)
 
     if after is not None:
-        sql_arr.append(db.create_where_clause_statement(f'{DEAtr.TIMESTAMP}','>'))
+        sql_arr.append(db.create_where_clause_statement(f'{TIMESTAMP}','>'))
         tuple_arr.append(after)
 
     if before is not None:
-        sql_arr.append(db.create_where_clause_statement(f'{DEAtr.TIMESTAMP}','<'))
+        sql_arr.append(db.create_where_clause_statement(f'{TIMESTAMP}','<'))
         tuple_arr.append(before)
 
     sql = db.add_where_clause(GET_ENTRY, sql_arr)
@@ -207,8 +206,8 @@ def get_obj_from_fetched(fetched_dronedata) -> DroneEvent | None:
         drone_data_obj = DroneEvent(
             drone_id=fetched_dronedata[0],
             timestamp=fetched_dronedata[1],
-            longitude=longitude,
-            latitude=latitude,
+            lon =longitude,
+            lat =latitude,
             event_type=eventtype,
             confidence=fetched_dronedata[5],
             picture_path=fetched_dronedata[6],
