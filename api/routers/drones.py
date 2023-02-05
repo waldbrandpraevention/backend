@@ -37,18 +37,18 @@ async def read_drone_events(drone_id: int=None,
                             minutes:int =0,
                             current_user: User = Depends(get_current_user)):
     #TODO
-    """_summary_
+    """API call to get all events of a drone
 
     Args:
-        drone_id (int, optional): _description_. Defaults to None.
-        zone_id (int, optional): _description_. Defaults to None.
-        days (int, optional): _description_. Defaults to 0.
-        hours (int, optional): _description_. Defaults to 0.
-        minutes (int, optional): _description_. Defaults to 0.
-        current_user (User, optional): _description_. Defaults to Depends(get_current_user).
+        drone_id (int, optional): id of the drone. Defaults to None.
+        zone_id (int, optional): zone id. Defaults to None.
+        days (int, optional): days before now. Defaults to 0.
+        hours (int, optional): hours before now. Defaults to 0.
+        minutes (int, optional): minutes before now. Defaults to 0.
+        current_user (User, optional): current user that is logged in. Defaults to Depends(get_current_user).
 
     Raises:
-        HTTPException: _description_
+        HTTPException: if no events are found.
 
     Returns:
         _type_: _description_
