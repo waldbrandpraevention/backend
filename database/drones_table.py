@@ -114,6 +114,8 @@ def get_drones(orga_id:int) -> List[Drone]:
         List[Drone]: list of all stored drones.
     """
     fetched_drones = db.fetch_all(GET_DRONES,(orga_id,))
+    if fetched_drones is None:
+        return None
     output = []
     for drone in fetched_drones:
         drone_obj = get_obj_from_fetched(drone)
@@ -128,6 +130,8 @@ def get_all_drones() -> List[Drone]:
         List[Drone]: list of all stored drones.
     """
     fetched_drones = db.fetch_all(GET_DRONES)
+    if fetched_drones is None:
+        return None
     output = []
     for drone in fetched_drones:
         drone_obj = get_obj_from_fetched(drone)

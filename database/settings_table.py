@@ -46,6 +46,8 @@ def get_settings() -> List[Setting]:
         list: list of all settings.
     """
     fetched_settings = db.fetch_all('SELECT * FROM settings')
+    if fetched_settings is None:
+        return None
     output = []
     for setting in fetched_settings:
         setting_obj = get_obj_from_fetched(setting)

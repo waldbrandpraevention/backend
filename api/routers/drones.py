@@ -59,6 +59,12 @@ async def read_drone_events(drone_id: int=None,
                                            timestamp=timestamp,
                                            drone_id=drone_id,
                                            zone_id=zone_id)
+    if drone_events is None:
+        raise HTTPException(
+            status_code=status.HTTP_406_NOT_ACCEPTABLE,
+            detail="Couldnt find any events.",
+        )
+    
     return drone_events
 
 def timestamp_helper(days:int,hours:int,minutes:int) -> datetime.datetime | None:
@@ -78,7 +84,7 @@ def timestamp_helper(days:int,hours:int,minutes:int) -> datetime.datetime | None
 
     return datetime.datetime.utcnow() - timedelta
 
-@router.get("/drones/route", status_code=status.HTTP_200_OK, response_model=DroneUpdateWithRoute)
+@router.get("/drones/route", status_code=status.HTTP_200_OK, response_model=List[DroneUpdateWithRoute])
 async def read_drone_route( drone_id: int=None,
                             zone_id:int =None,
                             days:int =0,
@@ -100,8 +106,12 @@ async def read_drone_route( drone_id: int=None,
                                            timestamp=timestamp,
                                            drone_id=drone_id,
                                            zone_id=zone_id)
+    if drone_events is None:
+        raise HTTPException(
+            status_code=status.HTTP_406_NOT_ACCEPTABLE,
+            detail="Couldnt find any updates.",
+        )
 
-    print(drone_events)
     return drone_events
 
 @router.get("/drones/all/", status_code=status.HTTP_200_OK)

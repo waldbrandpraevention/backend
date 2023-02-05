@@ -243,14 +243,15 @@ def get_zone_of_by_district(name: str) -> List[Zone] | None:
         Zone | None: the Zone if the point is inside a zones area, None if not.
     """
     fetched_zones = db.fetch_all(GET_ZONES_BY_DISTRICT, (name,))
-    if fetched_zones:
-        output = []
-        for zone in fetched_zones:
-            zone_obj = get_obj_from_fetched(zone)
-            if zone_obj:
-                output.append(zone_obj)
-        return output
-    return None
+    if fetched_zones is None:
+        return None
+
+    output = []
+    for zone in fetched_zones:
+        zone_obj = get_obj_from_fetched(zone)
+        if zone_obj:
+            output.append(zone_obj)
+    return output
 
 
 def get_zones() -> List[Zone]:
@@ -260,14 +261,14 @@ def get_zones() -> List[Zone]:
         List[Zone]: list containing Zone obj.
     """
     fetched_zones = db.fetch_all(GET_ZONES)
-    if fetched_zones:
-        output = []
-        for zone in fetched_zones:
-            zone_obj = get_obj_from_fetched(zone)
-            if zone_obj:
-                output.append(zone_obj)
-        return output
-    return None
+    if fetched_zones is None:
+        return None
+    output = []
+    for zone in fetched_zones:
+        zone_obj = get_obj_from_fetched(zone)
+        if zone_obj:
+            output.append(zone_obj)
+    return output
 
 def get_active_drone_count(polygon: str,
                            after: datetime.datetime = None) -> int:

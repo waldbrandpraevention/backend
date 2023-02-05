@@ -258,7 +258,8 @@ def fetch_all(fetch_sql:str,fetch_tuple=None):
                 cursor.execute(fetch_sql)
             fetched_user = cursor.fetchall()
             cursor.close()
-            return fetched_user
+            if len(fetched_user)>0:
+                return fetched_user
     except sqlite3.Error as exception:
         print(exception)
 

@@ -1,5 +1,6 @@
 """functions for drone api."""
 import datetime
+from typing import List
 from fastapi import HTTPException, status
 from api.dependencies.classes import Drone, DroneUpdate, DroneUpdateWithRoute
 from database import (drones_table,
@@ -76,7 +77,7 @@ async def get_drone_with_route( orga_id:int,
                                 timestamp:datetime.datetime,
                                 drone_id:int =None,
                                 zone_id:int=None
-                                )-> DroneUpdateWithRoute | None:
+                                )-> List[DroneUpdateWithRoute] | None:
     """_summary_
 
     Args:

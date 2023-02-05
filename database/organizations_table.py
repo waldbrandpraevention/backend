@@ -87,6 +87,8 @@ def get_all_orga():
     """
 
     fetched_orgas = db.fetch_all('SELECT * FROM organizations')
+    if fetched_orgas is None:
+        return None
     output = []
     for orga in fetched_orgas:
         orga_obj = get_obj_from_fetched(orga)

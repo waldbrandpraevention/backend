@@ -36,7 +36,9 @@ async def test_drones():
         await drones.read_drone_events(current_user=user,zone_id=-1)
     zone_events = await drones.read_drone_events(current_user=user,zone_id=zone.id)
     assert zone_events == zone.events
-    zone_updates = await drones.read_drone_route(current_user=user,zone_id=zone.id)
+    zone_updates = await drones.read_drone_route(current_user=user)
+    zone_updates = await drones.read_drone_route(current_user=user,zone_id=zone.id,drone_id=-1)
+    zone_copunt = await drones.read_drones_count(current_user=user,zone_id=zone.id)
     zone_copunt = await drones.read_drones_count(current_user=user,zone_id=zone.id)
     assert zone_copunt == zone.drone_count
     d1events = await drones.read_drone_events(current_user=user,drone_id=1)

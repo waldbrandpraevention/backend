@@ -124,6 +124,9 @@ def get_drone_updates(  polygon:str,
 
     fetched_data = db.fetch_all(sql,tuple(tuple_arr))
 
+    if fetched_data is None:
+        return None
+
     output = []
     if get_coords_only:
         return get_routeobj_from_fetched(fetched_data)
@@ -162,7 +165,7 @@ def get_updates_in_zone(polygon: str,
     """
     fetched_data = db.fetch_all(GET_UPDATE_IN_ZONE, (polygon, after, before))
     output = []
-    if not fetched_data:
+    if fetched_data is None:
         return None
     for drone_data in fetched_data:
         dronedata_obj = get_obj_from_fetched(drone_data)
@@ -231,7 +234,7 @@ def get_obj_from_fetched(fetched_dronedata) -> DroneUpdate| None:
         return drone_data_obj
     return None
 
-def get_routeobj_from_fetched(fetched_dronedataarr) -> DroneUpdate| None:
+def get_routeobj_from_fetched(fetched_dronedataarr) -> List[DroneUpdate]| None:
     """generating DroneUpdate object with the fetched data.
 
     Args:
@@ -243,26 +246,33 @@ def get_routeobj_from_fetched(fetched_dronedataarr) -> DroneUpdate| None:
     if fetched_dronedataarr is None:
         return None
     
+    drones_arr = []
     route_arr = []
+    fetched_dronedataarr.sort(key=lambda x: x[0])#TODO sql sort
     drone_update = get_obj_from_fetched(fetched_dronedataarr[0])
     for fetched_dronedata in fetched_dronedataarr:
         if fetched_match_class(DroneUpdate,fetched_dronedata):
-            try:
-                longitude=float(fetched_dronedata[4])
-                latitude= float(fetched_dronedata[5])
-                route_arr.append(Point(longitude, latitude))
-            except ValueError as exception:
-                print(exception)
+            if fetched_dronedata[0] != drone_update.drone_id:
+                drones_arr.append(create_drone_with_route(drone_update,route_arr))
+                route_arr = []
+                drone_update = get_obj_from_fetched(fetched_dronedata)
+            else:
+                try:
+                    longitude=float(fetched_dronedata[4])
+                    latitude= float(fetched_dronedata[5])
+                    route_arr.append(Point(longitude, latitude))
+                except ValueError as exception:
+                    print(exception)
 
-
-    return create_drone_with_route(drone_update,route_arr)
+    drones_arr.append(create_drone_with_route(drone_update,route_arr))
+    return drones_arr
 
 def create_drone_with_route(drone_update:DroneUpdate,route:List[Point]) -> DroneUpdateWithRoute:
 
     if drone_update is None:
         return None
 
-    if len(route) > 0:
+    if len(route) > 1:
         geojson = {'type': 'Feature',
                     'properties': {},
                     'geometry': mapping(LineString(route))}

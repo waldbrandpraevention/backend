@@ -174,6 +174,10 @@ def get_drone_event(drone_id: int = None,
     fetched_data = db.fetch_all(
         sql, tuple(tuple_arr)
         )
+    
+    if fetched_data is None:
+        return None
+    
     output = []
     for drone_data in fetched_data:
         dronedata_obj = get_obj_from_fetched(drone_data)
