@@ -6,6 +6,7 @@ from database import (drones_table,
                       drone_events_table,
                       drone_updates_table as drone_data_table,
                       zones_table)
+from database.orga_zones_table import get_orgazones_by_id
 
 async def get_all_drones(orga_id:int):
     """Returns all drones from the db
@@ -121,11 +122,18 @@ async def set_update_and_zone(drone:Drone,drone_upate:DroneUpdate):
     if current_zone is not None:
         drone.zone_id = current_zone.id
 
-async def get_drone_count():
+async def get_drone_count(zone_id:int,orga_id:int):
     """Returns the amount of drones
 
     Returns:
         int: amount of drones
     """
 
-    return len(await get_all_drones())
+    zone = get_orgazones_by_id(zone_id,orga_id)
+    if zone is not None:
+        return zone.drone_count
+
+    raise HTTPException(
+            status_code=status.HTTP_406_NOT_ACCEPTABLE,
+            detail="Zone ID invalid or not linked to your Orga.",
+        )

@@ -3,8 +3,9 @@ import os
 import sys
 import pytest
 
-from database import zones_table
+
 sys.path.append('../backend')
+from database import zones_table
 from api.routers import zones,users,drones
 from fastapi import HTTPException
 
@@ -30,10 +31,14 @@ async def test_drones():
     """
     user = users.get_user(os.getenv("ADMIN_MAIL"))
     drone = await drones.read_drone(drone_id=1,current_user=user)
+    zone = zones_table.get_zone(drone.zone_id)
     with pytest.raises(HTTPException):
         await drones.read_drone_events(current_user=user,zone_id=-1)
-    zone_events = await drones.read_drone_events(current_user=user,zone_id=drone.zone_id)
-    zone_updates = await drones.read_drone_route(current_user=user,zone_id=drone.zone_id)
+    zone_events = await drones.read_drone_events(current_user=user,zone_id=zone.id)
+    assert zone_events == zone.events
+    zone_updates = await drones.read_drone_route(current_user=user,zone_id=zone.id)
+    zone_copunt = await drones.read_drones_count(current_user=user,zone_id=zone.id)
+    assert zone_copunt == zone.drone_count
     d1events = await drones.read_drone_events(current_user=user,drone_id=1)
     allevents = await drones.read_drone_events(current_user=user)
 

@@ -62,8 +62,9 @@ GET_ZONEJOINORGA ='''SELECT id,name,federal_state,district,AsGeoJSON(area),
 #                 LEFT JOIN drone_data ON ST_Intersects(drone_data.coordinates, area)
 #                 GROUP BY name;'''
 
-GET_ZONES = '''SELECT id,name,federal_state,district,AsGeoJSON(area),
-   X(geo_point),Y(geo_point) FROM zones'''
+GET_ZONES = ''' SELECT id,name,federal_state,district,AsGeoJSON(area),
+                X(geo_point),Y(geo_point) 
+                FROM zones'''
 
 GET_ZONES_BY_DISTRICT = '''SELECT id,name,federal_state,district,AsGeoJSON(area),
                             X(geo_point),Y(geo_point),Count(DISTINCT drone_id)
@@ -189,7 +190,8 @@ def get_zone(zone_id:int) -> Zone | None:
     Returns:
         Zone | None: the Zone.
     """
-    sql = add_where_clause(GET_ZONE,[ZoneWhereClause.ZONE_ID])
+    where_arr = create_where_clause_statement(ZoneWhereClause.ZONE_ID,'=')
+    sql = add_where_clause(GET_ZONE,[where_arr])
     fetched_zone = db.fetch_one(sql, (zone_id,))
     return get_obj_from_fetched(fetched_zone)
 
@@ -288,7 +290,7 @@ def get_active_drone_count(polygon: str,
 
 def get_obj_from_fetched(
                 fetched_zone,
-                after: datetime.datetime = datetime.datetime.utcnow()-datetime.timedelta(days=1)
+                after: datetime.datetime = datetime.datetime.utcnow()-datetime.timedelta(days=3)
                 ) -> Zone | None:
     """generate Zone obj from fetched element.
 

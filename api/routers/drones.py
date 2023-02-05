@@ -129,4 +129,4 @@ async def read_drones_count(
     Returns:
         int: Amount of drones
     """
-    return await drones.get_drone_count()
+    return await drones.get_drone_count(zone_id,current_user.organization.id)
