@@ -135,9 +135,10 @@ async def drone_event( event: DroneEvent, file: UploadFile, current_drone: Drone
     content = file.file.read()
     date = str(datetime.now().timestamp())
     new_file_name = file.filename + date
-    path = "./drone_images/" + new_file_name
+    path = "./drone_images/" + new_file_name + "jpg"
     f = open(path, "w")
     f.write(content)
     f.close()
+    url = "https://kiwa.tech/api/drone_images/" + new_file_name + "jpg" #check if this is correct
     return {"message": "success"}
 
