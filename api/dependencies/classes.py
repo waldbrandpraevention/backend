@@ -153,4 +153,4 @@ class DroneForSimulation(BaseModel):
     token: str
     lat: float
     lon: float
-    last_update: DroneUpdate
+    last_update: DroneUpdate | None = None #init as none

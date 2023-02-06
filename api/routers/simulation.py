@@ -13,7 +13,6 @@ async def read_zones_all():
         DronesForSimulation[]: List of drones.
     """
 
+    #load the drones #todo
     drones = []
-
-    #load the drones
-    return get_current_wind()
+    return drones
