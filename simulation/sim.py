@@ -4,10 +4,9 @@ from shapely.geometry import shape, Point
 import time
 import os, random
 from datetime import datetime
-from .cv import ai_prediction
+from .cv import ai_prediction, Result
 
 from api.dependencies.classes import DroneUpdate, DroneEvent, EventType
-from .cv import ai_evaluation
 
 ASSETS = "./assets/raw/"
 URL = "kiwa.tech/api/"
@@ -75,18 +74,20 @@ while True:
                 file_name = random.choice(os.listdir(ASSETS))
                 path = os.path.join(ASSETS, filename)
 
-            result = ai_prediction(path)
+            results = ai_prediction(path)
 
-            event = DroneEvent(
+            for r in results:
+                event = DroneEvent(
                 drone_id = drones_dict[i]["drone"]["id"],
                 timestamp = datetime.now(),
                 longitude = drones_dict[i]["lon"],
                 latitude = drones_dict[i]["lat"],
-                event_type = evaluate_image(path),
-                confidence = result.confidence,
-                picture_path = path,
-                ai_predictions = result.ai_predictions,
-                csv_file_path = result.csv_file_path,
+                event_type = r.event_type,
+                confidence = r.confidence,
+                picture = r.picture,
+                csv_file_path = None,
                 )
-            payload = {'event': event}
-            responses.post(URL + "drones/send-event/", params=payload) 
+                payload = {'event': event}
+                responses.post(URL + "drones/send-event/", params=payload) 
+
+            

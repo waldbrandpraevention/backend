@@ -4,7 +4,7 @@ import os
 
 import tensorflow as tf
 from tensorflow import keras
-#from api.dependencies.classes import EventType
+from .api.dependencies.classes import EventType
 import numpy as np
 from PIL import Image
 from PIL.JpegImagePlugin import JpegImageFile
@@ -15,14 +15,14 @@ import time
 from object_detection.utils import label_map_util
 from object_detection.utils import visualization_utils as viz_utils
 
+threshold = .30
+
 
 class Result():
   """Result inforamtion"""
   event_type: int | None = None
   confidence: int | None = None
   picture: JpegImageFile | None = None
-  ai_predictions :dict| None = None
-  csv_file_path :str| None = None
 
 def load_image_into_numpy_array(path):
     """Load an image from file into a numpy array.
@@ -85,14 +85,22 @@ def ai_prediction(path: str):
     detections = {key: value[0, :num_detections].numpy()
                   for key, value in detections.items()}
     detections['num_detections'] = num_detections
-    print("num:")
-    print(num_detections)
-    print("\n")
+    #print("num:")
+    #print(num_detections)
+    #print("\n")
 
     # detection_classes should be ints.
     detections['detection_classes'] = detections['detection_classes'].astype(np.int64)
 
     image_np_with_detections = image_np.copy()
+
+    classes = [cls for cls in detections['detection_classes'][detections['detection_scores'] > threshold]]
+    #classes = [category_index.get(cls)['name'] for cls in classes]
+    percantages = detections['detection_scores'][:len(classes)]
+    #print("output:\n")
+    #print(classes)
+    #print("per:\n")
+    #print(percantages)
     
     viz_utils.visualize_boxes_and_labels_on_image_array(
           image_np_with_detections,
@@ -102,7 +110,7 @@ def ai_prediction(path: str):
           category_index,
           use_normalized_coordinates=True,
           max_boxes_to_draw=200,
-          min_score_thresh=.30,
+          min_score_thresh=threshold,
           agnostic_mode=False)
 
     #plt.figure()
@@ -110,6 +118,15 @@ def ai_prediction(path: str):
     im = Image.fromarray(image_np_with_detections)
     #im.save("./assets/predicted/out_{}.png".format(counter))
     print('Done')
+    results = []
+    for i in range(len(classes)):
+      result = Result(
+        event_type = EventType(classes[i]),
+        confidence = int(percantages[i] * 100 + 0.5),
+        picture = im,
+      )
+      results.append(result)
+    return result
 
-    result = Result()
-    return im
+
+#ai_prediction("./assets/raw/111171_waldbrand-longEdge512.jpg")
