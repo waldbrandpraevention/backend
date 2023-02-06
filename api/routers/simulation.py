@@ -1,3 +1,5 @@
+"""functions for the simulation api"""
+
 from fastapi import APIRouter, Depends, HTTPException, status
 
 router = APIRouter()
@@ -10,6 +12,8 @@ async def read_zones_all():
     Returns:
         DronesForSimulation[]: List of drones.
     """
+
+    drones = []
 
     #load the drones
     return get_current_wind()

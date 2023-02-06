@@ -1,3 +1,5 @@
+"""Functions for the simulation"""
+
 import os
 
 import tensorflow as tf
@@ -5,20 +7,22 @@ from tensorflow import keras
 #from api.dependencies.classes import EventType
 import numpy as np
 from PIL import Image
+from PIL.JpegImagePlugin import JpegImageFile
 import matplotlib.pyplot as plt
 import warnings
-warnings.filterwarnings('ignore')   # Suppress Matplotlib warnings
+warnings.filterwarnings('ignore')   #Suppress Matplotlib warnings
 import time
 from object_detection.utils import label_map_util
 from object_detection.utils import visualization_utils as viz_utils
 
 
 class Result():
-    event_type: int | None = None
-    confidence: int | None = None
-    picture_path :str| None = None
-    ai_predictions :dict| None = None
-    csv_file_path :str| None = None
+  """Result inforamtion"""
+  event_type: int | None = None
+  confidence: int | None = None
+  picture: JpegImageFile | None = None
+  ai_predictions :dict| None = None
+  csv_file_path :str| None = None
 
 def load_image_into_numpy_array(path):
     """Load an image from file into a numpy array.
@@ -106,4 +110,6 @@ def ai_prediction(path: str):
     im = Image.fromarray(image_np_with_detections)
     #im.save("./assets/predicted/out_{}.png".format(counter))
     print('Done')
+
+    result = Result()
     return im
