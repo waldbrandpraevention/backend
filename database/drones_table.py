@@ -16,7 +16,6 @@ CREATE_DRONES_TABLE = '''CREATE TABLE drones
 (
 id             integer NOT NULL ,
 name           text NOT NULL ,
-droneowner_id  integer,
 type           text,
 flight_range   real,
 cc_range       real,
@@ -25,15 +24,50 @@ PRIMARY KEY (id)
 );
 CREATE UNIQUE INDEX IF NOT EXISTS drones_AK ON drones (name);'''
 
-CREATE_DRONE = 'INSERT INTO drones (name,droneowner_id,type,flight_range,cc_range,flight_time) VALUES (? ,? ,? ,? ,? ,?);'
-GET_DRONE = 'SELECT * FROM drones WHERE name=?;'
+CREATE_DRONE = '''  INSERT INTO drones (name,type,flight_range,cc_range,flight_time)
+                    VALUES (? ,? ,? ,? ,?);'''
+GET_DRONE = '''SELECT
+drones.id, 
+drones.name, 
+drones.type, 
+drones.flight_range, 
+drones.cc_range, 
+drones.flight_time, 
+zones.id
+FROM drones
+JOIN drone_data ON drone_data.drone_id = drones.id
+JOIN zones ON ST_Intersects(drone_data.coordinates, zones.area)
+JOIN organization_zones ON organization_zones.zone_id = zones.id
+WHERE drones.id=?
+AND organization_zones.orga_id = ?
+Group by drones.id
+Order by drone_data.timestamp;'''
 
-def create_drone(name:str,droneowner_id:int|None,type:str|None,flight_range:int|None,cc_range:int|None,flight_time:int|None):
+GET_DRONES = '''SELECT
+drones.id, 
+drones.name, 
+drones.type, 
+drones.flight_range, 
+drones.cc_range, 
+drones.flight_time, 
+zones.id
+FROM drones
+JOIN drone_data ON drone_data.drone_id = drones.id
+JOIN zones ON ST_Intersects(drone_data.coordinates, zones.area)
+JOIN organization_zones ON organization_zones.zone_id = zones.id
+WHERE organization_zones.orga_id = ?
+Group by drones.id
+Order by drone_data.timestamp;'''
+
+def create_drone(name:str,
+                 drone_type:str|None,
+                 flight_range:int|None,
+                 cc_range:int|None,
+                 flight_time:int|None):
     """Create an entry for a drone.
 
     Args:
-        name (str): name of the drone.
-        droneowner_id (int | None): the drone owners id. 
+        name (str): name of the drone
         type (str | None): type of the aerial vehicle
         flight_range (int | None): maximum flight range of the aerial vehicle in [km]
         cc_range (int | None): maximum command and control range of the aerial vehicle in [km]
@@ -42,13 +76,20 @@ def create_drone(name:str,droneowner_id:int|None,type:str|None,flight_range:int|
     Returns:
         Drone: obj of the drone.
     """
-    inserted_id = db.insert(CREATE_DRONE,(name,droneowner_id,type,flight_range,cc_range,flight_time))
+    inserted_id = db.insert(CREATE_DRONE,
+                                (
+                                    name,
+                                    drone_type,
+                                    flight_range,
+                                    cc_range,
+                                    flight_time
+                                )
+                             )
     if inserted_id:
         drone_obj = Drone(
         id = inserted_id,
         name=name,
-        droneowner_id= droneowner_id,
-        type=type,
+        type=drone_type,
         flight_range=flight_range,
         cc_range=cc_range,
         flight_time=flight_time
@@ -56,7 +97,7 @@ def create_drone(name:str,droneowner_id:int|None,type:str|None,flight_range:int|
         return drone_obj
     return None
 
-def get_drone(name:str)-> Drone | None:
+def get_drone(drone_id:int,orga_id:int)-> Drone | None:
     """get the requested drone.
 
     Args:
@@ -65,16 +106,30 @@ def get_drone(name:str)-> Drone | None:
     Returns:
         Drone | None: the drone obj or None if not found.
     """
-    fetched_drone = db.fetch_one(GET_DRONE,(name,))
+    fetched_drone = db.fetch_one(GET_DRONE,(drone_id,orga_id))
     return get_obj_from_fetched(fetched_drone)
 
-def get_drones() -> List[Drone]:
+def get_drones(orga_id:int) -> List[Drone]:
     """fetches all stored drones.
 
     Returns:
         List[Drone]: list of all stored drones.
     """
-    fetched_drones = db.fetch_all('SELECT * FROM drones')
+    fetched_drones = db.fetch_all(GET_DRONES,(orga_id,))
+    output = []
+    for drone in fetched_drones:
+        drone_obj = get_obj_from_fetched(drone)
+        if drone_obj:
+            output.append(drone_obj)
+    return output
+
+def get_all_drones() -> List[Drone]:
+    """fetches all stored drones.
+
+    Returns:
+        List[Drone]: list of all stored drones.
+    """
+    fetched_drones = db.fetch_all(GET_DRONES)
     output = []
     for drone in fetched_drones:
         drone_obj = get_obj_from_fetched(drone)
@@ -91,19 +146,19 @@ def get_obj_from_fetched(fetched_drone):
     Returns:
         Drone: drone object.
     """
-    if fetched_match_class(Drone,fetched_drone,2):
+    if fetched_match_class(Drone,fetched_drone,1):
         try:
             drone_obj = Drone(
                 id = fetched_drone[0],
                 name=fetched_drone[1],
-                droneowner_id= fetched_drone[2],
-                type=fetched_drone[3],
-                flight_range=fetched_drone[4],
-                cc_range=fetched_drone[5],
-                flight_time=fetched_drone[6]
+                type=fetched_drone[2],
+                flight_range=fetched_drone[3],
+                cc_range=fetched_drone[4],
+                flight_time=fetched_drone[5],
+                zone_id=fetched_drone[6]
             )
             return drone_obj
-        except Exception as exception:
+        except ValueError as exception:
             print(exception)
 
     return None

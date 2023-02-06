@@ -93,8 +93,7 @@ class Drone(BaseModel):
     cc_range: float | None = None
     flight_time: float | None = None
     last_update: datetime | None = None
-    zone: str | None = None
-    droneowner_id: int | None = None
+    zone_id: int | None = None
 
 class DroneUpdate(BaseModel):
     """DroneUpdate class"""
@@ -129,9 +128,10 @@ class Zone(BaseModel):
     district: str | None = None
     events: List[DroneEvent] | None = None
     fire_risk: FireRisk | None = None
-    ai: FireRisk | None = None
+    ai_fire_risk: FireRisk | None = None
     geo_json: dict | None = None
     geo_point: tuple[float,float] | None = None
+    drone_count: int | None = None
 
 
 class WindInfo(BaseModel):
@@ -152,4 +152,3 @@ class DroneForSimulation(BaseModel):
     token: str
     lat: float
     lon: float
-    last_update: DroneUpdate | None = None #init as none

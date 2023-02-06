@@ -40,9 +40,9 @@ def load_image_into_numpy_array(path):
 
 
 LABEL_FILENAME = 'labelmap.pbtxt'
-PATH_TO_LABELS = "./labelmap.pbtxt"
+PATH_TO_LABELS = "./simulation/labelmap.pbtxt"
 
-PATH_TO_SAVED_MODEL = "./saved_model"
+PATH_TO_SAVED_MODEL = "./simulation/saved_model"
 
 category_index = label_map_util.create_category_index_from_labelmap(PATH_TO_LABELS, use_display_name=True)
 

@@ -89,7 +89,7 @@ def get_orgazones_by_name(name,orga_id) -> Zone | None:
     Returns:
         Zone | None: zone object.
     """
-    sql = zones_table.GET_ZONEBY.format('name')
+    sql = zones_table.GET_ZONEJOINORGA.format('name')
     fetched_zone = db.fetch_one(sql,(name,orga_id))
     return zones_table.get_obj_from_fetched(fetched_zone)
 
@@ -103,6 +103,6 @@ def get_orgazones_by_id(zone_id,orga_id) -> Zone | None:
     Returns:
         Zone | None: zone object.
     """
-    sql = zones_table.GET_ZONEBY.format('id')
+    sql = zones_table.GET_ZONEJOINORGA.format('id')
     fetched_zone = db.fetch_one(sql,(zone_id,orga_id))
     return zones_table.get_obj_from_fetched(fetched_zone)

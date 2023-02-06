@@ -19,6 +19,7 @@ from database import zones_table
 from database.database import create_table, initialise_spatialite
 from database.drone_events_table import CREATE_DRONE_EVENT_TABLE
 from database import orga_zones_table
+from database.drone_updates_table import CREATE_DRONE_DATA_TABLE
 from database.organizations_table import CREATE_ORGANISATIONS_TABLE
 from database.users_table import CREATE_USER_TABLE
 from database.zones_table import CREATE_ZONE_TABLE
@@ -72,6 +73,8 @@ def create_drone_events():
     if os.getenv("DEMO_LONG") is not None \
             and os.getenv("DEMO_LAT") is not None:
         
+        drone_events_table.insert_demo_events(12.559776306152344,52.189299066349946,2)
+        drone_events_table.insert_demo_events(12.559776306152344,50.189299066349946,3)
         drone_events_table.insert_demo_events(float(os.getenv("DEMO_LONG")),float(os.getenv("DEMO_LAT")))
     
     print("drone_events done")
@@ -103,6 +106,7 @@ def main():
     create_table(CREATE_USER_TABLE)
     create_table(CREATE_DRONE_EVENT_TABLE)
     create_table(CREATE_ZONE_TABLE)
+    create_table(CREATE_DRONE_DATA_TABLE)
     create_table(orga_zones_table.CREATE_ORGAZONES_TABLE)
     create_default_user()
     create_drone_events()
