@@ -125,8 +125,8 @@ async def read_drones_count(
 
 @router.post("/drones/send-update/", status_code=status.HTTP_200_OK)
 async def drone_update(update: DroneUpdate, current_drone: Drone = Depends(get_current_drone)):
-    #todo
-    return {"message": "todo"}
+    #todo: add to db
+    return update
 
 
 @router.post("/drones/send-event/")
