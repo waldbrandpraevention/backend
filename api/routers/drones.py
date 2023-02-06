@@ -131,6 +131,13 @@ async def drone_update(update: DroneUpdate, current_drone: Drone = Depends(get_c
 
 @router.post("/drones/send-event/")
 async def drone_event( event: DroneEvent, file: UploadFile, current_drone: Drone = Depends(get_current_drone)):
-    #todo
-    return {"message": "todo"}
+    #todo: add event to db + create link to saved location (path)
+    content = file.file.read()
+    date = str(datetime.now().timestamp())
+    new_file_name = file.filename + date
+    path = "./drone_images/" + new_file_name
+    f = open(path, "w")
+    f.write(content)
+    f.close()
+    return {"message": "success"}
 
