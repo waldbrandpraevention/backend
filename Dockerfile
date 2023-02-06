@@ -1,6 +1,8 @@
 # sqlite + spatialite + FastAPI
 FROM python:3.10-bullseye
 
+RUN apt update
+
 RUN apt install -y sqlite3 libsqlite3-dev
 
 RUN apt install -y libspatialite7
