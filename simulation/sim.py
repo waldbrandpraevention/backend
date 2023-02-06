@@ -87,7 +87,8 @@ while True:
                 confidence = r.confidence,
                 csv_file_path = None,
                 )
-                payload = {'event': event, file: r.picture}
-                responses.post(URL + "drones/send-event/", params=payload) 
+                payload = {'event': event}
+                files = {'file:': r.picture}
+                responses.post(URL + "drones/send-event/", params=payload, files=files) 
 
             
