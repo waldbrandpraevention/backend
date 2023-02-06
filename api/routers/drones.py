@@ -140,5 +140,5 @@ async def drone_event( event: DroneEvent, file: UploadFile, current_drone: Drone
     f.write(content)
     f.close()
     url = "https://kiwa.tech/api/drone_images/" + new_file_name + "jpg" #check if this is correct
-    return {"url": url}
+    return {"url": url, "event": event}
 
