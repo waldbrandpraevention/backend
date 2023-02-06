@@ -19,7 +19,7 @@ threshold = .30
 
 class Result():
   """Result inforamtion"""
-  event_type: int | None = None
+  event_type: EventType | None = None
   confidence: int | None = None
   picture: JpegImageFile | None = None
 
