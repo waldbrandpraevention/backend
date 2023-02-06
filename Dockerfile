@@ -5,7 +5,7 @@ RUN apt update
 
 RUN apt install -y sqlite3=3.34.1-3 libsqlite3-dev=3.34.1-3
 
-RUN apt install -y libsqlite3-mod-spatialite=4.3.0a-5
+RUN apt install -y libsqlite3-mod-spatialite=5.0.1-2
 
 WORKDIR /api
 
