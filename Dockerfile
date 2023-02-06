@@ -1,5 +1,11 @@
 # sqlite + spatialite + FastAPI
-FROM python:3.10-bullseye
+FROM python:3.10-alpine
+
+RUN apk add --no-cache \
+  gcc \
+  libc-dev \
+  geos-dev \
+  && pip install shapely
 
 RUN apk add --no-cache sqlite
 
