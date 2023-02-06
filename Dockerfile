@@ -1,5 +1,5 @@
 # sqlite + spatialite + FastAPI
-FROM python:3.10-alpine
+FROM python:3.10-bullseye
 
 RUN apk add --no-cache sqlite
 
