@@ -55,17 +55,6 @@ GET_ZONEJOINORGA ='''SELECT id,name,federal_state,district,AsGeoJSON(area),
                     AND organization_zones.orga_id=?
                     GROUP BY name;'''
 
-# GET_ZONES = '''SELECT id,name,federal_state,district,AsGeoJSON(area),
-#                 X(geo_point),Y(geo_point),Count(DISTINCT drone_id) FROM zones
-#                 JOIN ElementaryGeometries AS e ON (e.f_table_name = 'zones' 
-#                 AND e.origin_rowid = zones.rowid)
-#                 LEFT JOIN drone_data ON ST_Intersects(drone_data.coordinates, area)
-#                 GROUP BY name;'''
-
-GET_ZONES = ''' SELECT id,name,federal_state,district,AsGeoJSON(area),
-                X(geo_point),Y(geo_point) 
-                FROM zones'''
-
 GET_ZONES_BY_DISTRICT = '''SELECT id,name,federal_state,district,AsGeoJSON(area),
                             X(geo_point),Y(geo_point),Count(DISTINCT drone_id)
                             FROM zones 
@@ -260,7 +249,8 @@ def get_zones() -> List[Zone]:
     Returns:
         List[Zone]: list containing Zone obj.
     """
-    fetched_zones = db.fetch_all(GET_ZONES)
+    sql = GET_ZONE.format('')
+    fetched_zones = db.fetch_all(sql)
     if fetched_zones is None:
         return None
     output = []
