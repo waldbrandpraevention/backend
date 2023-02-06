@@ -22,7 +22,7 @@ async def get_all_drones(orga_id:int):
     for drone in drones:
         drone_upate = drone_data_table.get_latest_update(drone.id)
         if drone_upate is not None:
-            set_update_and_zone(drone,drone_upate)
+            await set_update_and_zone(drone,drone_upate)
 
     return drones
 
@@ -37,7 +37,7 @@ async def get_drone(drone_id: int,orga_id:int):
         return None
     drone_upate = drone_data_table.get_latest_update(drone_id)
     if drone_upate:
-        set_update_and_zone(drone,drone_upate)
+        await set_update_and_zone(drone,drone_upate)
 
     return drone
 

@@ -29,14 +29,16 @@ async def read_drone(drone_id: int, current_user: User = Depends(get_current_use
         )
     return drone
 
-@router.get("/drones/events/", status_code=status.HTTP_200_OK, response_model=List[DroneEvent])
+@router.get("/drones/events/",
+            status_code=status.HTTP_200_OK,
+            response_model=List[DroneEvent]
+            )
 async def read_drone_events(drone_id: int=None,
                             zone_id:int =None,
                             days:int =0,
                             hours:int =0,
                             minutes:int =0,
                             current_user: User = Depends(get_current_user)):
-    #TODO
     """API call to get all events of a drone
 
     Args:
@@ -45,7 +47,8 @@ async def read_drone_events(drone_id: int=None,
         days (int, optional): days before now. Defaults to 0.
         hours (int, optional): hours before now. Defaults to 0.
         minutes (int, optional): minutes before now. Defaults to 0.
-        current_user (User, optional): current user that is logged in. Defaults to Depends(get_current_user).
+        current_user (User, optional): current user that is logged in.
+        Defaults to Depends(get_current_user).
 
     Raises:
         HTTPException: if no events are found.
@@ -64,7 +67,7 @@ async def read_drone_events(drone_id: int=None,
             status_code=status.HTTP_406_NOT_ACCEPTABLE,
             detail="Couldnt find any events.",
         )
-    
+
     return drone_events
 
 def timestamp_helper(days:int,hours:int,minutes:int) -> datetime.datetime | None:
@@ -84,7 +87,10 @@ def timestamp_helper(days:int,hours:int,minutes:int) -> datetime.datetime | None
 
     return datetime.datetime.utcnow() - timedelta
 
-@router.get("/drones/route", status_code=status.HTTP_200_OK, response_model=List[DroneUpdateWithRoute])
+@router.get("/drones/route",
+            status_code=status.HTTP_200_OK,
+            response_model=List[DroneUpdateWithRoute]
+            )
 async def read_drone_route( drone_id: int=None,
                             zone_id:int =None,
                             days:int =0,
@@ -114,7 +120,9 @@ async def read_drone_route( drone_id: int=None,
 
     return drone_events
 
-@router.get("/drones/all/", status_code=status.HTTP_200_OK)
+@router.get("/drones/all/",
+            status_code=status.HTTP_200_OK,
+            response_model=List[Drone])
 async def read_drones_all(current_user: User = Depends(get_current_user)):
     """API call to get the all drones
 
@@ -126,7 +134,10 @@ async def read_drones_all(current_user: User = Depends(get_current_user)):
     """
     return await drones.get_all_drones(current_user.organization.id)
 
-@router.get("/drones/count", status_code=status.HTTP_200_OK)
+@router.get("/drones/count",
+            status_code=status.HTTP_200_OK,
+            response_model=int
+            )
 async def read_drones_count(
                             zone_id: int,
                             current_user: User = Depends(get_current_user)
