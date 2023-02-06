@@ -91,18 +91,18 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
         detail="User is disabled",
         headers={"WWW-Authenticate": "Bearer"},
     )
-    email_verification_exception = HTTPException(
-        status_code=status.HTTP_406_NOT_ACCEPTABLE,
-        detail="Email is not verified",
-    )
+    # email_verification_exception = HTTPException(
+    #     status_code=status.HTTP_406_NOT_ACCEPTABLE,
+    #     detail="Email is not verified",
+    # )
     email = await get_email_from_token(token)
     user = get_user(email)
     if user is None:
         raise credentials_exception
     if user.disabled:
         raise disabled_exception
-    if not user.email_verified:
-        raise email_verification_exception
+    # if not user.email_verified:
+    #     raise email_verification_exception
     return user
 
 async def get_user_allerts(user: User):
@@ -134,9 +134,9 @@ async def generate_event_string(event:DroneEvent):
         str: the generated string.
     """
     return f'''{event.event_type.name} spotted at
-    \nLon: {event.lon}
-    \nLat: {event.lat}
-    \nwith a confidence of {event.confidence}%'''
+    Lon: {event.lon}
+    Lat: {event.lat}
+    with a confidence of {event.confidence}%'''
 
 async def update_user(user_to_update:User,
                   email: str | None=None,
