@@ -4,17 +4,19 @@ from shapely.geometry import shape, Point
 import time
 import os, random
 from datetime import datetime
+from .cv import ai_prediction
 
 from api.dependencies.classes import DroneUpdate, DroneEvent, EventType
 from .cv import ai_evaluation
 
-ASSETS = "./assets/"
+ASSETS = "./assets/raw/"
 URL = "kiwa.tech/api/"
-CHANCE_OF_EVENT = 0.5
+CHANCE_OF_EVENT = 0.001
 
 #load drones
 drones_json = requests.get(URL + "simulation/get-drones/")
-drones_dict = json.loads(drones_json)
+text = response.text
+drones_dict = json.loads(text)
 
 last_execution = time.time()
 
@@ -32,10 +34,7 @@ while True:
         new_x = drones_dict[i]["lat"] + vel[0] * speed * dt
         new_y = drones_dict[i]["lon"] + vel[1] * speed * dt
 
-        drones_dict[i]["lat"] = new_x
-        drones_dict[i]["lon"] = new_y
-
-        point = Point(new_y new_x)
+        point = Point(new_y, new_x)
 
         found = False
 
@@ -44,12 +43,15 @@ while True:
             if polygon.contains(point):
                 found = True
 
-        if not found: #not in polygon
+        if not found: #not in polygon just turn randomly
             new_angle = random.uniform(0, 6.28318530718)
             x = 1 * cos(new_angle)
             y = 1 * sin(new_angle)
 
             new_vel = (x, y)
+        else:
+            drones_dict[i]["lat"] = new_x
+            drones_dict[i]["lon"] = new_y
 
         time_differenze = time.time() - last_update
         if time_differenze > 10:
@@ -60,22 +62,23 @@ while True:
                 timestamp = datetime.now(),
                 longitude = drones_dict[i]["lon"],
                 latitude = drones_dict[i]["lat"],
-                flight_range: drones_dict[i]["drone"]["flight_range"] + distance
-                flight_time: drones_dict[i]["drone"]["flight_time"] + time_differenze
+                flight_range = drones_dict[i]["drone"]["flight_range"] + distance,
+                flight_time = drones_dict[i]["drone"]["flight_time"] + time_differenze
                 )
 
-            #responses.post(URL + drones/send-update/......) #todo    
+            payload = {'update': new_update}
+            responses.post(URL + "drones/send-update/", params=payload)   
 
             if random() <= CHANCE_OF_EVENT: #event happens as well
                 #pick random file
                 file_name = random.choice(os.listdir(ASSETS))
                 path = os.path.join(ASSETS, filename)
 
-            result = ai_evaluation(path)
+            result = ai_prediction(path)
 
             event = DroneEvent(
                 drone_id = drones_dict[i]["drone"]["id"],
-                timestamp datetime.now(),
+                timestamp = datetime.now(),
                 longitude = drones_dict[i]["lon"],
                 latitude = drones_dict[i]["lat"],
                 event_type = evaluate_image(path),
@@ -84,4 +87,5 @@ while True:
                 ai_predictions = result.ai_predictions,
                 csv_file_path = result.csv_file_path,
                 )
-            #responses.post(URL + drones/send-event......) #todo
+            payload = {'event': event}
+            responses.post(URL + "drones/send-event/", params=payload) 

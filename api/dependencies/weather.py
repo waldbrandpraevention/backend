@@ -13,7 +13,7 @@ def load_sources():
 
 def get_wind():
     wind_info = []
-    ids = await load_sources()
+    ids = load_sources()
     #curr_date = date.today()
     for id in ids:
         payload = {'dwd_station_id': id.strip().zfill(5)}
@@ -40,7 +40,7 @@ def wind_update():
     last_execution = time.time()
     while(True):
         if(time.time() - last_execution > 1800 or len(wind) == 0):
-            wind = await get_wind()
+            wind = get_wind()
             last_execution = time.time()
 
 def get_current_wind():

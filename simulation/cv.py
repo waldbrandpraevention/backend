@@ -12,6 +12,7 @@ import time
 from object_detection.utils import label_map_util
 from object_detection.utils import visualization_utils as viz_utils
 
+
 class Result():
     event_type: int | None = None
     confidence: int | None = None
@@ -55,11 +56,12 @@ print('Done! Took {} seconds'.format(elapsed_time))
 img_path = "./assets/raw"
 directory = os.fsencode(img_path)
     
-counter = 0
-for file in os.listdir(directory):
+def ai_prediction(path: str):
+    #for file in os.listdir(directory):
 
-    filename = os.fsdecode(file)
-    image_path = os.path.join(img_path, filename)
+    #filename = os.fsdecode(path)
+    #image_path = os.path.join(img_path, filename)
+    image_path = path
     print('Running inference for {}... '.format(image_path), end='')
 
     image_np = load_image_into_numpy_array(image_path)
@@ -77,14 +79,17 @@ for file in os.listdir(directory):
     # We're only interested in the first num_detections.
     num_detections = int(detections.pop('num_detections'))
     detections = {key: value[0, :num_detections].numpy()
-                   for key, value in detections.items()}
+                  for key, value in detections.items()}
     detections['num_detections'] = num_detections
+    print("num:")
+    print(num_detections)
+    print("\n")
 
     # detection_classes should be ints.
     detections['detection_classes'] = detections['detection_classes'].astype(np.int64)
 
     image_np_with_detections = image_np.copy()
-
+    
     viz_utils.visualize_boxes_and_labels_on_image_array(
           image_np_with_detections,
           detections['detection_boxes'],
@@ -96,11 +101,9 @@ for file in os.listdir(directory):
           min_score_thresh=.30,
           agnostic_mode=False)
 
-    plt.figure()
-    plt.imshow(image_np_with_detections)
+    #plt.figure()
+    #plt.imshow(image_np_with_detections)
     im = Image.fromarray(image_np_with_detections)
-    im.save("./assets/predicted/out_{}.png".format(counter))
+    #im.save("./assets/predicted/out_{}.png".format(counter))
     print('Done')
-    counter = counter + 1
-plt.show()
-
+    return im
