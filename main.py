@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from api.dependencies.authentication import get_password_hash
 from api.dependencies.email import send_email
 from api.dependencies.classes import UserWithSensitiveInfo
-from api.routers import email, users, zones, drones
+from api.routers import users, zones, drones
 
 from database import (users_table,
                       organizations_table,
@@ -26,7 +26,7 @@ from database.zones_table import CREATE_ZONE_TABLE
 
 app = FastAPI()
 app.include_router(users.router)
-app.include_router(email.router)
+#app.include_router(email.router)
 app.include_router(zones.router)
 app.include_router(drones.router)
 

@@ -1,6 +1,5 @@
 """funcs to read and write on the drone_event table in database."""
 import datetime
-from enum import Enum
 import random
 from typing import List
 from api.dependencies.classes import DroneEvent, EventType, FireRisk
@@ -223,18 +222,37 @@ def get_obj_from_fetched(fetched_dronedata) -> DroneEvent | None:
 
 def calculate_firerisk(events: List[DroneEvent]) -> FireRisk:
     """calculates the firerisk, based on the events fire/smoke confidences.
-
+    sehr niedrig rauch:>5 feuer: >0
+    niedrig rauch:>40 feuer: > 10
+    mittel rauch:>60 feuer: >30
+    hoch rauch:>80 feuer: >70
+    sehr hoch rauch:>... feuer: >90
     Args:
         events (List[DroneEvent]): list of drone events.
 
     Returns:
         FireRisk: the calculated risk.
     """
-    firerisk = 20
-    for event in events:  # TODO feuer und rauch unterschiedlich bewerten.
-        if firerisk < event.confidence:
-            firerisk = event.confidence
+    smokerisk= 0
+    firerisk = 0
+    for event in events:
+        if event.event_type == EventType.FIRE:
+            if smokerisk < event.confidence:
+                smokerisk = event.confidence
+        else:
+            if firerisk < event.confidence:
+                firerisk = event.confidence
 
-    firerisk = firerisk/100*5
-    firerisk = round(firerisk)
-    return FireRisk(firerisk)
+    if smokerisk > 90 or firerisk > 90:
+        return FireRisk.VERY_HEIGH#
+
+    if smokerisk > 80 or firerisk > 70:
+        return FireRisk.HEIGH
+
+    if smokerisk > 60 or firerisk > 30:
+        return FireRisk.MIDDLE
+
+    if smokerisk > 40 or firerisk > 10:
+        return FireRisk.LOW
+
+    return FireRisk.VERY_LOW
