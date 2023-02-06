@@ -10,7 +10,7 @@ from io import StringIO
 
 from api.dependencies.classes import DroneUpdate, DroneEvent, EventType
 
-ASSETS = "./assets/raw/"
+ASSETS = "./simulation/assets/raw/"
 URL = "kiwa.tech/api/"
 CHANCE_OF_EVENT = 0.001
 
