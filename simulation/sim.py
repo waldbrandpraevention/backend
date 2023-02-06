@@ -18,14 +18,14 @@ drones_json = requests.get(URL + "simulation/get-drones/")
 text = response.text
 drones_dict = json.loads(text)
 
-last_execution = time.time()
-
-last_update = time.time()
+last_execution = datetime.now()
+next_update = datetime.now()
+delta = timedelta(minutes=10)
 
 
 while True:
-    dt = time.time() - last_execution
-    last_execution = time.time()
+    dt = datetime.now() - last_execution
+    last_execution = datetime.now()
     for i in range(len(drones_dict)):
         drone = drones_dict[i]["drone"]
         geo_json = drones_dict[i]["geo_json"]
@@ -53,8 +53,9 @@ while True:
             drones_dict[i]["lat"] = new_x
             drones_dict[i]["lon"] = new_y
 
-        time_differenze = time.time() - last_update
-        if time_differenze > 10:
+        if datetime.now() >= next_update:
+            next_update = datetime.now() + delta
+
             distance = math.hypot(drones_dict[i]["last_update"]["lon"] - drones_dict[i]["lon"],
                     drones_dict[i]["last_update"]["lat"] - drones_dict[i]["lat"])
             new_update = DroneUpdate(

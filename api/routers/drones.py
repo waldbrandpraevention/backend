@@ -61,10 +61,10 @@ async def drone_signup(drone: Drone):
 
 
 @router.post("/drones/send-update/", status_code=status.HTTP_200_OK)
-async def drone_login(current_drone: Drone = Depends(get_current_drone), update: DroneUpdate):
+async def drone_login(update: DroneUpdate, current_drone: Drone = Depends(get_current_drone)):
     return {"message": "todo"}
 
 
 @app.post("/drones/send-event/")
-async def create_upload_file(current_user: Drone = Depends(get_current_drone), event: DroneEvent):
+async def create_upload_file( event: DroneEvent, current_user: Drone = Depends(get_current_drone)):
     return {"message": "todo"}

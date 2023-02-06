@@ -23,7 +23,7 @@ async def send_token_email(reciever: str):
     https://kiwa.tech/api/email/verify/?token=%s
     """ % (message, access_token)
 
-    return await send_email(reciever, "Ihr neure KIWA Account", message)
+    return await send_email(reciever, "KIWA Information", message)
 
 
 async def send_email(reciever: str, subject: str, message: str):
