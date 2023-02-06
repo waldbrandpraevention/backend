@@ -4,7 +4,7 @@ import os
 
 import tensorflow as tf
 from tensorflow import keras
-from .api.dependencies.classes import EventType
+from api.dependencies.classes import EventType
 import numpy as np
 from PIL import Image
 from PIL.JpegImagePlugin import JpegImageFile

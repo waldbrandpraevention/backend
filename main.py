@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from threading import Thread
 
+from simulation.sim import simulate
 from api.dependencies.authentication import get_password_hash
 from api.dependencies.emails import send_email
 from api.dependencies.weather import wind_update
@@ -108,7 +109,7 @@ def main():
     load_zones_from_geojson()
 
     #make sure this actually works
-    weather_thread = Thread(target = wind_update, args = (10, ))
+    simulation_thread = Thread(target = simulate)
     weather_thread.start()
 
 
