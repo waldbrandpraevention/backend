@@ -2,6 +2,7 @@
 import os
 import sqlite3
 from contextlib import contextmanager
+from typing import List
 from pydantic import BaseModel
 
 DATABASE_PATH = os.getenv('DB_PATH')
@@ -257,7 +258,8 @@ def fetch_all(fetch_sql:str,fetch_tuple=None):
                 cursor.execute(fetch_sql)
             fetched_user = cursor.fetchall()
             cursor.close()
-            return fetched_user
+            if len(fetched_user)>0:
+                return fetched_user
     except sqlite3.Error as exception:
         print(exception)
 
@@ -288,3 +290,49 @@ def check_fetch(fetch_sql:str,fetch_tuple=None):
     except sqlite3.Error as exception:
         print(exception)
     return False
+
+def add_where_clause(sql:str, where_param_array:List[str]):
+    """concats where_clause and inserts it into sql statement.
+
+    Args:
+        sql (_type_): _description_
+        where_param_array (List[str]): _description_
+
+    Returns:
+        _type_: _description_
+    """
+    where_clause = ''
+    if len(where_param_array)>0:
+        witter = iter(where_param_array)
+        first_statement = next(witter)
+
+        where_clause = f'WHERE {first_statement}'
+        for statement in witter:
+            where_clause += f' AND {statement}'
+
+    sql = sql.format(where_clause)
+    return sql
+
+def create_where_clause_statement(clmname:str,eqator:str='',questionmark:str='?'):
+    """_summary_
+
+    Args:
+        clmname (str): _description_
+        eqator (str): _description_
+
+    Returns:
+        _type_: _description_
+    """
+    return f'{clmname} {eqator} {questionmark}'
+
+def create_intersection_clause(first_geom:str,second_geom:str='GeomFromGeoJSON(?)'):
+    """creates sql that checks for an intersection of the given geoms.
+
+    Args:
+        first_geom (str): _description_
+        second_geom (str, optional): _description_. Defaults to 'GeomFromGeoJSON(?)'.
+
+    Returns:
+        _type_: _description_
+    """
+    return f'ST_Intersects({first_geom},{second_geom})'

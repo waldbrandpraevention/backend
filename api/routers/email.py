@@ -12,7 +12,7 @@ from database import users_table
 import random
 from database import mail_verif_table
 from validation import *
-from classes import *
+from api.dependencies.classes import *
 
 router = APIRouter()
 

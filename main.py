@@ -1,20 +1,25 @@
+""" Main file for the API. """
 import os
 import sqlite3
-
-from fastapi import Depends, FastAPI, HTTPException, status
 import random
+from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 
 from api.dependencies.authentication import get_password_hash
 from api.dependencies.email import send_email
-from api.dependencies.classes import Organization, UserWithSensitiveInfo
+from api.dependencies.classes import UserWithSensitiveInfo
 from api.routers import email, users, zones, drones
-from database import users_table, organizations_table
-from database import drone_events_table
-from database import zones_table
+
+from database import (users_table,
+                      organizations_table,
+                      drones_table,
+                      drone_events_table,
+                      zones_table)
 from database.database import create_table, initialise_spatialite
 from database.drone_events_table import CREATE_DRONE_EVENT_TABLE
 from database import orga_zones_table
+from database.drone_updates_table import CREATE_DRONE_DATA_TABLE
+from database.drones_table import CREATE_DRONES_TABLE
 from database.organizations_table import CREATE_ORGANISATIONS_TABLE
 from database.users_table import CREATE_USER_TABLE
 from database.zones_table import CREATE_ZONE_TABLE
@@ -35,12 +40,16 @@ app.add_middleware(
 )
 
 def create_default_user():
+    """Creates a default user if the environment variables are set."""
     # Save default user only if env var is set
     if os.getenv("ADMIN_MAIL") is not None \
             and os.getenv("ADMIN_PASSWORD") is not None \
             and os.getenv("ADMIN_ORGANIZATION") is not None:
         try:
-            organization = organizations_table.create_orga(organame=os.getenv("ADMIN_ORGANIZATION"), orga_abb=os.getenv("ADMIN_ORGANIZATION"))
+            organization = organizations_table.create_orga(
+                organame=os.getenv("ADMIN_ORGANIZATION"),
+                orga_abb=os.getenv("ADMIN_ORGANIZATION")
+                )
         except sqlite3.IntegrityError:
             organization = organizations_table.get_orga(os.getenv("ADMIN_ORGANIZATION"))
         hashed_pw = get_password_hash(os.getenv("ADMIN_PASSWORD"))
@@ -59,15 +68,28 @@ def create_default_user():
         print("user done")
 
 def create_drone_events():
-    """ for demo set
+    """ set demo events with env vars
         long=12.68895149
         lat=52.07454738
     """
     if os.getenv("DEMO_LONG") is not None \
             and os.getenv("DEMO_LAT") is not None:
-        
-        drone_events_table.insert_demo_events(float(os.getenv("DEMO_LONG")),float(os.getenv("DEMO_LAT")))
-    
+
+        for i in range(3):
+            drones_table.create_drone(
+                name=f'Trinity F0{i}',
+                drone_type="Unmanned Aerial Vehicle",
+                cc_range=7.5,
+                flight_range=100.0,
+                flight_time=90
+            )
+        drone_events_table.insert_demo_events(12.559776306152344,52.189299066349946,2)
+        drone_events_table.insert_demo_events(12.559776306152344,50.189299066349946,3)
+        drone_events_table.insert_demo_events(
+                                            float(os.getenv("DEMO_LONG")),
+                                            float(os.getenv("DEMO_LAT"))
+                                            )
+
     print("drone_events done")
 
 def load_zones_from_geojson():
@@ -79,7 +101,7 @@ def load_zones_from_geojson():
         path+=os.getenv("GEOJSON_PATH")
         added_zones = zones_table.load_from_geojson(path)
         print(f'Zones added: {added_zones}')
-        
+
         if os.getenv("DEMO_DISTRICT") is not None \
                 and os.getenv("ADMIN_ORGANIZATION") is not None:
             fetched_zones = zones_table.get_zone_of_by_district(os.getenv("DEMO_DISTRICT"))
@@ -89,14 +111,18 @@ def load_zones_from_geojson():
                 except sqlite3.IntegrityError:
                     pass
 
-    print("zones done")
+            print("zones linked")
 
 def main():
+    """ Initialise the database and create the tables.
+    """
     initialise_spatialite()
     create_table(CREATE_ORGANISATIONS_TABLE)
     create_table(CREATE_USER_TABLE)
-    create_table(CREATE_DRONE_EVENT_TABLE)
     create_table(CREATE_ZONE_TABLE)
+    create_table(CREATE_DRONES_TABLE)
+    create_table(CREATE_DRONE_DATA_TABLE)
+    create_table(CREATE_DRONE_EVENT_TABLE)
     create_table(orga_zones_table.CREATE_ORGAZONES_TABLE)
     create_default_user()
     create_drone_events()
@@ -107,18 +133,22 @@ main()
 
 @app.get("/")
 async def root():
-    n1 = random.randint(0,100)
-    n2 = random.randint(0,100)
+    """ Root function to check if the server is running."""
+    number_one = random.randint(0,100)
+    number_two = random.randint(0,100)
     raise HTTPException(
                 status_code=status.HTTP_418_IM_A_TEAPOT,
-                detail="Random addition: " + str(n1) + " + " + str(n2) + " = " + str(n1 +n2),
+                detail=f"""Random addition: {number_one}
+                        {number_one} {number_one +number_two}""",
             )
 
 @app.get("/test")
-async def test(input: str):
-    return {"message": input}
+async def test(test_input: str):
+    """ Test function to check if the server is running."""
+    return {"message": test_input}
 
 
 @app.get("/test-mail/")
 async def test_mail(reciever: str, subject: str, message: str):
+    """ Test function to check if the server is running."""
     return await send_email(reciever, subject, message)

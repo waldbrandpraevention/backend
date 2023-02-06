@@ -1,14 +1,16 @@
 """api tests"""
 import os
-import sys
+from fastapi import HTTPException
 import pytest
-sys.path.append('../backend')
-from api.routers import zones,users
+from database import zones_table
+from api.routers import zones,users,drones
+
 
 @pytest.mark.asyncio
 async def test_zones():
     """zone api tests.
     """
+    fetched = zones_table.get_zones()
     user = users.get_user(os.getenv("ADMIN_MAIL"))
     zones_arr = await zones.get_all_zones(user.organization.id)
     demo_distr = os.getenv("DEMO_DISTRICT")
@@ -19,6 +21,30 @@ async def test_zones():
     assert zone == zones_arr[index]
     count = await zones.get_zone_count(user.organization.id)
     assert len(zones_arr) == count
+
+@pytest.mark.asyncio
+async def test_drones():
+    """drone api tests
+    """
+    user = users.get_user(os.getenv("ADMIN_MAIL"))
+    drone = await drones.read_drone(drone_id=1,current_user=user)
+    zone = zones_table.get_zone(drone.zone_id)
+    with pytest.raises(HTTPException):
+        await drones.read_drone_events(current_user=user,zone_id=-1)
+    zone_events = await drones.read_drone_events(current_user=user,zone_id=zone.id)
+    assert zone_events == zone.events
+    zone_updates = await drones.read_drone_route(current_user=user,zone_id=zone.id)
+    assert zone_updates[0].timestamp == zone.last_update
+    with pytest.raises(HTTPException):
+        await drones.read_drone_route(current_user=user,zone_id=zone.id,drone_id=-1)
+    zone_copunt = await drones.read_drones_count(current_user=user,zone_id=zone.id)
+    zone_copunt = await drones.read_drones_count(current_user=user,zone_id=zone.id)
+    assert zone_copunt == zone.drone_count
+    d1events = await drones.read_drone_events(current_user=user,drone_id=1)
+    allevents = await drones.read_drone_events(current_user=user)
+
+    assert len(d1events) < len(allevents)
+
 
 
 @pytest.mark.asyncio

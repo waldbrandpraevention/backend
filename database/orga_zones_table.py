@@ -57,6 +57,8 @@ def get_zones_by_orga(orga_id:int) -> List[Zone] | None:
         List[Zone] | None: list of zones.
     """
     fetched_zones = db.fetch_all(zones_table.GET_ORGAZONES,(orga_id,))
+    if fetched_zones is None:
+        return None
     output = []
     for fetched in fetched_zones:
         zone = zones_table.get_obj_from_fetched(fetched)
@@ -73,6 +75,8 @@ def get_orgas_by_zone(zone_id:int) -> List[Organization] | None:
         List[Organization] | None: list of orgas.
     """
     fetched_orga = db.fetch_all(GET_ZONEORGAS,(zone_id,))
+    if fetched_orga is None:
+        return None
     output = []
     for fetched in fetched_orga:
         orga = orgas_table.get_obj_from_fetched(fetched)
@@ -89,7 +93,7 @@ def get_orgazones_by_name(name,orga_id) -> Zone | None:
     Returns:
         Zone | None: zone object.
     """
-    sql = zones_table.GET_ZONEBY.format('name')
+    sql = zones_table.GET_ZONEJOINORGA.format('name')
     fetched_zone = db.fetch_one(sql,(name,orga_id))
     return zones_table.get_obj_from_fetched(fetched_zone)
 
@@ -103,6 +107,6 @@ def get_orgazones_by_id(zone_id,orga_id) -> Zone | None:
     Returns:
         Zone | None: zone object.
     """
-    sql = zones_table.GET_ZONEBY.format('id')
+    sql = zones_table.GET_ZONEJOINORGA.format('id')
     fetched_zone = db.fetch_one(sql,(zone_id,orga_id))
     return zones_table.get_obj_from_fetched(fetched_zone)
