@@ -1,3 +1,4 @@
+""" Module that contains the settings table. """
 from enum import Enum
 from typing import List
 from api.dependencies.classes import Setting,SettingsType
@@ -19,15 +20,24 @@ PRIMARY KEY (id)
 CREATE UNIQUE INDEX IF NOT EXISTS settings_AK ON settings (name);'''
 
 class SettingsAttributes(str,Enum):
+    """Enum that defines the attributes of the settings table. Can be one of the following:
+    NAME,
+    DESCRIPTION,
+    DEFAULT_VALUE
+    """
     NAME='name'
     DESCRIPTION ='description'
     DEFAULT_VALUE ='default_val'
-    
+
 INSERT_SETTING = 'INSERT INTO settings (name, description,default_val,type) VALUES (?,?,?,?);'
 UPDATE_SETTING = 'UPDATE settings SET {} = ? WHERE name = ?;'
 GET_SETTING = 'SELECT * FROM settings WHERE ID = ?;'
 
-def create_setting(name:str,description:str, defaul_val: int,type:SettingsType) -> int | None:
+def create_setting(name:str,
+                   description:str,
+                   defaul_val: int,
+                   setting_type:SettingsType
+                   ) -> int | None:
     """create a setting.
 
     Args:
@@ -37,7 +47,7 @@ def create_setting(name:str,description:str, defaul_val: int,type:SettingsType) 
     Returns:
         int | None: Id of the inserted entry, None if an error occurs.
     """
-    return db.insert(INSERT_SETTING,(name, description,defaul_val,type.value))
+    return db.insert(INSERT_SETTING,(name, description,defaul_val,setting_type.value))
 
 def get_settings() -> List[Setting]:
     """fetch all settings.

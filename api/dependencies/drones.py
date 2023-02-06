@@ -1,8 +1,8 @@
-"""functions for drone api."""
+"""Drone related functions"""
 import datetime
 from typing import List
 from fastapi import HTTPException, status
-from api.dependencies.classes import Drone, DroneUpdate, DroneUpdateWithRoute
+from api.dependencies.classes import Drone, DroneEvent, DroneUpdate, DroneUpdateWithRoute
 from database import (drones_table,
                       drone_events_table,
                       drone_updates_table as drone_data_table,
@@ -44,21 +44,20 @@ async def get_drone(drone_id: int,orga_id:int):
 async def get_drone_events(orga_id:int,
                            timestamp:datetime.datetime,
                            drone_id:int =None,
-                           zone_id:int=None):
-    #TODO
-    """_summary_
+                           zone_id:int=None) -> List[DroneEvent]:
+    """get all drone events in a zone or the whole orga area after a timestamp.
 
     Args:
-        orga_id (int): _description_
-        timestamp (datetime.datetime): _description_
-        drone_id (int, optional): _description_. Defaults to None.
-        zone_id (int, optional): _description_. Defaults to None.
+        orga_id (int): id of the orga.
+        timestamp (datetime.datetime): timestamp after which the events should be returned.
+        drone_id (int, optional): id of the drone. Defaults to None.
+        zone_id (int, optional): id of the zone. Defaults to None.
 
     Raises:
-        HTTPException: _description_
+        HTTPException: if the zone id is invalid.
 
     Returns:
-        _type_: _description_
+        List[DroneEvent]: list of drone events filtered by the given parameters.
     """
 
     if zone_id is not None:
@@ -78,19 +77,19 @@ async def get_drone_with_route( orga_id:int,
                                 drone_id:int =None,
                                 zone_id:int=None
                                 )-> List[DroneUpdateWithRoute] | None:
-    """_summary_
+    """get all drone updates in a zone or the whole orga area after a timestamp.
 
     Args:
-        orga_id (int): _description_
-        timestamp (datetime.datetime): _description_
-        drone_id (int, optional): _description_. Defaults to None.
-        zone_id (int, optional): _description_. Defaults to None.
+        orga_id (int): id of the orga.
+        timestamp (datetime.datetime): timestamp after which the events should be returned.
+        drone_id (int, optional): id of the drone. Defaults to None.
+        zone_id (int, optional): id of the zone. Defaults to None.
 
     Raises:
-        HTTPException: _description_
+        HTTPException: if the zone id is invalid.
 
     Returns:
-        DroneUpdateWithRoute | None: _description_
+        DroneUpdateWithRoute | None: list of drone updates filtered by the given parameters.
     """
 
     if zone_id is not None:
@@ -109,11 +108,11 @@ async def get_drone_with_route( orga_id:int,
                                               get_coords_only=True)
 
 async def set_update_and_zone(drone:Drone,drone_upate:DroneUpdate):
-    """gets the id of the zone, the drone is in.
+    """Sets the last update and the zone of a drone
 
     Args:
-        drone (Drone): _description_
-        drone_upate (DroneUpdate): _description_
+        drone (Drone): the drone
+        drone_upate (DroneUpdate): the last update of the drone
     """
     drone.last_update = drone_upate.timestamp
     current_zone = zones_table.get_zone_of_coordinate(

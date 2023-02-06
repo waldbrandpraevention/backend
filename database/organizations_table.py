@@ -1,5 +1,5 @@
+"""Module to handle the organizations table in the database."""
 from enum import Enum
-from typing import List
 
 from api.dependencies.classes import Organization
 from database.database import fetched_match_class
@@ -24,6 +24,10 @@ UPDATE_ORGA_NAME = ''' UPDATE users
 UPDATE_ATTRIBUTE = 'UPDATE organizations SET {} = ? WHERE name = ?;'
 
 class OrgAttributes(str,Enum):
+    """Enum that defines the attributes of the organizations table. Can be one of the following:
+    NAME,
+    ABBREVIATION
+    """
     NAME = 'name'
     ABBREVIATION = 'abbreviation'
 
@@ -52,7 +56,7 @@ def create_orga(organame:str, orga_abb:str):
             abbreviation=orga_abb
         )
         return orga_obj
-    
+
     return None
 
 def get_orga(organame:str) -> Organization | None:
