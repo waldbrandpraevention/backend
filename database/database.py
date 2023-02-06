@@ -75,8 +75,7 @@ def connect(path=DATABASE_PATH) -> sqlite3.Connection | None:
         if os.name == 'nt':
             conn.load_extension("mod_spatialite") # windows
         else:
-            conn.load_extension("libspatialite.so.7.1.2") # fix for docker image
-            # conn.load_extension("mod_spatialite.so.7.1.2") # fix for docker image
+            conn.load_extension("mod_spatialite.so.7.1.2") # fix for docker image
 
     except sqlite3.Error as error:
         print(error)
