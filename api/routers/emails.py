@@ -14,7 +14,7 @@ from database import mail_verif_table
 from validation import *
 from classes import *
 
-from ..dependencies.authentication import (
+from ..dependencies.emails import (
     send_token_email
     )
 

@@ -24,7 +24,7 @@ from database.zones_table import CREATE_ZONE_TABLE
 
 app = FastAPI()
 app.include_router(users.router)
-app.include_router(email.router)
+app.include_router(emails.router)
 app.include_router(zones.router)
 app.include_router(drones.router)
 app.include_router(weather.router)

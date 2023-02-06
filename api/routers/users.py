@@ -28,7 +28,7 @@ from ..dependencies.users import (
     get_user
     )
 
-from ..dependencies.users import (
+from ..dependencies.emails import (
     send_token_email
 )
 

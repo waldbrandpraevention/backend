@@ -1,7 +1,7 @@
 import requests
 import json
 from datetime import date
-from classes import WindInfo
+from .classes import WindInfo
 import time
 import asyncio
 

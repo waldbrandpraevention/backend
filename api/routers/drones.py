@@ -58,6 +58,6 @@ async def drone_update(update: DroneUpdate, current_drone: Drone = Depends(get_c
     return {"message": "todo"}
 
 
-@app.post("/drones/send-event/")
+@router.post("/drones/send-event/")
 async def drone_event( event: DroneEvent, file: UploadFile, current_drone: Drone = Depends(get_current_drone)):
     return {"message": "todo"}
