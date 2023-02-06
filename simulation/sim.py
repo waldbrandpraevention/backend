@@ -49,7 +49,7 @@ while True:
             x = 1 * cos(new_angle)
             y = 1 * sin(new_angle)
 
-            new_vel = (x, y)
+            drones_dict[i]["direction"] = (x, y)
         else:
             drones_dict[i]["lat"] = new_x
             drones_dict[i]["lon"] = new_y
