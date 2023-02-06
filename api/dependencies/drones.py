@@ -63,8 +63,8 @@ async def get_current_drone(token: str):
         detail="Token data is invalid",
         headers={"WWW-Authenticate": "Bearer"},
     )
-    name = await get_email_from_token(token) #returns id as well
-    drone = get_drone(name)
+    drone_id = await get_email_from_token(token) #returns id as well
+    drone = get_drone(drone_id)
     if drone is None:
         raise credentials_exception
 
