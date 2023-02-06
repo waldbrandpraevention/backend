@@ -6,6 +6,7 @@ import time
 import os, random
 from datetime import datetime
 from .cv import ai_prediction, Result
+from io import StringIO 
 
 from api.dependencies.classes import DroneUpdate, DroneEvent, EventType
 
@@ -88,7 +89,12 @@ while True:
                 csv_file_path = None,
                 )
                 payload = {'event': event}
-                files = {'file:': r.picture}
+                #might be needed
+                img_io = StringIO()
+                r.picture.save(img_io, 'JPEG', quality=70)
+                img_io.seek(0)
+                files = {'file:': img_io}
+                #files = {'file:': r.picture}
                 responses.post(URL + "drones/send-event/", params=payload, files=files) 
 
             
