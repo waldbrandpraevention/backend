@@ -1,4 +1,4 @@
-from fastapi import Depends, APIRouter, FastAPI, HTTPException, status, Request, Form
+from fastapi import Depends, APIRouter, FastAPI, HTTPException, status, Request, Form, File, UploadFile
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from .users import get_current_user
 from ..dependencies.drones import get_all_drones, get_drone, get_drone_count, get_current_drone
@@ -53,18 +53,11 @@ async def read_drones_count(current_user: User = Depends(get_current_user)):
     """
     return await get_drone_count()
 
-@router.post("/drones/signup/", status_code=status.HTTP_200_OK)
-async def drone_signup(drone: Drone):
-
-    #add to db
-    return {"message": "todo"}
-
-
 @router.post("/drones/send-update/", status_code=status.HTTP_200_OK)
-async def drone_login(update: DroneUpdate, current_drone: Drone = Depends(get_current_drone)):
+async def drone_update(update: DroneUpdate, current_drone: Drone = Depends(get_current_drone)):
     return {"message": "todo"}
 
 
 @app.post("/drones/send-event/")
-async def create_upload_file( event: DroneEvent, current_user: Drone = Depends(get_current_drone)):
+async def drone_event( event: DroneEvent, file: UploadFile, current_drone: Drone = Depends(get_current_drone)):
     return {"message": "todo"}

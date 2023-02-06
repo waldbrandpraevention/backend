@@ -17,7 +17,6 @@ from object_detection.utils import visualization_utils as viz_utils
 
 threshold = .30
 
-
 class Result():
   """Result inforamtion"""
   event_type: int | None = None

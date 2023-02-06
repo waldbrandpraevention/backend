@@ -85,10 +85,9 @@ while True:
                 latitude = drones_dict[i]["lat"],
                 event_type = r.event_type,
                 confidence = r.confidence,
-                picture = r.picture,
                 csv_file_path = None,
                 )
-                payload = {'event': event}
+                payload = {'event': event, file: r.picture}
                 responses.post(URL + "drones/send-event/", params=payload) 
 
             

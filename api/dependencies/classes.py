@@ -119,7 +119,6 @@ class DroneEvent(BaseModel):
     event_type: EventType | None = None
     confidence: int | None = None
     picture_path :str| None = None
-    ai_predictions :dict| None = None
     csv_file_path :str| None = None
 
 class Zone(BaseModel):
