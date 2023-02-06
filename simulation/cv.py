@@ -1,4 +1,4 @@
-"""Functions for the simulation"""
+"""Functions for the ai prediction"""
 
 import os
 
