@@ -6,3 +6,4 @@ python-multipart
 tensorflow==2.11.0
 shapely==2.0.1
 labelImg==1.8.6
+pillow==9.1.0
