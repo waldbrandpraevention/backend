@@ -20,7 +20,7 @@ from ..dependencies.emails import (
 
 router = APIRouter()
 
-@router.post("email/verify/", status_code=status.HTTP_200_OK)
+@router.post("/email/verify/", status_code=status.HTTP_200_OK)
 async def verify_email(token: str):
     invalid_token_exception = HTTPException(
             status_code=status.HTTP_406_NOT_ACCEPTABLE,
