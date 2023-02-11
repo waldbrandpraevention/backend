@@ -21,9 +21,11 @@ RUN protoc object_detection/protos/*.proto --python_out=.
 
 RUN cp object_detection/packages/tf2/setup.py . 
 
-RUN python -m pip install --upgrade pip 
+RUN python -m pip install --no-cache-dir --upgrade pip 
 
-RUN python -m pip install .
+RUN python -m pip install --no-cache-dir --upgrade .
+
+RUN rm -rf /models
 
 # fastapi
 WORKDIR /api
