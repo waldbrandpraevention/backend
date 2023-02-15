@@ -28,7 +28,7 @@ try:
 except Exception as e:
     print("error:")
     print(e)
-    drondrones_dict = {}
+    drones_dict = {}
 
 last_execution = datetime.now()
 next_update = datetime.now()
