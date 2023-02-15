@@ -159,6 +159,8 @@ async def drone_update(update: DroneUpdate, current_drone: Drone = Depends(get_c
     Returns:
         dict: response
     """
+    if current_drone is None:
+        return {"message": "invalid drone"}
     #todo: add to db
     return update
 
