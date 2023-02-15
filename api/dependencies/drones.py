@@ -1,5 +1,5 @@
 """Drone related functions"""
-import datetime, timedelta
+from datetime import datetime, timedelta
 from .authentication import create_access_token, DRONE_TOKEN_EXPIRE_WEEKS
 from typing import List
 from fastapi import HTTPException, status
