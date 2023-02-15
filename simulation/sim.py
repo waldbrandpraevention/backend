@@ -21,7 +21,7 @@ time.sleep(1)
 #load drones
 drones_dict = None
 try:
-    drones_json = requests.get(URL + "simulation/all-drones/")
+    response = requests.get(URL + "simulation/all-drones/")
     text = response.text
     drones_dict = json.loads(text)
 
