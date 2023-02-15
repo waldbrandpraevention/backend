@@ -1,10 +1,13 @@
 """api calls for drones."""
-import datetime
-from typing import List
-from fastapi import Depends, APIRouter, HTTPException, status
+from datetime import datetime, timedelta
+from fastapi import Depends, APIRouter, HTTPException, status, File, UploadFile
 from .users import get_current_user
 from ..dependencies import drones
-from ..dependencies.classes import Drone, DroneEvent, DroneUpdateWithRoute, User
+from ..dependencies.drones import get_current_drone
+from ..dependencies.classes import Drone, User, DroneUpdate, DroneEvent
+from ..dependencies.authentication import create_access_token, DRONE_TOKEN_EXPIRE_WEEKS
+from typing import List
+from ..dependencies.classes import Drone, DroneEvent, DroneUpdateWithRoute, DroneUpdate, User
 
 router = APIRouter()
 
@@ -62,12 +65,7 @@ async def read_drone_events(drone_id: int=None,
                                            timestamp=timestamp,
                                            drone_id=drone_id,
                                            zone_id=zone_id)
-    if drone_events is None:
-        raise HTTPException(
-            status_code=status.HTTP_406_NOT_ACCEPTABLE,
-            detail="Couldnt find any events.",
-        )
-
+    print(drone_events)
     return drone_events
 
 def timestamp_helper(days:int,hours:int,minutes:int) -> datetime.datetime | None:
@@ -87,7 +85,7 @@ def timestamp_helper(days:int,hours:int,minutes:int) -> datetime.datetime | None
 
     return datetime.datetime.utcnow() - timedelta
 
-@router.get("/drones/route",
+@router.get("/drones/route/",
             status_code=status.HTTP_200_OK,
             response_model=List[DroneUpdateWithRoute]
             )
@@ -151,3 +149,26 @@ async def read_drones_count(
         int: Amount of drones
     """
     return await drones.get_drone_count(zone_id,current_user.organization.id)
+
+@router.post("/drones/send-update/", status_code=status.HTTP_200_OK)
+async def drone_update(update: DroneUpdate, current_drone: Drone = Depends(get_current_drone)):
+    #todo: add to db
+    return update
+
+
+@router.post("/drones/send-event/")
+async def drone_event( event: DroneEvent, file: UploadFile, current_drone: Drone = Depends(get_current_drone)):
+    #todo: add event to db + create link to saved location (path)
+    try:
+        content = file.file.read()
+        date = str(datetime.now().timestamp())
+        new_file_name = file.filename + date
+        path = "./drone_images/" + new_file_name + ".jpg"
+        f = open(path, "w")
+        f.write(content)
+        f.close()
+        url = "https://kiwa.tech/api/drone_images/" + new_file_name + ".jpg" #check if this is correct
+        return {"url": url, "event": event}
+    except Exception as e:
+        print(e)
+        return {}

@@ -278,6 +278,24 @@ def get_active_drone_count(polygon: str,
 
     return len(drones)
 
+def get_active_drone_count(polygon: str,
+                           after: datetime.datetime = None) -> int:
+    """counts the number of actives drones in a area.
+
+    Args:
+        polygon (str): _description_
+        after (datetime.datetime, optional): _description_. Defaults to None.
+
+    Returns:
+        int: _description_
+    """
+    drones = drone_updates_table.get_active_drones(polygon,after)
+
+    if drones is None:
+        return 0
+
+    return len(drones)
+
 
 def get_obj_from_fetched(
                 fetched_zone,

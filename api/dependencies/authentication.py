@@ -20,6 +20,7 @@ SECRET_KEY = "cbdc851fece93e7b1a3bf9ca16c9ce62939e22f668866c875d294363e2530b27"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 EMAIL_VERIFICATION_TOKEN_EXPIRE_HOURS = 24
+DRONE_TOKEN_EXPIRE_WEEKS = 420
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -67,8 +68,8 @@ def create_access_token(data: dict, expires_delta: timedelta):
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
-async def get_email_from_token(token: str = Depends(oauth2_scheme)):
-    """Returns the email in the token
+async def get_email_from_token(token: str = Depends(oauth2_scheme), allow_expired: bool = False):
+    """Returns the email in the token (works for drone name as well)
 
     Args:
         token str: Usertoken to decode
@@ -80,7 +81,8 @@ async def get_email_from_token(token: str = Depends(oauth2_scheme)):
         str: email that is embedded in the token
     """
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM], options={"verify_signature": not allow_expired})
+
         email: str = payload.get("sub")
         if email is None:
             raise HTTPException(

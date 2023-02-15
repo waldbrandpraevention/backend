@@ -162,3 +162,21 @@ class Zone(BaseModel):
     lat :float | None = None
     drone_count: int | None = None
     last_update: datetime | None = None
+
+class WindInfo(BaseModel):
+    """Wind inforamtion"""
+    lat: float
+    lon: float
+    wind_speed: float | None = None
+    wind_direction: float | None = None
+
+
+class DroneForSimulation(BaseModel):
+    """Drone for the simulation"""
+    drone: Drone | None = None
+    token: str
+    geo_json: dict
+    speed: float
+    direction: tuple[float,float] #vector with length 1
+    lat: float
+    lon: float
