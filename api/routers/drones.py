@@ -1,12 +1,10 @@
 """api calls for drones."""
-from datetime import datetime, timedelta
-from fastapi import Depends, APIRouter, HTTPException, status, File, UploadFile
+from datetime import datetime
+from typing import List
+from fastapi import Depends, APIRouter, HTTPException, status, UploadFile
 from .users import get_current_user
 from ..dependencies import drones
 from ..dependencies.drones import get_current_drone
-from ..dependencies.classes import Drone, User, DroneUpdate, DroneEvent
-from ..dependencies.authentication import create_access_token, DRONE_TOKEN_EXPIRE_WEEKS
-from typing import List
 from ..dependencies.classes import Drone, DroneEvent, DroneUpdateWithRoute, DroneUpdate, User
 
 router = APIRouter()
@@ -152,23 +150,48 @@ async def read_drones_count(
 
 @router.post("/drones/send-update/", status_code=status.HTTP_200_OK)
 async def drone_update(update: DroneUpdate, current_drone: Drone = Depends(get_current_drone)):
+    """Api call te recieve updates from drones
+
+    Args:
+        update (DroneUpdate): updtade object
+        current_drone (Drone, optional): drone to use. Defaults to Depends(get_current_drone).
+
+    Returns:
+        dict: response
+    """
     #todo: add to db
     return update
 
 
 @router.post("/drones/send-event/")
-async def drone_event( event: DroneEvent, file: UploadFile, current_drone: Drone = Depends(get_current_drone)):
+async def drone_event( 
+    event: DroneEvent,
+    file: UploadFile,
+    current_drone: Drone = Depends(get_current_drone)):
+    """Api call to recieve events form drones
+
+    Args:
+        event (DroneEvent): Event from the drone
+        file (UploadFile): Associated image file
+        current_drone (Drone, optional): Drone to use. Defaults to Depends(get_current_drone).
+
+    Returns:
+        dict: response
+    """
     #todo: add event to db + create link to saved location (path)
     try:
+        if current_drone is None:
+            return {"message:": "Invalid drone" }
         content = file.file.read()
         date = str(datetime.now().timestamp())
         new_file_name = file.filename + date
         path = "./drone_images/" + new_file_name + ".jpg"
-        f = open(path, "w")
-        f.write(content)
-        f.close()
-        url = "https://kiwa.tech/api/drone_images/" + new_file_name + ".jpg" #check if this is correct
+        new_file = open(path, "w", encoding="utf-8")
+        new_file.write(content)
+        new_file.close()
+        #check if this is correct
+        url = "https://kiwa.tech/api/drone_images/" + new_file_name + ".jpg"
         return {"url": url, "event": event}
-    except Exception as e:
-        print(e)
-        return {}
+    except Exception as err:
+        print(err)
+        return {"message": "success"}

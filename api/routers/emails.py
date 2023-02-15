@@ -1,18 +1,6 @@
-from fastapi import APIRouter
+"""Code for email api"""
 
-from datetime import datetime, timedelta
-from enum import Enum
-from fastapi import Depends, FastAPI, HTTPException, status, Request, Form
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from jose import JWTError, jwt
-from passlib.context import CryptContext
-#from pydantic import BaseModel
-from database import users_table
-
-import random
-from database import mail_verif_table
-from validation import *
-from api.dependencies.classes import *
+from fastapi import HTTPException, status, APIRouter
 from ..dependencies.authentication import get_email_from_token
 from ..dependencies.users import get_user
 
@@ -24,24 +12,38 @@ router = APIRouter()
 
 @router.post("/email/verify/", status_code=status.HTTP_200_OK)
 async def verify_email(token: str):
+    """Validates a token that got send with an email
+
+    Args:
+        token (str): token to verity
+
+    Raises:
+        HTTPException: misc error
+        invalid_token_exception: token is not valid
+
+    Returns:
+        response message
+    """
     invalid_token_exception = HTTPException(
             status_code=status.HTTP_406_NOT_ACCEPTABLE,
             detail="Token invalid",
         )
+    expried_token_exception = HTTPException(
+            status_code=status.HTTP_406_NOT_ACCEPTABLE,
+            detail="Token expired. A new email is on it's way",
+        )
 
     try:
         token_email = await get_email_from_token(token, False)
-    except HTTPException as e:
-        if e.status_code == status.HTTP_406_NOT_ACCEPTABLE: #expired
+    except HTTPException as err:
+        if err.status_code == status.HTTP_406_NOT_ACCEPTABLE: #expired
             mail_from_token = await get_email_from_token(token, True)
             await send_token_email(mail_from_token)
-            raise HTTPException(
-                status_code=status.HTTP_406_NOT_ACCEPTABLE,
-                detail="Token expired. A new email is on it's way",
-            )
+            raise expried_token_exception from err
         else:
-            raise invalid_token_exception
-   
+            raise invalid_token_exception from err
+
     user = get_user(token_email)
     user.verified_email = True
     return {"message": "Email successfully verified"}
+    

@@ -1,17 +1,15 @@
 """functions for the simulation"""
-import requests
 import json
 import time
-from shapely.geometry import shape, Point
-import time
-import os, random
-from datetime import datetime, timedelta
-from .cv import ai_prediction, Result
-from io import StringIO 
+import os
+import random
 import math
-
-from api.dependencies.classes import DroneUpdate, DroneEvent, EventType
-
+from io import StringIO
+from datetime import datetime, timedelta
+import requests
+from shapely.geometry import shape, Point
+from api.dependencies.classes import DroneUpdate, DroneEvent
+from .cv import ai_prediction
 
 ASSETS = "./simulation/assets/raw/"
 URL = "kiwa.tech/api/"
@@ -20,35 +18,35 @@ CHANCE_OF_EVENT = 0.001
 time.sleep(1)
 
 #load drones
-drones_dict = None
+DRONES_DICT = None
 try:
-    response = requests.get(URL + "simulation/all-drones/")
+    response = requests.get(URL + "simulation/all-drones/", timeout=10)
     text = response.text
-    drones_dict = json.loads(text)
+    DRONES_DICT = json.loads(text)
 
-except Exception as e:
+except Exception as err:
     print("error:")
-    print(e)
+    print(err)
     drones_dict = {}
-
-last_execution = datetime.now()
-next_update = datetime.now()
-delta = timedelta(minutes=10)
 
 
 def simulate():
+    """simulates drones in a loop
+    """
+    last_execution = datetime.now()
+    next_update = datetime.now()
+    delta = timedelta(minutes=10)
     try:
         while True:
-            global last_execution
-            dt = datetime.now() - last_execution
+            delta_time = datetime.now() - last_execution
             last_execution = datetime.now()
-            for i in range(len(drones_dict)):
-                drone = drones_dict[i]["drone"]
-                geo_json = drones_dict[i]["geo_json"]
-                vel = drones_dict[i]["direction"]
-                speed = drones_dict[i]["speed"]
-                new_x = drones_dict[i]["lat"] + vel[0] * speed * dt
-                new_y = drones_dict[i]["lon"] + vel[1] * speed * dt
+
+            for drone_entry in DRONES_DICT:
+                geo_json = drone_entry["geo_json"]
+                vel = drone_entry["direction"]
+                speed = drone_entry["speed"]
+                new_x = drone_entry["lat"] + vel[0] * speed * delta_time
+                new_y = drone_entry["lon"] + vel[1] * speed * delta_time
 
                 point = Point(new_y, new_x)
 
@@ -64,23 +62,23 @@ def simulate():
                     x = 1 * math.cos(new_angle)
                     y = 1 * math.sin(new_angle)
 
-                    drones_dict[i]["direction"] = (x, y)
+                    drone_entry["direction"] = (x, y)
                 else:
-                    drones_dict[i]["lat"] = new_x
-                    drones_dict[i]["lon"] = new_y
+                    drone_entry["lat"] = new_x
+                    drone_entry["lon"] = new_y
 
                 if datetime.now() >= next_update:
                     next_update = datetime.now() + delta
 
-                    distance = math.hypot(drones_dict[i]["last_update"]["lon"] - drones_dict[i]["lon"],
-                            drones_dict[i]["last_update"]["lat"] - drones_dict[i]["lat"])
+                    distance = math.hypot(drone_entry["last_update"]["lon"] - drone_entry["lon"],
+                            drone_entry["last_update"]["lat"] - drone_entry["lat"])
                     new_update = DroneUpdate(
-                        drone_id = drones_dict[i]["drone"]["id"],
+                        drone_id = drone_entry["drone"]["id"],
                         timestamp = datetime.now(),
-                        longitude = drones_dict[i]["lon"],
-                        latitude = drones_dict[i]["lat"],
-                        flight_range = drones_dict[i]["drone"]["flight_range"] + distance,
-                        flight_time = drones_dict[i]["drone"]["flight_time"] + 10
+                        longitude = drone_entry["lon"],
+                        latitude = drone_entry["lat"],
+                        flight_range = drone_entry["drone"]["flight_range"] + distance,
+                        flight_time = drone_entry["drone"]["flight_time"] + 10
                         )
 
                     payload = {'update': new_update}
@@ -92,25 +90,24 @@ def simulate():
                         path = os.path.join(ASSETS, file_name)
 
                     results = ai_prediction(path)
-                    for x in range(len(results)):
-                        r = results[x]
+                    for result in results:
                         event = DroneEvent(
-                        drone_id = drones_dict[i]["drone"]["id"],
+                        drone_id = drone_entry["drone"]["id"],
                         timestamp = datetime.now(),
-                        longitude = drones_dict[i]["lon"],
-                        latitude = drones_dict[i]["lat"],
-                        event_type = r.event_type,
-                        confidence = r.confidence,
+                        longitude = drone_entry["lon"],
+                        latitude = drone_entry["lat"],
+                        event_type = result.event_type,
+                        confidence = result.confidence,
                         csv_file_path = None,
                         )
                         payload = {'event': event}
                         #might be needed
                         img_io = StringIO()
-                        r.picture.save(img_io, 'JPEG', quality=70)
+                        result.picture.save(img_io, 'JPEG', quality=70)
                         img_io.seek(0)
                         files = {'file:': img_io}
                         #files = {'file:': r.picture}
                         response.post(URL + "drones/send-event/", params=payload, files=files) 
-    except Exception as e:
+    except Exception as err2:
         print("Simulation failed:")
-        print(e)
+        print(err2)
