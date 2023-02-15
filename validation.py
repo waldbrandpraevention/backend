@@ -1,4 +1,4 @@
-"""functions for validaten"""
+"""various functions for validaten"""
 import re
 from api.dependencies.classes import Permission
 
@@ -34,9 +34,9 @@ def validate_password(password: str):
         err.append("Password must be at least 8 characters long")
     if re.search('[0-9]', password) is None:
         err.append("Password must have at least one number")
-    if re.search('[A-Z]', password) is None: 
+    if re.search('[A-Z]', password) is None:
         err.append("Password must have at least one uppercase character")
-    if re.search('[a-z]', password) is None: 
+    if re.search('[a-z]', password) is None:
         err.append("Password must have at least one lowercase character")
     return err
 

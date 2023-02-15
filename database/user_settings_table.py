@@ -37,6 +37,7 @@ GET_DEFAULTUSERSETTING = '''    SELECT settings_id, user_id, settings.name, sett
 # default_val integer NOT NULL,
 
 class UsrsettingsAttributes(str,Enum):
+    """User settings class"""
     SETTING_NAME = 'key'
     SETTING_VALUE = 'value'
     USER_ID = 'user_id'

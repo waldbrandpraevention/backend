@@ -7,6 +7,7 @@ from api.routers import zones,users,drones
 from database import zones_table
 
 
+
 @pytest.mark.asyncio
 async def test_zones():
     """zone api tests.
