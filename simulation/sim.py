@@ -88,7 +88,7 @@ def simulate():
                     if random() <= CHANCE_OF_EVENT: #event happens as well
                         #pick random file
                         file_name = random.choice(os.listdir(ASSETS))
-                        path = os.path.join(ASSETS, filename)
+                        path = os.path.join(ASSETS, file_name)
 
                     results = ai_prediction(path)
 
