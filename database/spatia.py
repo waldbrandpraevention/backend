@@ -28,7 +28,7 @@ def spatiapoint_to_long_lat(spatia_point:str)-> tuple[float, float]:
     return long, lat
 
 
-def spatiageostr_to_geojson(spatia_polygon:str)-> dict:
+def spatiageostr_to_geojson(spatia_polygon:str,properties:dict=None)-> dict:
     """converts an spatia geojson str into a geodict.\n
 
     Args:
@@ -42,6 +42,9 @@ def spatiageostr_to_geojson(spatia_polygon:str)-> dict:
                 "type": "Feature",
                 "geometry": geometry
                 }
+    if properties is not None:
+        geo_json['properties'] = properties
+        
     return geo_json
 
 def coordinates_to_multipolygonstr(geometry: dict) -> str:

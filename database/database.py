@@ -75,7 +75,7 @@ def connect(path=DATABASE_PATH) -> sqlite3.Connection | None:
         if os.name == 'nt':
             conn.load_extension("mod_spatialite") # windows
         else:
-            conn.load_extension("mod_spatialite.so.7.1.0") # fix for alpine docker image
+            conn.load_extension("mod_spatialite.so.7.1.0") # fix for docker image
 
     except sqlite3.Error as error:
         print(error)
@@ -258,7 +258,8 @@ def fetch_all(fetch_sql:str,fetch_tuple=None):
                 cursor.execute(fetch_sql)
             fetched_user = cursor.fetchall()
             cursor.close()
-            return fetched_user
+            if len(fetched_user)>0:
+                return fetched_user
     except sqlite3.Error as exception:
         print(exception)
 
@@ -323,3 +324,15 @@ def create_where_clause_statement(clmname:str,eqator:str='',questionmark:str='?'
         _type_: _description_
     """
     return f'{clmname} {eqator} {questionmark}'
+
+def create_intersection_clause(first_geom:str,second_geom:str='GeomFromGeoJSON(?)'):
+    """creates sql that checks for an intersection of the given geoms.
+
+    Args:
+        first_geom (str): _description_
+        second_geom (str, optional): _description_. Defaults to 'GeomFromGeoJSON(?)'.
+
+    Returns:
+        _type_: _description_
+    """
+    return f'ST_Intersects({first_geom},{second_geom})'

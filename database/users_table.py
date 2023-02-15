@@ -129,6 +129,8 @@ def get_all_users(orga_id:int)-> List[User]:
     """
     sql = GET_USER_WITH_ORGA.format(UsrAttributes.ORGA_ID)
     fetched_users = db.fetch_all(sql,(orga_id,))
+    if fetched_users is None:
+        return None
     output = []
     for fetched in fetched_users:
         try:

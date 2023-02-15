@@ -1,6 +1,5 @@
 """funcs to read and write on the drone_event table in database."""
 import datetime
-from enum import Enum
 import random
 from typing import List
 from api.dependencies.classes import DroneEvent, EventType, FireRisk
@@ -8,30 +7,28 @@ from database.database import fetched_match_class
 import database.database as db
 from database import drone_updates_table
 
-class DEAtr(str,Enum):
-    """Enum class containing all possible drone_event attributes."""
-    DRONE_ID = 'drone_id'
-    TIMESTAMP = 'timestamp'
-    EVENT_TYPE = 'event_type'
-    CONFIDENCE = 'confidence'
-    PICTURE_PATH='picture_path'
-    CSV_FILE_PATH= 'csv_file_path'
-    COORDINATES= 'coordinates'
-    
+DRONE_ID = 'drone_id'
+TIMESTAMP = 'timestamp'
+EVENT_TYPE = 'event_type'
+CONFIDENCE = 'confidence'
+PICTURE_PATH='picture_path'
+CSV_FILE_PATH= 'csv_file_path'
+COORDINATES= 'coordinates'
+
 CREATE_DRONE_EVENT_TABLE = f'''CREATE TABLE drone_event
 (
-{DEAtr.DRONE_ID}     integer NOT NULL ,
-{DEAtr.TIMESTAMP}    timestamp NOT NULL ,
-{DEAtr.EVENT_TYPE}   integer NOT NULL,
-{DEAtr.CONFIDENCE}   integer NOT NULL,
-{DEAtr.PICTURE_PATH}   text,
-{DEAtr.CSV_FILE_PATH}  text ,
-PRIMARY KEY ({DEAtr.DRONE_ID}, {DEAtr.TIMESTAMP}),
-FOREIGN KEY ({DEAtr.DRONE_ID}) REFERENCES drones (id)
+{DRONE_ID}     integer NOT NULL ,
+{TIMESTAMP}    timestamp NOT NULL ,
+{EVENT_TYPE}   integer NOT NULL,
+{CONFIDENCE}   integer NOT NULL,
+{PICTURE_PATH}   text,
+{CSV_FILE_PATH}  text ,
+PRIMARY KEY ({DRONE_ID}, {TIMESTAMP}),
+FOREIGN KEY ({DRONE_ID}) REFERENCES drones (id)
 );
 
-CREATE INDEX drone_event_FK_1 ON drone_event ({DEAtr.DRONE_ID});
-SELECT AddGeometryColumn('drone_event', '{DEAtr.COORDINATES}', 4326, 'POINT', 'XY');'''
+CREATE INDEX drone_event_FK_1 ON drone_event ({DRONE_ID});
+SELECT AddGeometryColumn('drone_event', '{COORDINATES}', 4326, 'POINT', 'XY');'''
 
 CREATE_ENTRY = '''
 INSERT INTO drone_event (drone_id,timestamp,coordinates,event_type,confidence,picture_path,csv_file_path) 
@@ -57,8 +54,8 @@ def insert_demo_events(long: float, lat: float, droneid = 1):
         long (float): long of the coordinate.
         lat (float): lat of the coordinate.
     """
-    updates = drone_updates_table.get_drone_data_by_timestamp(droneid)
-    if updates is not None and len(updates)>0:
+    update = drone_updates_table.get_latest_update(droneid)
+    if update is not None:
         print('already created drone events.')
         return
     timestamp = datetime.datetime.utcnow()
@@ -155,19 +152,20 @@ def get_drone_event(drone_id: int = None,
     sql_arr = []
     tuple_arr = []
     if drone_id is not None:
-        sql_arr.append(db.create_where_clause_statement(f'{DEAtr.DRONE_ID}','='))
+        sql_arr.append(db.create_where_clause_statement(f'{DRONE_ID}','='))
         tuple_arr.append(drone_id)
 
     if polygon is not None:
-        sql_arr.append(db.create_where_clause_statement(f'ST_Intersects({DEAtr.COORDINATES}',',', 'GeomFromGeoJSON(?))'))
+
+        sql_arr.append(db.create_intersection_clause(COORDINATES))
         tuple_arr.append(polygon)
 
     if after is not None:
-        sql_arr.append(db.create_where_clause_statement(f'{DEAtr.TIMESTAMP}','>'))
+        sql_arr.append(db.create_where_clause_statement(f'{TIMESTAMP}','>'))
         tuple_arr.append(after)
 
     if before is not None:
-        sql_arr.append(db.create_where_clause_statement(f'{DEAtr.TIMESTAMP}','<'))
+        sql_arr.append(db.create_where_clause_statement(f'{TIMESTAMP}','<'))
         tuple_arr.append(before)
 
     sql = db.add_where_clause(GET_ENTRY, sql_arr)
@@ -175,6 +173,10 @@ def get_drone_event(drone_id: int = None,
     fetched_data = db.fetch_all(
         sql, tuple(tuple_arr)
         )
+    
+    if fetched_data is None:
+        return None
+    
     output = []
     for drone_data in fetched_data:
         dronedata_obj = get_obj_from_fetched(drone_data)
@@ -207,8 +209,8 @@ def get_obj_from_fetched(fetched_dronedata) -> DroneEvent | None:
         drone_data_obj = DroneEvent(
             drone_id=fetched_dronedata[0],
             timestamp=fetched_dronedata[1],
-            longitude=longitude,
-            latitude=latitude,
+            lon =longitude,
+            lat =latitude,
             event_type=eventtype,
             confidence=fetched_dronedata[5],
             picture_path=fetched_dronedata[6],
@@ -220,18 +222,37 @@ def get_obj_from_fetched(fetched_dronedata) -> DroneEvent | None:
 
 def calculate_firerisk(events: List[DroneEvent]) -> FireRisk:
     """calculates the firerisk, based on the events fire/smoke confidences.
-
+    sehr niedrig rauch:>5 feuer: >0
+    niedrig rauch:>40 feuer: > 10
+    mittel rauch:>60 feuer: >30
+    hoch rauch:>80 feuer: >70
+    sehr hoch rauch:>... feuer: >90
     Args:
         events (List[DroneEvent]): list of drone events.
 
     Returns:
         FireRisk: the calculated risk.
     """
-    firerisk = 20
-    for event in events:  # TODO feuer und rauch unterschiedlich bewerten.
-        if firerisk < event.confidence:
-            firerisk = event.confidence
+    smokerisk= 0
+    firerisk = 0
+    for event in events:
+        if event.event_type == EventType.FIRE:
+            if smokerisk < event.confidence:
+                smokerisk = event.confidence
+        else:
+            if firerisk < event.confidence:
+                firerisk = event.confidence
 
-    firerisk = firerisk/100*5
-    firerisk = round(firerisk)
-    return FireRisk(firerisk)
+    if smokerisk > 90 or firerisk > 90:
+        return FireRisk.VERY_HEIGH#
+
+    if smokerisk > 80 or firerisk > 70:
+        return FireRisk.HEIGH
+
+    if smokerisk > 60 or firerisk > 30:
+        return FireRisk.MIDDLE
+
+    if smokerisk > 40 or firerisk > 10:
+        return FireRisk.LOW
+
+    return FireRisk.VERY_LOW

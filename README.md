@@ -1,6 +1,6 @@
 <h1 align="center">Waldbrandprävention Backend</h1>
 <p align="center">   
-    <img width="460" height="300" src="https://bp.adriansoftware.de/media/logo-v1.svg?ref=gh-back"> <!-- Todo make file local -->
+    <img width="320" height="160" src="https://bp.adriansoftware.de/media/logo-v1.svg?ref=gh-back"> <!-- Todo make file local -->
 </p>
 
 <div align="center">
@@ -84,3 +84,6 @@ uvicorn main:app --reload --env-file demo.env
 Backend läuft auf http://localhost:8000<br>
 API Documentation auf http://localhost:8000/docs
 
+#### Tools
+
+Spatialite GUI Editor https://www.gaia-gis.it/fossil/spatialite_gui/index

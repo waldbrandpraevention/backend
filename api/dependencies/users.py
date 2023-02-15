@@ -1,7 +1,8 @@
 """functions for user api"""
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List
 from fastapi import Depends, HTTPException, status
+from api.dependencies.drones import get_drone_events
 from database import users_table, organizations_table
 from validation import (validate_email,
                         validate_first_name,
@@ -9,7 +10,7 @@ from validation import (validate_email,
                         validate_organization,
                         validate_password,
                         validate_permission)
-from .classes import Permission, User, UserWithSensitiveInfo, Allert
+from .classes import DroneEvent, Permission, User, UserWithSensitiveInfo, Allert
 from .authentication import get_password_hash, oauth2_scheme, verify_password, get_email_from_token
 
 def get_user(email: str) -> UserWithSensitiveInfo | None:
@@ -90,18 +91,18 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
         detail="User is disabled",
         headers={"WWW-Authenticate": "Bearer"},
     )
-    email_verification_exception = HTTPException(
-        status_code=status.HTTP_406_NOT_ACCEPTABLE,
-        detail="Email is not verified",
-    )
+    # email_verification_exception = HTTPException(
+    #     status_code=status.HTTP_406_NOT_ACCEPTABLE,
+    #     detail="Email is not verified",
+    # )
     email = await get_email_from_token(token)
     user = get_user(email)
     if user is None:
         raise credentials_exception
     if user.disabled:
         raise disabled_exception
-    #if not user.email_verified:
-        #raise email_verification_exception
+    # if not user.email_verified:
+    #     raise email_verification_exception
     return user
 
 async def get_user_allerts(user: User):
@@ -113,14 +114,29 @@ async def get_user_allerts(user: User):
     Returns:
         _type_: _description_
     """
-    #TODO add db call here or to user directly during object creation
+    events = await get_drone_events(user.organization.id,
+                           datetime.utcnow() - timedelta(days=1)
+    )
     allerts = []
-    allerts.append(Allert(content="Test allert", date=datetime.now()))
-    allerts.append(Allert(content="1+1=2", date=datetime.now()))
-    allerts.append(Allert(
-        content="Dein name ist " + user.first_name + " " + user.last_name, date=datetime.now()
-        ))
+    for event in events:
+        content = await generate_event_string(event)
+        allerts.append(Allert(content=content, date=event.timestamp))
+
     return allerts
+
+async def generate_event_string(event:DroneEvent):
+    """generates a string for an event allert.
+
+    Args:
+        event (DroneEvent): the event to generate the string for.
+
+    Returns:
+        str: the generated string.
+    """
+    return f'''{event.event_type.name} spotted at
+    Lon: {event.lon}
+    Lat: {event.lat}
+    with a confidence of {event.confidence}%'''
 
 async def update_user(user_to_update:User,
                   email: str | None=None,

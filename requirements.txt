@@ -8,3 +8,5 @@ shapely==2.0.1
 labelImg==1.8.6
 pillow==9.1.0
 numpy==1.22.3
+shapely==2.0.1
+

@@ -6,7 +6,8 @@ from ..dependencies import drones
 from ..dependencies.drones import get_current_drone
 from ..dependencies.classes import Drone, User, DroneUpdate, DroneEvent
 from ..dependencies.authentication import create_access_token, DRONE_TOKEN_EXPIRE_WEEKS
-
+from typing import List
+from ..dependencies.classes import Drone, DroneEvent, DroneUpdateWithRoute, DroneUpdate, User
 
 router = APIRouter()
 
@@ -27,51 +28,67 @@ async def read_drone(drone_id: int, current_user: User = Depends(get_current_use
     if drone is None:
         raise HTTPException(
             status_code=status.HTTP_406_NOT_ACCEPTABLE,
-            detail="Drone does not exist ",
+            detail="Drone does not exist.",
         )
     return drone
 
-@router.get("/drones/events/", status_code=status.HTTP_200_OK)
+@router.get("/drones/events/",
+            status_code=status.HTTP_200_OK,
+            response_model=List[DroneEvent]
+            )
 async def read_drone_events(drone_id: int=None,
                             zone_id:int =None,
                             days:int =0,
                             hours:int =0,
                             minutes:int =0,
                             current_user: User = Depends(get_current_user)):
-    """_summary_
+    """API call to get all events of a drone
 
     Args:
-        drone_id (int, optional): _description_. Defaults to None.
-        zone_id (int, optional): _description_. Defaults to None.
-        days (int, optional): _description_. Defaults to 0.
-        hours (int, optional): _description_. Defaults to 0.
-        minutes (int, optional): _description_. Defaults to 0.
-        current_user (User, optional): _description_. Defaults to Depends(get_current_user).
+        drone_id (int, optional): id of the drone. Defaults to None.
+        zone_id (int, optional): zone id. Defaults to None.
+        days (int, optional): days before now. Defaults to 0.
+        hours (int, optional): hours before now. Defaults to 0.
+        minutes (int, optional): minutes before now. Defaults to 0.
+        current_user (User, optional): current user that is logged in.
+        Defaults to Depends(get_current_user).
 
     Raises:
-        HTTPException: _description_
+        HTTPException: if no events are found.
 
     Returns:
         _type_: _description_
     """
 
-    timestamp = timestamphelper(days,hours,minutes)
+    timestamp = timestamp_helper(days,hours,minutes)
     drone_events = await drones.get_drone_events(orga_id=current_user.organization.id,
                                            timestamp=timestamp,
                                            drone_id=drone_id,
                                            zone_id=zone_id)
-    
     print(drone_events)
     return drone_events
 
-def timestamphelper(days,hours,minutes):
+def timestamp_helper(days:int,hours:int,minutes:int) -> datetime.datetime | None:
+    """generates a timestamp x days, y hours and z minutes before now.
+
+    Args:
+        days (int): number of days.
+        hours (int): number of hours.
+        minutes (int): number of minutes.
+
+    Returns:
+        datetime: the calculated timestamp.
+    """
     timedelta = datetime.timedelta(days=days,minutes=minutes,hours=hours)
     if timedelta.total_seconds() == 0:
         return None
 
     return datetime.datetime.utcnow() - timedelta
 
-@router.get("/drones/route", status_code=status.HTTP_200_OK)
+@router.get("/drones/route/",
+            status_code=status.HTTP_200_OK,
+            response_model=List[DroneUpdateWithRoute]
+            )
 async def read_drone_route( drone_id: int=None,
                             zone_id:int =None,
                             days:int =0,
@@ -88,16 +105,22 @@ async def read_drone_route( drone_id: int=None,
         Drone: drone
     """
 
-    timestamp = timestamphelper(days,hours,minutes)
-    drone_events = await drones.get_drone_events(orga_id=current_user.organization.id,
+    timestamp = timestamp_helper(days,hours,minutes)
+    drone_events = await drones.get_drone_with_route(orga_id=current_user.organization.id,
                                            timestamp=timestamp,
                                            drone_id=drone_id,
                                            zone_id=zone_id)
-    
-    print(drone_events)
+    if drone_events is None:
+        raise HTTPException(
+            status_code=status.HTTP_406_NOT_ACCEPTABLE,
+            detail="Couldnt find any updates.",
+        )
+
     return drone_events
 
-@router.get("/drones/all/", status_code=status.HTTP_200_OK)
+@router.get("/drones/all/",
+            status_code=status.HTTP_200_OK,
+            response_model=List[Drone])
 async def read_drones_all(current_user: User = Depends(get_current_user)):
     """API call to get the all drones
 
@@ -109,7 +132,10 @@ async def read_drones_all(current_user: User = Depends(get_current_user)):
     """
     return await drones.get_all_drones(current_user.organization.id)
 
-@router.get("/drones/count", status_code=status.HTTP_200_OK)
+@router.get("/drones/count",
+            status_code=status.HTTP_200_OK,
+            response_model=int
+            )
 async def read_drones_count(
                             zone_id: int,
                             current_user: User = Depends(get_current_user)
@@ -122,7 +148,7 @@ async def read_drones_count(
     Returns:
         int: Amount of drones
     """
-    return await drones.get_drone_count()
+    return await drones.get_drone_count(zone_id,current_user.organization.id)
 
 @router.post("/drones/send-update/", status_code=status.HTTP_200_OK)
 async def drone_update(update: DroneUpdate, current_drone: Drone = Depends(get_current_drone)):
@@ -146,4 +172,3 @@ async def drone_event( event: DroneEvent, file: UploadFile, current_drone: Drone
     except Exception as e:
         print(e)
         return {}
-

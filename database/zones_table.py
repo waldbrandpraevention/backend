@@ -37,8 +37,6 @@ CREATE_ENTRY_TEXTGEO = '''INSERT OR IGNORE
 
 GET_ZONE = """SELECT id,name,federal_state,district,AsGeoJSON(area),
                 X(geo_point),Y(geo_point),Count(DISTINCT drone_id) FROM zones
-                JOIN ElementaryGeometries AS e ON (e.f_table_name = 'zones' 
-                AND e.origin_rowid = zones.rowid)
                 LEFT JOIN drone_data ON ST_Intersects(drone_data.coordinates, area)
                 {}
                 GROUP BY name;"""
@@ -56,13 +54,6 @@ GET_ZONEJOINORGA ='''SELECT id,name,federal_state,district,AsGeoJSON(area),
                     WHERE zones.{}=? 
                     AND organization_zones.orga_id=?
                     GROUP BY name;'''
-
-GET_ZONES = '''SELECT id,name,federal_state,district,AsGeoJSON(area),
-                X(geo_point),Y(geo_point),Count(DISTINCT drone_id) FROM zones
-                JOIN ElementaryGeometries AS e ON (e.f_table_name = 'zones' 
-                AND e.origin_rowid = zones.rowid)
-                LEFT JOIN drone_data ON ST_Intersects(drone_data.coordinates, area)
-                GROUP BY name;'''
 
 GET_ZONES_BY_DISTRICT = '''SELECT id,name,federal_state,district,AsGeoJSON(area),
                             X(geo_point),Y(geo_point),Count(DISTINCT drone_id)
@@ -188,7 +179,8 @@ def get_zone(zone_id:int) -> Zone | None:
     Returns:
         Zone | None: the Zone.
     """
-    sql = add_where_clause(GET_ZONE,[ZoneWhereClause.ZONE_ID])
+    where_arr = create_where_clause_statement(ZoneWhereClause.ZONE_ID,'=')
+    sql = add_where_clause(GET_ZONE,[where_arr])
     fetched_zone = db.fetch_one(sql, (zone_id,))
     return get_obj_from_fetched(fetched_zone)
 
@@ -240,14 +232,15 @@ def get_zone_of_by_district(name: str) -> List[Zone] | None:
         Zone | None: the Zone if the point is inside a zones area, None if not.
     """
     fetched_zones = db.fetch_all(GET_ZONES_BY_DISTRICT, (name,))
-    if fetched_zones:
-        output = []
-        for zone in fetched_zones:
-            zone_obj = get_obj_from_fetched(zone)
-            if zone_obj:
-                output.append(zone_obj)
-        return output
-    return None
+    if fetched_zones is None:
+        return None
+
+    output = []
+    for zone in fetched_zones:
+        zone_obj = get_obj_from_fetched(zone)
+        if zone_obj:
+            output.append(zone_obj)
+    return output
 
 
 def get_zones() -> List[Zone]:
@@ -256,15 +249,34 @@ def get_zones() -> List[Zone]:
     Returns:
         List[Zone]: list containing Zone obj.
     """
-    fetched_zones = db.fetch_all(GET_ZONES)
-    if fetched_zones:
-        output = []
-        for zone in fetched_zones:
-            zone_obj = get_obj_from_fetched(zone)
-            if zone_obj:
-                output.append(zone_obj)
-        return output
-    return None
+    sql = GET_ZONE.format('')
+    fetched_zones = db.fetch_all(sql)
+    if fetched_zones is None:
+        return None
+    output = []
+    for zone in fetched_zones:
+        zone_obj = get_obj_from_fetched(zone)
+        if zone_obj:
+            output.append(zone_obj)
+    return output
+
+def get_active_drone_count(polygon: str,
+                           after: datetime.datetime = None) -> int:
+    """counts the number of actives drones in a area.
+
+    Args:
+        polygon (str): _description_
+        after (datetime.datetime, optional): _description_. Defaults to None.
+
+    Returns:
+        int: _description_
+    """
+    drones = drone_updates_table.get_active_drones(polygon,after)
+
+    if drones is None:
+        return 0
+
+    return len(drones)
 
 def get_active_drone_count(polygon: str,
                            after: datetime.datetime = None) -> int:
@@ -287,7 +299,7 @@ def get_active_drone_count(polygon: str,
 
 def get_obj_from_fetched(
                 fetched_zone,
-                after: datetime.datetime = datetime.datetime.utcnow()-datetime.timedelta(days=1)
+                after: datetime.datetime = datetime.datetime.utcnow()-datetime.timedelta(days=3)
                 ) -> Zone | None:
     """generate Zone obj from fetched element.
 
@@ -299,7 +311,7 @@ def get_obj_from_fetched(
     Returns:
         Zone | None: zone object or None if obj cant be generated.
     """
-    if fetched_match_class(Zone, fetched_zone,3):
+    if fetched_match_class(Zone, fetched_zone,4):
         geo_json = spatiageostr_to_geojson(fetched_zone[4])
 
         events = drone_events_table.get_drone_event(
@@ -308,6 +320,10 @@ def get_obj_from_fetched(
 
         last_update = drone_updates_table.get_lastest_update_in_zone(
                         fetched_zone[4])
+        if last_update is not None:
+            la_timestam = last_update.timestamp
+        else:
+            la_timestam = None
 
         if events:
             ai_firerisk_enum = drone_events_table.calculate_firerisk(events)
@@ -315,9 +331,11 @@ def get_obj_from_fetched(
             ai_firerisk_enum = FireRisk(1)
 
         try:
-            geo_tuple = (fetched_zone[5],fetched_zone[6])
+            lon = fetched_zone[5]
+            lat= fetched_zone[6]
         except IndexError:
-            geo_tuple = None
+            lon = None
+            lat= None
 
         zone_obj = Zone(
             id=fetched_zone[0],
@@ -327,8 +345,9 @@ def get_obj_from_fetched(
             geo_json=geo_json,
             events=events,
             ai_fire_risk=ai_firerisk_enum,
-            geo_point=geo_tuple,
-            last_update=last_update,
+            lon=lon,
+            lat=lat,
+            last_update=la_timestam,
             drone_count=fetched_zone[7]
         )
         return zone_obj

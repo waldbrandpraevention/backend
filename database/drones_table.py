@@ -1,5 +1,4 @@
 from typing import List
-from enum import Enum
 
 from api.dependencies.classes import Drone
 from database.database import fetched_match_class
@@ -21,8 +20,7 @@ flight_range   real,
 cc_range       real,
 flight_time    real,
 PRIMARY KEY (id)
-);
-CREATE UNIQUE INDEX IF NOT EXISTS drones_AK ON drones (name);'''
+);'''
 
 CREATE_DRONE = '''  INSERT INTO drones (name,type,flight_range,cc_range,flight_time)
                     VALUES (? ,? ,? ,? ,?);'''
@@ -116,6 +114,8 @@ def get_drones(orga_id:int) -> List[Drone]:
         List[Drone]: list of all stored drones.
     """
     fetched_drones = db.fetch_all(GET_DRONES,(orga_id,))
+    if fetched_drones is None:
+        return None
     output = []
     for drone in fetched_drones:
         drone_obj = get_obj_from_fetched(drone)
@@ -130,6 +130,8 @@ def get_all_drones() -> List[Drone]:
         List[Drone]: list of all stored drones.
     """
     fetched_drones = db.fetch_all(GET_DRONES)
+    if fetched_drones is None:
+        return None
     output = []
     for drone in fetched_drones:
         drone_obj = get_obj_from_fetched(drone)
