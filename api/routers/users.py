@@ -182,7 +182,7 @@ async def register( email: str = Form(),
                                     email_verified=0)
 
     if users_table.create_user(user):
-        send_token_email(email)
+        await send_token_email(email)
         return {"message": "success"}
 
     return {"message": "couldnt create user."}
