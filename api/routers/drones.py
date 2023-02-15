@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from fastapi import Depends, APIRouter, HTTPException, status, File, UploadFile
 from .users import get_current_user
 from ..dependencies import drones
+from ..dependencies.drones import get_current_drone
 from ..dependencies.classes import Drone, User, DroneUpdate, DroneEvent
 from ..dependencies.authentication import create_access_token, DRONE_TOKEN_EXPIRE_WEEKS
 
@@ -132,13 +133,17 @@ async def drone_update(update: DroneUpdate, current_drone: Drone = Depends(get_c
 @router.post("/drones/send-event/")
 async def drone_event( event: DroneEvent, file: UploadFile, current_drone: Drone = Depends(get_current_drone)):
     #todo: add event to db + create link to saved location (path)
-    content = file.file.read()
-    date = str(datetime.now().timestamp())
-    new_file_name = file.filename + date
-    path = "./drone_images/" + new_file_name + ".jpg"
-    f = open(path, "w")
-    f.write(content)
-    f.close()
-    url = "https://kiwa.tech/api/drone_images/" + new_file_name + ".jpg" #check if this is correct
-    return {"url": url, "event": event}
+    try:
+        content = file.file.read()
+        date = str(datetime.now().timestamp())
+        new_file_name = file.filename + date
+        path = "./drone_images/" + new_file_name + ".jpg"
+        f = open(path, "w")
+        f.write(content)
+        f.close()
+        url = "https://kiwa.tech/api/drone_images/" + new_file_name + ".jpg" #check if this is correct
+        return {"url": url, "event": event}
+    except Exception as e:
+        print(e)
+        return {}
 

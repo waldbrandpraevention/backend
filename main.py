@@ -23,6 +23,7 @@ from database.drone_updates_table import CREATE_DRONE_DATA_TABLE
 from database.organizations_table import CREATE_ORGANISATIONS_TABLE
 from database.users_table import CREATE_USER_TABLE
 from database.zones_table import CREATE_ZONE_TABLE
+from database.drones_table import create_drone
 
 app = FastAPI()
 app.include_router(users.router)
@@ -79,6 +80,30 @@ def create_drone_events():
     
     print("drone_events done")
 
+def create_drones():
+    """ for demo set
+        long=12.68895149
+        lat=52.07454738    
+    """
+    try:
+        d1 = create_drone(
+            name = "Bob",
+            drone_type = "very very fast drone",
+            flight_range = 10000,
+            cc_range = 10000,
+            flight_time = 0)
+
+        d2 = create_drone(
+            name = "Klaus",
+            drone_type = "very very slow drone",
+            flight_range = 10000,
+            cc_range = 10000,
+            flight_time = 0)
+    except Exception as e:
+        print(e)
+    
+    print("drone_events done")
+
 def load_zones_from_geojson():
     """ for demo set
         Landkreis Potsdam-Mittelmark
@@ -110,11 +135,16 @@ def main():
     create_table(orga_zones_table.CREATE_ORGAZONES_TABLE)
     create_default_user()
     create_drone_events()
+    create_drones()
     load_zones_from_geojson()
 
     #make sure this actually works
-    simulation_thread = Thread(target = simulate)
-    weather_thread.start()
+    try:
+        simulation_thread = Thread(target = simulate)
+        simulation_thread.start()
+        #weather_thread.start()
+    except Exception as e:
+        print(e)
 
 
 main()

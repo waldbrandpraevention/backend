@@ -149,6 +149,5 @@ class DroneForSimulation(BaseModel):
     geo_json: dict
     speed: float
     direction: tuple[float,float] #vector with length 1
-    token: str
     lat: float
     lon: float
