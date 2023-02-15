@@ -40,10 +40,8 @@ async def verify_email(token: str):
             mail_from_token = await get_email_from_token(token, True)
             await send_token_email(mail_from_token)
             raise expried_token_exception from err
-        else:
-            raise invalid_token_exception from err
+        raise invalid_token_exception from err
 
     user = get_user(token_email)
     user.verified_email = True
     return {"message": "Email successfully verified"}
-    
