@@ -1,17 +1,11 @@
-from fastapi import APIRouter
-
+"""Functions for authentication"""
 from datetime import datetime, timedelta
-from fastapi import Depends, FastAPI, HTTPException, status, Request, Form
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt, ExpiredSignatureError
 from passlib.context import CryptContext
-#from pydantic import BaseModel
-from database import users_table
-
-import random
-from database import mail_verif_table
-from validation import *
-from .classes import Token, TokenData
+#from validation import *
+from .classes import TokenData
 
 
 #secret key generated with: openssl rand -hex 32
@@ -39,7 +33,7 @@ def verify_password(plain_password, hashed_password):
         bool: True if the hashes match
     """
     return pwd_context.verify(plain_password, hashed_password)
-    
+
 def get_password_hash(password):
     """Returns the hash of the given pssward
 
@@ -81,8 +75,8 @@ async def get_email_from_token(token: str = Depends(oauth2_scheme), allow_expire
         str: email that is embedded in the token
     """
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM], options={"verify_signature": not allow_expired})
-
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM],
+                                options={"verify_signature": not allow_expired})
         email: str = payload.get("sub")
         if email is None:
             raise HTTPException(
@@ -90,15 +84,15 @@ async def get_email_from_token(token: str = Depends(oauth2_scheme), allow_expire
                 detail="Token has no information",
             )
         token_data = TokenData(email=email)
-    except JWTError:
+    except ExpiredSignatureError as err:
+        raise HTTPException(
+            status_code=status.HTTP_406_NOT_ACCEPTABLE,
+            detail="Token is expired",
+        ) from err
+    except JWTError as err:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Could not validate token",
             headers={"WWW-Authenticate": "Bearer"},
-        )
-    except ExpiredSignatureError:
-        raise HTTPException(
-            status_code=status.HTTP_406_NOT_ACCEPTABLE,
-            detail="Token is expired",
-        )
+        ) from err
     return token_data.email
