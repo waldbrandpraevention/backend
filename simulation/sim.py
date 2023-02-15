@@ -59,10 +59,10 @@ def simulate():
 
                 if not found: #not in polygon just turn randomly
                     new_angle = random.uniform(0, 6.28318530718)
-                    x = 1 * math.cos(new_angle)
-                    y = 1 * math.sin(new_angle)
+                    dir_x = 1 * math.cos(new_angle)
+                    dir_y = 1 * math.sin(new_angle)
 
-                    drone_entry["direction"] = (x, y)
+                    drone_entry["direction"] = (dir_x, dir_y)
                 else:
                     drone_entry["lat"] = new_x
                     drone_entry["lon"] = new_y
