@@ -2,6 +2,7 @@
 from datetime import datetime, timedelta
 from typing import List
 from fastapi import Depends, APIRouter, HTTPException, status, UploadFile
+from database.drone_updates_table import create_drone_update
 from .users import get_current_user
 from ..dependencies import drones
 from ..dependencies.drones import get_current_drone
@@ -161,8 +162,17 @@ async def drone_update(update: DroneUpdate, current_drone: Drone = Depends(get_c
     """
     if current_drone is None:
         return {"message": "invalid drone"}
-    #todo: add to db
-    return update
+
+    create_drone_update(
+        current_drone.id,
+        update.timestamp,
+        update.lon,
+        update.lat,
+        update.flight_range,
+        update.flight_time
+    )
+
+    return {"message": "seccess"}
 
 
 @router.post("/drones/send-event/")
