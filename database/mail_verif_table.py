@@ -1,3 +1,4 @@
+"""DB functions for mail"""
 import sqlite3
 import database.database as db
 
@@ -67,4 +68,3 @@ def get_token_by_mail(mail:str) -> str | None:
     if fetched_token:
         return fetched_token[0]
     return None
-

@@ -81,7 +81,7 @@ def insert_demo_events(long: float, lat: float, droneid = 1):
         )
         if event_rand > 0:
             confidence = random.randint(20, 90)
-            
+
             create_drone_event_entry(
                 drone_id=droneid,
                 timestamp=timestamp,
@@ -173,10 +173,10 @@ def get_drone_event(drone_id: int = None,
     fetched_data = db.fetch_all(
         sql, tuple(tuple_arr)
         )
-    
+
     if fetched_data is None:
         return None
-    
+
     output = []
     for drone_data in fetched_data:
         dronedata_obj = get_obj_from_fetched(drone_data)

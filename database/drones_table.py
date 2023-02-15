@@ -1,3 +1,4 @@
+"""DB functions for drones"""
 from typing import List
 
 from api.dependencies.classes import Drone

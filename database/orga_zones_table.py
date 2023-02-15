@@ -1,3 +1,4 @@
+"""DB functions for orga zones"""
 from typing import List
 
 from api.dependencies.classes import Organization, Zone
@@ -44,7 +45,7 @@ def link_orgazone(orga_id:int,zone_id:int)->bool:
     inserted_id = db.insert(INSERT_ORGAZONE,(orga_id,zone_id))
     if inserted_id:
         return True
-    
+
     return False
 
 def get_zones_by_orga(orga_id:int) -> List[Zone] | None:
@@ -110,3 +111,4 @@ def get_orgazones_by_id(zone_id,orga_id) -> Zone | None:
     sql = zones_table.GET_ZONEJOINORGA.format('id')
     fetched_zone = db.fetch_one(sql,(zone_id,orga_id))
     return zones_table.get_obj_from_fetched(fetched_zone)
+    

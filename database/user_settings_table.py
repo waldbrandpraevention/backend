@@ -1,12 +1,11 @@
+"""DB functions for user settings"""
 from enum import Enum
 import json
 
-from api.dependencies.classes import User, UserSetting, UserWithSensitiveInfo
+from api.dependencies.classes import UserSetting, SettingsType
 from database.database import fetched_match_class
 import database.database as db
-from api.dependencies.classes import SettingsType
 from database import settings_table
-
 
 CREATE_USERSETTINGS_TABLE = '''
 CREATE TABLE user_settings
@@ -98,9 +97,8 @@ def get_obj_from_fetched(fetched_setting) -> UserSetting:
     """
     if fetched_match_class(UserSetting,fetched_setting):
 
-
-        type = fetched_setting[5]
-        value = get_value(fetched_setting[4],type)
+        settings_type = fetched_setting[5]
+        value = get_value(fetched_setting[4],settings_type)
 
         setting_obj = UserSetting(
             id=fetched_setting[0],
@@ -108,12 +106,12 @@ def get_obj_from_fetched(fetched_setting) -> UserSetting:
             name=fetched_setting[2],
             description=fetched_setting[3],
             value=value,
-            type=type
+            type=settings_type
         )
         return setting_obj
     return None
 
-def get_value(value,type) -> int|str|dict:
+def get_value(value,settings_type) -> int|str|dict:
     """convert stored text value into the given type.
 
     Args:
@@ -123,14 +121,13 @@ def get_value(value,type) -> int|str|dict:
     Returns:
         int|str|dict: converted value.
     """
-    if type == SettingsType.INTEGER:
+    if settings_type == SettingsType.INTEGER:
         type_value=int(value)
-    elif type == SettingsType.STRING:
+    elif settings_type == SettingsType.STRING:
         type_value=str(value)
-    elif type == SettingsType.JSON:
+    elif settings_type == SettingsType.JSON:
         type_value=json.loads(value)
     else:
         type_value = None
 
     return type_value
-

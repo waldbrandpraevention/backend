@@ -1,3 +1,4 @@
+"""Module for sparta lite"""
 import json
 from typing import List
 
@@ -44,7 +45,7 @@ def spatiageostr_to_geojson(spatia_polygon:str,properties:dict=None)-> dict:
                 }
     if properties is not None:
         geo_json['properties'] = properties
-        
+
     return geo_json
 
 def coordinates_to_multipolygonstr(geometry: dict) -> str:
@@ -55,11 +56,13 @@ def coordinates_to_multipolygonstr(geometry: dict) -> str:
         geometry (dict): dict which contains the coordinates and the type. Working with SRID 4326.
         "geometry": {
             "type": "Polygon",
-            "coordinates": [[[8.127194650631184, 48.75522682270608], more coordinates], interior rings...]
+            "coordinates": [[[8.127194650631184, 48.75522682270608], more coordinates],
+                 interior rings...]
         }
         "geometry": {
             "type": "MultiPolygon",
-            "coordinates": [[[[8.127194650631184, 48.75522682270608], more coordinates], interior rings...], more Polygons]
+            "coordinates": [[[[8.127194650631184, 48.75522682270608], more coordinates],
+                                 interior rings...],  more Polygons]
         }
 
     Returns:
@@ -67,7 +70,7 @@ def coordinates_to_multipolygonstr(geometry: dict) -> str:
     """
     if not (geometry['type'] == 'Polygon' or geometry['type'] == 'MultiPolygon'):
         return None
-    
+
     coordinates = geometry['coordinates']
     if  geometry['type'] == 'Polygon':
         coordinates = [coordinates]
@@ -128,6 +131,14 @@ def polygon_coordinates_helper(coordinates: List[List[float]]):
     return polygon_wkt
 
 def geoJSON_insert_text(geometry):
+    """Inserts text into a geojson
+
+    Args:
+        geometry (_type_): goemotry object
+
+    Returns:
+        json: geojson
+    """
     geo_json = {}
     geo_json = {'type':'MultiPolygon'}
 
@@ -136,6 +147,6 @@ def geoJSON_insert_text(geometry):
         geo_json['coordinates'] = [geometry['coordinates']]
     else:
         geo_json['coordinates'] = geometry['coordinates']
-    
+
     geo_json['crs'] = {"type":"name","properties":{"name":"EPSG:4326"}}
     return json.dumps(geo_json)
