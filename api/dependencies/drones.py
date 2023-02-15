@@ -99,7 +99,7 @@ async def get_drone_events(orga_id:int,
 
     Args:
         orga_id (int): id of the orga.
-        timestamp (datetime.datetime): timestamp after which the events should be returned.
+        timestamp (datetime): timestamp after which the events should be returned.
         drone_id (int, optional): id of the drone. Defaults to None.
         zone_id (int, optional): id of the zone. Defaults to None.
 
@@ -146,7 +146,7 @@ async def get_drone_with_route( orga_id:int,
 
     Args:
         orga_id (int): id of the orga.
-        timestamp (datetime.datetime): timestamp after which the events should be returned.
+        timestamp (datetime): timestamp after which the events should be returned.
         drone_id (int, optional): id of the drone. Defaults to None.
         zone_id (int, optional): id of the zone. Defaults to None.
 
