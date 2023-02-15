@@ -82,7 +82,7 @@ def simulate():
                         )
 
                     payload = {'update': new_update}
-                    response.post(URL + "drones/send-update/", params=payload)   
+                    response.post(URL + "drones/send-update/", params=payload)
 
                     if random.random() <= CHANCE_OF_EVENT: #event happens as well
                         #pick random file
@@ -107,7 +107,7 @@ def simulate():
                         img_io.seek(0)
                         files = {'file:': img_io}
                         #files = {'file:': r.picture}
-                        response.post(URL + "drones/send-event/", params=payload, files=files) 
+                        response.post(URL + "drones/send-event/", params=payload, files=files)
     except Exception as err2:
         print("Simulation failed:")
         print(err2)
