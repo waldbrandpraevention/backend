@@ -125,7 +125,7 @@ def ai_prediction(path: str):
         picture = im,
       )
       results.append(result)
-    return result
+    return results
 
 
 #ai_prediction("./assets/raw/111171_waldbrand-longEdge512.jpg")

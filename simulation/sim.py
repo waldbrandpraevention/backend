@@ -39,6 +39,7 @@ delta = timedelta(minutes=10)
 def simulate():
     try:
         while True:
+            global last_execution
             dt = datetime.now() - last_execution
             last_execution = datetime.now()
             for i in range(len(drones_dict)):
@@ -60,8 +61,8 @@ def simulate():
 
                 if not found: #not in polygon just turn randomly
                     new_angle = random.uniform(0, 6.28318530718)
-                    x = 1 * cos(new_angle)
-                    y = 1 * sin(new_angle)
+                    x = 1 * math.cos(new_angle)
+                    y = 1 * math.sin(new_angle)
 
                     drones_dict[i]["direction"] = (x, y)
                 else:
@@ -83,16 +84,16 @@ def simulate():
                         )
 
                     payload = {'update': new_update}
-                    responses.post(URL + "drones/send-update/", params=payload)   
+                    response.post(URL + "drones/send-update/", params=payload)   
 
-                    if random() <= CHANCE_OF_EVENT: #event happens as well
+                    if random.random() <= CHANCE_OF_EVENT: #event happens as well
                         #pick random file
                         file_name = random.choice(os.listdir(ASSETS))
                         path = os.path.join(ASSETS, file_name)
 
                     results = ai_prediction(path)
-
-                    for r in results:
+                    for x in range(len(results)):
+                        r = results[x]
                         event = DroneEvent(
                         drone_id = drones_dict[i]["drone"]["id"],
                         timestamp = datetime.now(),
