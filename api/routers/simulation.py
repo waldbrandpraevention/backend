@@ -23,7 +23,7 @@ async def get_sim_drones():
         
         for d in drones:
             random = randrange(0, len(zones) - 1)
-            angle = random()
+            angle = random.random()
             d_sim = DroneForSimulation( 
                 drone = d,     
                 token = generate_drone_token(d.id),

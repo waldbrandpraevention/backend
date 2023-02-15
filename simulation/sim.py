@@ -8,6 +8,7 @@ import os, random
 from datetime import datetime, timedelta
 from .cv import ai_prediction, Result
 from io import StringIO 
+import math
 
 from api.dependencies.classes import DroneUpdate, DroneEvent, EventType
 
@@ -78,7 +79,7 @@ def simulate():
                         longitude = drones_dict[i]["lon"],
                         latitude = drones_dict[i]["lat"],
                         flight_range = drones_dict[i]["drone"]["flight_range"] + distance,
-                        flight_time = drones_dict[i]["drone"]["flight_time"] + time_differenze
+                        flight_time = drones_dict[i]["drone"]["flight_time"] + 10
                         )
 
                     payload = {'update': new_update}
@@ -87,7 +88,7 @@ def simulate():
                     if random() <= CHANCE_OF_EVENT: #event happens as well
                         #pick random file
                         file_name = random.choice(os.listdir(ASSETS))
-                        path = os.path.join(ASSETS, filename)
+                        path = os.path.join(ASSETS, file_name)
 
                     results = ai_prediction(path)
 
@@ -108,7 +109,7 @@ def simulate():
                         img_io.seek(0)
                         files = {'file:': img_io}
                         #files = {'file:': r.picture}
-                        responses.post(URL + "drones/send-event/", params=payload, files=files) 
+                        response.post(URL + "drones/send-event/", params=payload, files=files) 
     except Exception as e:
         print("Simulation failed:")
         print(e)
