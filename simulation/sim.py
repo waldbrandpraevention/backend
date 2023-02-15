@@ -16,19 +16,19 @@ ASSETS = "./simulation/assets/raw/"
 URL = "kiwa.tech/api/"
 CHANCE_OF_EVENT = 0.001
 
-time.sleep(5)
+time.sleep(1)
 
 #load drones
 drones_dict = None
 try:
-    drones_json = requests.get(URL + "simulation/get-drones")
+    drones_json = requests.get(URL + "simulation/all-drones/")
     text = response.text
     drones_dict = json.loads(text)
 
 except Exception as e:
     print("error:")
     print(e)
-    drondrones_dict = {}
+    drones_dict = {}
 
 last_execution = datetime.now()
 next_update = datetime.now()
