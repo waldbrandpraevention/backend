@@ -23,12 +23,12 @@ async def get_sim_drones():
         zones = zones_table.get_zone_of_by_district(os.getenv("DEMO_DISTRICT"))
         
         for d in drones:
-            rand = randrange(0, len(zones) - 1)
+            rand = random.randrange(0, len(zones) - 1)
             angle = random.random()
             d_sim = DroneForSimulation( 
                 drone = d,     
                 token = generate_drone_token(d.id),
-                geo_json = zone[rand].geo_json,
+                geo_json = zones[rand].geo_json,
                 speed = 0.0001,
                 direction = (math.cos(angle), math.sin(angle)),
                 lat = zones[rand].lat,
