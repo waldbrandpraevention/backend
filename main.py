@@ -2,17 +2,15 @@
 import os
 import sqlite3
 import random
+from threading import Thread
 from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
-
-from threading import Thread
 
 from simulation.sim import simulate
 from api.dependencies.authentication import get_password_hash
 from api.dependencies.emails import send_email
-from api.dependencies.weather import wind_update
-from api.dependencies.classes import Organization, UserWithSensitiveInfo
-from api.routers import emails, users, zones, drones, weather, simulation
+from api.dependencies.classes import UserWithSensitiveInfo
+from api.routers import emails, users, zones, drones, simulation
 from database import (users_table,
                       organizations_table,
                       drones_table,
@@ -34,7 +32,6 @@ app.include_router(users.router)
 app.include_router(emails.router)
 app.include_router(zones.router)
 app.include_router(drones.router)
-app.include_router(weather.router)
 app.include_router(simulation.router)
 
 # CORS https://fastapi.tiangolo.com/tutorial/cors/
@@ -98,30 +95,6 @@ def create_drone_events():
                                             )
     print("drone_events done")
 
-def create_drones():
-    """ for demo set
-        long=12.68895149
-        lat=52.07454738    
-    """
-    try:
-        d1 = create_drone(
-            name = "Bob",
-            drone_type = "very very fast drone",
-            flight_range = 10000,
-            cc_range = 10000,
-            flight_time = 0)
-
-        d2 = create_drone(
-            name = "Klaus",
-            drone_type = "very very slow drone",
-            flight_range = 10000,
-            cc_range = 10000,
-            flight_time = 0)
-    except Exception as e:
-        print(e)
-    
-    print("drone_events done")
-
 def load_zones_from_geojson():
     """ for demo set
         Landkreis Potsdam-Mittelmark
@@ -164,8 +137,8 @@ def main():
         simulation_thread = Thread(target = simulate)
         simulation_thread.start()
         #weather_thread.start()
-    except Exception as e:
-        print(e)
+    except Exception as err:
+        print(err)
 
 
 main()
