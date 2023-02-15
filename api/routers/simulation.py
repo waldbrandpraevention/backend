@@ -30,8 +30,8 @@ async def get_sim_drones():
                 geo_json = zone[random].geo_json,
                 speed = 0.0001,
                 direction = (cos(angle), sin(angle)),
-                lat = zones[random].geo_point[0],
-                lon = zones[random].geo_point[1]
+                lat = zones[random].lat,
+                lon = zones[random].lan
             )
             sim_drones.append(d_sim)
     except Exception as e:
