@@ -1,27 +1,22 @@
 """Functions for the ai prediction"""
 
 import os
-
+import time
 import tensorflow as tf
-from tensorflow import keras
-from api.dependencies.classes import EventType
 import numpy as np
 from PIL import Image
 from PIL.JpegImagePlugin import JpegImageFile
-import matplotlib.pyplot as plt
-import warnings
-warnings.filterwarnings('ignore')   #Suppress Matplotlib warnings
-import time
 from object_detection.utils import label_map_util
 from object_detection.utils import visualization_utils as viz_utils
+from api.dependencies.classes import EventType
 
-threshold = .30
+THRESHOLD = .30
 
 class Result():
-  """Result inforamtion"""
-  event_type: EventType | None = None
-  confidence: int | None = None
-  picture: JpegImageFile | None = None
+    """Result inforamtion"""
+    event_type: EventType | None = None
+    confidence: int | None = None
+    picture: JpegImageFile | None = None
 
 def load_image_into_numpy_array(path):
     """Load an image from file into a numpy array.
@@ -44,7 +39,8 @@ PATH_TO_LABELS = "./simulation/labelmap.pbtxt"
 
 PATH_TO_SAVED_MODEL = "./simulation/saved_model"
 
-category_index = label_map_util.create_category_index_from_labelmap(PATH_TO_LABELS, use_display_name=True)
+category_index = label_map_util.create_category_index_from_labelmap(
+  PATH_TO_LABELS, use_display_name=True)
 
 print('Loading model...', end='')
 start_time = time.time()
@@ -54,18 +50,26 @@ detect_fn = tf.saved_model.load(PATH_TO_SAVED_MODEL)
 
 end_time = time.time()
 elapsed_time = end_time - start_time
-print('Done! Took {} seconds'.format(elapsed_time))
+print(f'Done! Took {elapsed_time} seconds')
 
-img_path = "./assets/raw"
-directory = os.fsencode(img_path)
-    
+IMG_PATH = "./assets/raw"
+directory = os.fsencode(IMG_PATH)
+
 def ai_prediction(path: str):
+    """Generates an ai prediction using computer vision and object detection
+
+    Args:
+        path (str): path to the image
+
+    Returns:
+        Result: result
+    """
     #for file in os.listdir(directory):
 
     #filename = os.fsdecode(path)
     #image_path = os.path.join(img_path, filename)
     image_path = path
-    print('Running inference for {}... '.format(image_path), end='')
+    print(f'Running inference for {image_path}... ', end='')
 
     image_np = load_image_into_numpy_array(image_path)
 
@@ -93,14 +97,15 @@ def ai_prediction(path: str):
 
     image_np_with_detections = image_np.copy()
 
-    classes = [cls for cls in detections['detection_classes'][detections['detection_scores'] > threshold]]
+    classes = [cls for cls in detections['detection_classes']
+                  [detections['detection_scores'] > THRESHOLD]]
     #classes = [category_index.get(cls)['name'] for cls in classes]
     percantages = detections['detection_scores'][:len(classes)]
     #print("output:\n")
     #print(classes)
     #print("per:\n")
     #print(percantages)
-    
+
     viz_utils.visualize_boxes_and_labels_on_image_array(
           image_np_with_detections,
           detections['detection_boxes'],
@@ -109,22 +114,23 @@ def ai_prediction(path: str):
           category_index,
           use_normalized_coordinates=True,
           max_boxes_to_draw=200,
-          min_score_thresh=threshold,
+          min_score_thresh=THRESHOLD,
           agnostic_mode=False)
 
     #plt.figure()
     #plt.imshow(image_np_with_detections)
-    im = Image.fromarray(image_np_with_detections)
+    image = Image.fromarray(image_np_with_detections)
     #im.save("./assets/predicted/out_{}.png".format(counter))
     print('Done')
     results = []
-    for i in range(len(classes)):
-      result = Result(
-        event_type = EventType(classes[i]),
-        confidence = int(percantages[i] * 100 + 0.5),
-        picture = im,
-      )
-      results.append(result)
+    size = len(classes)
+    for i in range(size):
+        result = Result(
+          event_type = EventType(classes[i]),
+          confidence = int(percantages[i] * 100 + 0.5),
+          picture = image,
+        )
+        results.append(result)
     return results
 
 
