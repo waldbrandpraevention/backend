@@ -1,5 +1,5 @@
 """api calls for drones."""
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List
 from fastapi import Depends, APIRouter, HTTPException, status, UploadFile
 from .users import get_current_user
@@ -66,7 +66,7 @@ async def read_drone_events(drone_id: int=None,
     print(drone_events)
     return drone_events
 
-def timestamp_helper(days:int,hours:int,minutes:int) -> datetime.datetime | None:
+def timestamp_helper(days:int,hours:int,minutes:int) -> datetime | None:
     """generates a timestamp x days, y hours and z minutes before now.
 
     Args:
@@ -77,11 +77,11 @@ def timestamp_helper(days:int,hours:int,minutes:int) -> datetime.datetime | None
     Returns:
         datetime: the calculated timestamp.
     """
-    timedelta = datetime.timedelta(days=days,minutes=minutes,hours=hours)
-    if timedelta.total_seconds() == 0:
+    time_delta = timedelta(days=days,minutes=minutes,hours=hours)
+    if time_delta.total_seconds() == 0:
         return None
 
-    return datetime.datetime.utcnow() - timedelta
+    return datetime.utcnow() - timedelta
 
 @router.get("/drones/route/",
             status_code=status.HTTP_200_OK,
