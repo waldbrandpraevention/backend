@@ -10,7 +10,7 @@ from ..dependencies.emails import (
 
 router = APIRouter()
 
-@router.post("/email/verify/", status_code=status.HTTP_200_OK)
+@router.get("/email/verify/", status_code=status.HTTP_200_OK)
 async def verify_email(token: str):
     """Validates a token that got send with an email
 
