@@ -55,8 +55,7 @@ async def get_drone(drone_id: int,orga_id:int):
 
     return drone
 
-async def get_drone_for_token(drone_id: int):
-    #todo
+async def get_drone_for_token(drone_id: int, orga_id: int):
     """Returns a specific drone from the db
 
     Returns:
