@@ -13,6 +13,14 @@ passsword = os.getenv("SMTP_PASSWORD")
 sender = os.getenv("SMTP_SENDER")
 
 async def send_token_email(reciever: str):
+    """Sends out a new token email
+
+    Args:
+        reciever (str): Email of the reciever
+
+    Returns:
+        Dict: Response
+    """
 
     access_token_expires = timedelta(hours=EMAIL_VERIFICATION_TOKEN_EXPIRE_HOURS)
     access_token = create_access_token(
@@ -27,6 +35,16 @@ async def send_token_email(reciever: str):
 
 
 async def send_email(reciever: str, subject: str, message: str):
+    """Sends out a new email
+
+    Args:
+        reciever (str): Email of the reciever
+        subject (str): Subject of the email
+        message (str): Message of the email
+
+    Returns:
+        Dict: Response
+    """
 
     errors = validate_email(reciever)
     if len(errors) > 0:
