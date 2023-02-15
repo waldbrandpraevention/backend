@@ -1,6 +1,6 @@
 """Drone related functions"""
 from datetime import datetime, timedelta
-from .authentication import create_access_token, DRONE_TOKEN_EXPIRE_WEEKS
+from .authentication import create_access_token, DRONE_TOKEN_EXPIRE_WEEKS, get_email_from_token
 from typing import List
 from fastapi import HTTPException, status
 from api.dependencies.classes import Drone, DroneEvent, DroneUpdate, DroneUpdateWithRoute
@@ -55,13 +55,14 @@ async def get_drone(drone_id: int,orga_id:int):
 
     return drone
 
-async def get_drone_for_token(drone_id: int, orga_id: int):
+async def get_drone_for_token(drone_id: int):
     """Returns a specific drone from the db
 
     Returns:
         Drone: the requestesd drone
     """
-    drone = drones_table.get_drone(drone_id,orga_id)
+    #todo add proper call
+    drone = drones_table.get_drone(drone_id, 0)
     drone_upate = drone_data_table.get_latest_update(drone.id)
     if drone_upate:
         set_update_and_zone(drone,drone_upate)
