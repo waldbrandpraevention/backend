@@ -1,10 +1,10 @@
-from smtplib import SMTP
-import datetime
-from validation import *
+"""Futctions for email communication"""
 import os
-from fastapi import Depends, FastAPI, HTTPException, status
-from .authentication import create_access_token, EMAIL_VERIFICATION_TOKEN_EXPIRE_HOURS
+from smtplib import SMTP
 from datetime import timedelta
+from fastapi import HTTPException, status
+from validation import validate_email
+from .authentication import create_access_token, EMAIL_VERIFICATION_TOKEN_EXPIRE_HOURS
 
 server = os.getenv("SMTP_HOST")
 port = os.getenv("SMTP_PORT")
@@ -18,10 +18,10 @@ async def send_token_email(reciever: str):
     access_token = create_access_token(
         data={"sub": reciever}, expires_delta=access_token_expires
     )
-    message = """
+    message = f"""
     Bitte klicken Sie auf den Link:\n
-    https://kiwa.tech/api/email/verify/?token=%s
-    """ % (message, access_token)
+    https://kiwa.tech/api/email/verify/?token={access_token}
+    """
 
     return await send_email(reciever, "KIWA Information", message)
 
@@ -47,17 +47,17 @@ async def send_email(reciever: str, subject: str, message: str):
             detail="Email message must not be empty",
         )
 
-    message = """\
-    From: %s\n
-    To: %s\n
-    Subject: %s\n
-
+    message_final = f"""\
+    From:{sender}\n
+    To:{reciever}\n
+    Subject:{subject}\n
+    {message}
     %s
-    """ % (sender, reciever, subject, message)
+    """
 
     email_server = SMTP(server, port)
     email_server.login(user, passsword)
-    email_server.sendmail(sender, reciever, message)
+    email_server.sendmail(sender, reciever, message_final)
     email_server.quit()
 
     return {"message": "Email code executed"}
