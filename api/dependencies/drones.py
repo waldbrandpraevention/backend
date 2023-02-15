@@ -1,5 +1,5 @@
 """Drone related functions"""
-import datetime
+import datetime, timedelta
 from .authentication import create_access_token, DRONE_TOKEN_EXPIRE_WEEKS
 from typing import List
 from fastapi import HTTPException, status
@@ -91,7 +91,7 @@ async def get_current_drone(token: str):
     return drone
    
 async def get_drone_events(orga_id:int,
-                           timestamp:datetime.datetime,
+                           timestamp: datetime,
                            drone_id:int =None,
                            zone_id:int=None) -> List[DroneEvent]:
     """get all drone events in a zone or the whole orga area after a timestamp.
