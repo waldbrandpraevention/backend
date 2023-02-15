@@ -1,6 +1,5 @@
 """Drone related functions"""
 from datetime import datetime, timedelta
-from .authentication import create_access_token, DRONE_TOKEN_EXPIRE_WEEKS, get_email_from_token
 from typing import List
 from fastapi import HTTPException, status
 from api.dependencies.classes import Drone, DroneEvent, DroneUpdate, DroneUpdateWithRoute
@@ -9,6 +8,8 @@ from database import (drones_table,
                       drone_updates_table as drone_data_table,
                       zones_table)
 from database.orga_zones_table import get_orgazones_by_id
+from .authentication import create_access_token, DRONE_TOKEN_EXPIRE_WEEKS, get_email_from_token
+
 
 async def get_all_drones(orga_id:int):
     """Returns all drones from the db
@@ -23,11 +24,11 @@ async def get_all_drones(orga_id:int):
     for drone in drones:
         drone_upate = drone_data_table.get_latest_update(drone.id)
         if drone_upate is not None:
-           await set_update_and_zone(drone,drone_upate)
+            await set_update_and_zone(drone,drone_upate)
 
     return drones
 
-async def generate_drone_token(id: int):
+async def generate_drone_token(drone_id: int):
     """Returns a new drone token
 
     Returns:
@@ -35,7 +36,7 @@ async def generate_drone_token(id: int):
     """
     access_token_expires = timedelta(minutes=DRONE_TOKEN_EXPIRE_WEEKS)
     access_token = create_access_token(
-        data={"sub": id}, expires_delta=access_token_expires
+        data={"sub": drone_id}, expires_delta=access_token_expires
     )
 
     return access_token
@@ -89,7 +90,7 @@ async def get_current_drone(token: str):
         raise credentials_exception
 
     return drone
-   
+
 async def get_drone_events(orga_id:int,
                            timestamp: datetime,
                            drone_id:int =None,
