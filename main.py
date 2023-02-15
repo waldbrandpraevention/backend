@@ -25,7 +25,6 @@ from database.drones_table import CREATE_DRONES_TABLE
 from database.organizations_table import CREATE_ORGANISATIONS_TABLE
 from database.users_table import CREATE_USER_TABLE
 from database.zones_table import CREATE_ZONE_TABLE
-from database.drones_table import create_drone
 
 app = FastAPI()
 app.include_router(users.router)

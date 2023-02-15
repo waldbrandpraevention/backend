@@ -164,7 +164,7 @@ async def drone_update(update: DroneUpdate, current_drone: Drone = Depends(get_c
 
 
 @router.post("/drones/send-event/")
-async def drone_event( 
+async def drone_event(
     event: DroneEvent,
     file: UploadFile,
     current_drone: Drone = Depends(get_current_drone)):
