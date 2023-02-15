@@ -137,7 +137,7 @@ async def set_update_and_zone(drone:Drone,drone_upate:DroneUpdate):
         drone.zone_id = current_zone.id
 
 async def get_drone_with_route( orga_id:int,
-                                timestamp:datetime.datetime,
+                                timestamp:datetime,
                                 drone_id:int =None,
                                 zone_id:int=None
                                 )-> List[DroneUpdateWithRoute] | None:
