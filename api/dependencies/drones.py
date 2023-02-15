@@ -132,8 +132,8 @@ async def set_update_and_zone(drone:Drone,drone_upate:DroneUpdate):
     """
     drone.last_update = drone_upate.timestamp
     current_zone = zones_table.get_zone_of_coordinate(
-                                drone_upate.longitude,
-                                drone_upate.latitude)
+                                drone_upate.lon,
+                                drone_upate.lat)
     if current_zone is not None:
         drone.zone_id = current_zone.id
 
