@@ -43,5 +43,5 @@ async def verify_email(token: str):
         raise invalid_token_exception from err
 
     user = get_user(token_email)
-    user.verified_email = True
+    user.email_verified = True
     return {"message": "Email successfully verified"}
