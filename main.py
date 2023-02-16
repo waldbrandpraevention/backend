@@ -26,7 +26,10 @@ from database.organizations_table import CREATE_ORGANISATIONS_TABLE
 from database.users_table import CREATE_USER_TABLE
 from database.zones_table import CREATE_ZONE_TABLE
 
-app = FastAPI()
+app = FastAPI(  title="KIWA",
+                description="",
+                docs_url='/docs', redoc_url=None,
+                openapi_url="/api/openapi.json")
 app.include_router(users.router)
 app.include_router(emails.router)
 app.include_router(zones.router)
