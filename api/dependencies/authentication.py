@@ -18,7 +18,7 @@ DRONE_TOKEN_EXPIRE_WEEKS = 420
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/users/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/users/login")
 
 router = APIRouter()
 
