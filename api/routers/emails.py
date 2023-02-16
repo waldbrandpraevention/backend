@@ -2,11 +2,12 @@
 
 from fastapi import HTTPException, status, APIRouter
 from ..dependencies.authentication import get_email_from_token
-from ..dependencies.users import get_user
+from ..dependencies.users import get_user, update_user
 
 from ..dependencies.emails import (
     send_token_email
     )
+
 
 router = APIRouter()
 
@@ -44,4 +45,8 @@ async def verify_email(token: str):
 
     user = get_user(token_email)
     user.email_verified = True
-    return {"message": "Email successfully verified"}
+    result = await update_user(user, email_verified=True)
+    if result:
+        return {"message": "Email successfully verified"}
+    else:
+        return {"message": "Errror at verification"}
