@@ -162,3 +162,18 @@ class Zone(BaseModel):
     lat :float | None = None
     drone_count: int | None = None
     last_update: datetime | None = None
+
+class Territory(BaseModel):
+    """ Territory class. Contains all the information about a territory. """
+    id: int | None = None
+    name: str | None = None
+    orga_id :int | None = None
+    description: str | None = None
+
+class TerritoryWithZones(Territory):
+    """ Territory class. Contains all the information about a territory. """
+    dwd_fire_risk: FireRisk | None = None
+    ai_fire_risk: FireRisk | None = None
+    drone_count: int | None = None
+    zone_count: int | None = None
+    last_update: datetime | None = None

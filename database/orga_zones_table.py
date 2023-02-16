@@ -5,58 +5,59 @@ import database.database as db
 from database import zones_table
 import database.organizations_table as orgas_table
 
-CREATE_ORGAZONES_TABLE = """ CREATE TABLE organization_zones
+CREATE_ORGAZONES_TABLE = """ CREATE TABLE territory_zones
 (
-orga_id     integer NOT NULL ,
+territory_id     integer NOT NULL ,
 zone_id     integer NOT NULL ,
-PRIMARY KEY (orga_id, zone_id),
-FOREIGN KEY (orga_id) REFERENCES organizations (id),
+PRIMARY KEY (territory_id, zone_id),
+FOREIGN KEY (territory_id) REFERENCES territories (id),
 FOREIGN KEY (zone_id) REFERENCES Zones (id)
 );
 
-CREATE INDEX IF NOT EXISTS organization_zones_FK_2 ON organization_zones (orga_id);
-CREATE INDEX IF NOT EXISTS organization_zones_FK_3 ON organization_zones (zone_id);"""
+CREATE INDEX IF NOT EXISTS organization_zones_FK_2 ON territory_zones (territory_id);
+CREATE INDEX IF NOT EXISTS organization_zones_FK_3 ON territory_zones (zone_id);"""
 
-INSERT_ORGAZONE =  "INSERT INTO organization_zones (orga_id,zone_id) VALUES (?,?);"
+INSERT_ORGAZONE =  "INSERT INTO territory_zones (territory_id,zone_id) VALUES (?,?);"
 
 
 GET_ZONEORGAS = ''' SELECT *
                     FROM organizations
-                    LEFT JOIN organization_zones 
-                    ON organizations.id = organization_zones.orga_id
-                    WHERE organization_zones.zone_id=?;'''
+                    Join territories on organizations.id = territories.orga_id
+                    LEFT JOIN territory_zones 
+                    ON territories.id = territory_zones.territory_id
+                    WHERE territory_zones.zone_id=?;'''
 
-GET_ORGAZONES_BY_ORGA = 'SELECT * FROM organization_zones WHERE orga_id=?;'
-GET_ORGAZONES_BY_ZONE = 'SELECT * FROM organization_zones WHERE zone_id=?;'
-UPDATE_ATTRIBUTE = 'UPDATE organization_zones SET {} = ? WHERE name = ?;'
+GET_ORGAZONES_BY_ORGA = 'SELECT zone_id FROM territory_zones WHERE territory_id=?;'
+GET_ORGAZONES_BY_ZONE = 'SELECT territory_id FROM territory_zones WHERE zone_id=?;'
+UPDATE_ATTRIBUTE = 'UPDATE territory_zones SET {} = ? WHERE name = ?;'
 
 
-def link_orgazone(orga_id:int,zone_id:int)->bool:
+def link_orgazone(territory_id:int,zone_id:int)->bool:
     """link an organization with a zone.
 
     Args:
-        orga_id (int): id of the orga that should be linked.
+        territory_id (int): id of the territory that should be linked.
         zone_id (int): id of the zone that should be linked.
 
     Returns:
         bool: returns if action was successful.
     """
-    inserted_id = db.insert(INSERT_ORGAZONE,(orga_id,zone_id))
+    inserted_id = db.insert(INSERT_ORGAZONE,(territory_id,zone_id))
     if inserted_id:
         return True
     
     return False
 
-def get_zones_by_orga(orga_id:int) -> List[Zone] | None:
+def get_zones_by_orga(territory_id:int) -> List[Zone] | None:
     """fetches all zones, linked to an organization.
 
     Args:
-        orga_id (int): id of the orga.
+        territory_id (int): id of the territory.
 
     Returns:
         List[Zone] | None: list of zones.
     """
-    fetched_zones = db.fetch_all(zones_table.GET_ORGAZONES,(orga_id,))
+    fetched_zones = db.fetch_all(zones_table.GET_ORGAZONES,(territory_id,))
     if fetched_zones is None:
         return None
     output = []
@@ -83,30 +84,30 @@ def get_orgas_by_zone(zone_id:int) -> List[Organization] | None:
         output.append(orga)
     return output
 
-def get_orgazones_by_name(name,orga_id) -> Zone | None:
+def get_orgazones_by_name(name,territory_id) -> Zone | None:
     """fetch the zone by its name and make sure its a zone that the orga is allowed to see.
 
     Args:
         name (_type_): name of the zone.
-        orga_id (_type_): id of the orga that want to access this zones data.
+        territory_id (_type_): id of the orga that want to access this zones data.
 
     Returns:
         Zone | None: zone object.
     """
     sql = zones_table.GET_ZONEJOINORGA.format('name')
-    fetched_zone = db.fetch_one(sql,(name,orga_id))
+    fetched_zone = db.fetch_one(sql,(name,territory_id))
     return zones_table.get_obj_from_fetched(fetched_zone)
 
-def get_orgazones_by_id(zone_id,orga_id) -> Zone | None:
+def get_orgazones_by_id(zone_id,territory_id) -> Zone | None:
     """fetch the zone by its id and make sure its a zone that the orga is allowed to see.
 
     Args:
         zone_id (_type_): id of the zone.
-        orga_id (_type_): id of the orga that want to access this zones data.
+        territory_id (_type_): id of the orga that want to access this zones data.
 
     Returns:
         Zone | None: zone object.
     """
     sql = zones_table.GET_ZONEJOINORGA.format('id')
-    fetched_zone = db.fetch_one(sql,(zone_id,orga_id))
+    fetched_zone = db.fetch_one(sql,(zone_id,territory_id))
     return zones_table.get_obj_from_fetched(fetched_zone)
