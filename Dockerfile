@@ -13,7 +13,7 @@ RUN apt install -y libsqlite3-mod-spatialite=5.0.1-2
 RUN apt install -y protobuf-compiler=3.12.4-1
 
 # object detection api for tensorflow
-RUN git clone https://github.com/tensorflow/models.git
+RUN git clone --depth 1 https://github.com/tensorflow/models.git
 
 WORKDIR /models/research
 
