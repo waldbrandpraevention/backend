@@ -24,6 +24,7 @@ SELECT AddGeometryColumn('zones', 'geo_point', 4326, 'POINT', 'XY');'''
 #   exterior ring, no interior rings
 
 class ZoneWhereClause(str, Enum):
+    """Class for zones with a where clause"""
     MAKEPOINTINTERSECT = 'ST_Intersects(area, MakePoint(?, ?, 4326))'
     GEOJSONINTERSECT = 'ST_Intersects(area, GeomFromGeoJSON(?))'
     ZONE_ID = 'id'
@@ -147,11 +148,13 @@ def create_zone(gem_code, name, federal_state, district, gemometry: dict, geo_po
         geometry (dict): dict which contains the coordinates and the type. Working with SRID 4326.
         "geometry": {
             "type": "Polygon",
-            "coordinates": [[[8.127194650631184, 48.75522682270608], more coordinates], interior rings...]
+            "coordinates": [[[8.127194650631184, 48.75522682270608], more coordinates],
+                                 interior rings...]
         }
         "geometry": {
             "type": "MultiPolygon",
-            "coordinates": [[[[8.127194650631184, 48.75522682270608], more coordinates], interior rings...], more Polygons]
+            "coordinates": [[[[8.127194650631184, 48.75522682270608], more coordinates],
+                             interior rings...], more Polygons]
         }
 
     Returns:
@@ -282,7 +285,6 @@ def get_active_drone_count(polygon: str,
 
     return len(drones)
 
-
 def get_obj_from_fetched(
                 fetched_zone,
                 after: datetime.datetime = datetime.datetime.utcnow()-datetime.timedelta(days=3)
@@ -301,7 +303,7 @@ def get_obj_from_fetched(
         geo_json = spatiageostr_to_geojson(fetched_zone[4])
 
         events = drone_events_table.get_drone_event(
-                                    polygon=fetched_zone[4], 
+                                    polygon=fetched_zone[4],
                                     after=after)
 
         last_update = drone_updates_table.get_lastest_update_in_zone(

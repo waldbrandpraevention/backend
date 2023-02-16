@@ -1,17 +1,11 @@
-from fastapi import APIRouter
-
+"""Functions for authentication"""
 from datetime import datetime, timedelta
-from fastapi import Depends, FastAPI, HTTPException, status, Request, Form
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from jose import JWTError, jwt
+from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer
+from jose import JWTError, jwt, ExpiredSignatureError
 from passlib.context import CryptContext
-from pydantic import BaseModel
-from database import users_table
-
-import random
-from database import mail_verif_table
-from validation import *
-from .classes import Token, TokenData
+#from validation import *
+from .classes import TokenData
 
 
 #secret key generated with: openssl rand -hex 32
@@ -20,6 +14,7 @@ SECRET_KEY = "cbdc851fece93e7b1a3bf9ca16c9ce62939e22f668866c875d294363e2530b27"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 EMAIL_VERIFICATION_TOKEN_EXPIRE_HOURS = 24
+DRONE_TOKEN_EXPIRE_WEEKS = 420
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -38,7 +33,7 @@ def verify_password(plain_password, hashed_password):
         bool: True if the hashes match
     """
     return pwd_context.verify(plain_password, hashed_password)
-    
+
 def get_password_hash(password):
     """Returns the hash of the given pssward
 
@@ -67,8 +62,8 @@ def create_access_token(data: dict, expires_delta: timedelta):
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
-async def get_email_from_token(token: str = Depends(oauth2_scheme)):
-    """Returns the email in the token
+async def get_email_from_token(token: str = Depends(oauth2_scheme), allow_expired: bool = False):
+    """Returns the email in the token (works for drone name as well)
 
     Args:
         token str: Usertoken to decode
@@ -80,7 +75,8 @@ async def get_email_from_token(token: str = Depends(oauth2_scheme)):
         str: email that is embedded in the token
     """
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM],
+                                options={"verify_signature": not allow_expired})
         email: str = payload.get("sub")
         if email is None:
             raise HTTPException(
@@ -88,15 +84,15 @@ async def get_email_from_token(token: str = Depends(oauth2_scheme)):
                 detail="Token has no information",
             )
         token_data = TokenData(email=email)
-    except JWTError:
+    except ExpiredSignatureError as err:
+        raise HTTPException(
+            status_code=status.HTTP_406_NOT_ACCEPTABLE,
+            detail="Token is expired",
+        ) from err
+    except JWTError as err:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Could not validate token",
             headers={"WWW-Authenticate": "Bearer"},
-        )
-    except ExpiredSignatureError:
-        raise HTTPException(
-            status_code=status.HTTP_406_NOT_ACCEPTABLE,
-            detail="Token is expired",
-        )
+        ) from err
     return token_data.email

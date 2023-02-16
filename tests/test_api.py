@@ -2,8 +2,10 @@
 import os
 from fastapi import HTTPException
 import pytest
-from database import zones_table
+sys.path.append('../backend')
 from api.routers import zones,users,drones
+from database import zones_table
+
 
 
 @pytest.mark.asyncio
@@ -44,7 +46,6 @@ async def test_drones():
     allevents = await drones.read_drone_events(current_user=user)
 
     assert len(d1events) < len(allevents)
-
 
 
 @pytest.mark.asyncio

@@ -2,19 +2,21 @@
 import os
 import sqlite3
 import random
+from threading import Thread
 from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 
+from simulation.sim import simulate
 from api.dependencies.authentication import get_password_hash
-from api.dependencies.email import send_email
+from api.dependencies.emails import send_email
 from api.dependencies.classes import UserWithSensitiveInfo
-from api.routers import users, zones, drones
-
+from api.routers import emails, users, zones, drones, simulation
 from database import (users_table,
                       organizations_table,
                       drones_table,
                       drone_events_table,
                       zones_table)
+
 from database.database import create_table, initialise_spatialite
 from database.drone_events_table import CREATE_DRONE_EVENT_TABLE
 from database import orga_zones_table
@@ -26,9 +28,10 @@ from database.zones_table import CREATE_ZONE_TABLE
 
 app = FastAPI()
 app.include_router(users.router)
-#app.include_router(email.router)
+app.include_router(emails.router)
 app.include_router(zones.router)
 app.include_router(drones.router)
+app.include_router(simulation.router)
 
 # CORS https://fastapi.tiangolo.com/tutorial/cors/
 app.add_middleware(
@@ -89,7 +92,6 @@ def create_drone_events():
                                             float(os.getenv("DEMO_LONG")),
                                             float(os.getenv("DEMO_LAT"))
                                             )
-
     print("drone_events done")
 
 def load_zones_from_geojson():
@@ -126,7 +128,16 @@ def main():
     create_table(orga_zones_table.CREATE_ORGAZONES_TABLE)
     create_default_user()
     create_drone_events()
+    #create_drones()
     load_zones_from_geojson()
+
+    #make sure this actually works
+    try:
+        simulation_thread = Thread(target = simulate)
+        simulation_thread.start()
+        #weather_thread.start()
+    except Exception as err:
+        print(err)
 
 
 main()

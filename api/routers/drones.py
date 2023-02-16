@@ -1,10 +1,12 @@
 """api calls for drones."""
-import datetime
+from datetime import datetime, timedelta
 from typing import List
-from fastapi import Depends, APIRouter, HTTPException, status
+from fastapi import Depends, APIRouter, HTTPException, status, UploadFile
+from database.drone_updates_table import create_drone_update
 from .users import get_current_user
 from ..dependencies import drones
-from ..dependencies.classes import Drone, DroneEvent, DroneUpdateWithRoute, User
+from ..dependencies.drones import get_current_drone
+from ..dependencies.classes import Drone, DroneEvent, DroneUpdateWithRoute, DroneUpdate, User
 
 router = APIRouter()
 
@@ -62,15 +64,10 @@ async def read_drone_events(drone_id: int=None,
                                            timestamp=timestamp,
                                            drone_id=drone_id,
                                            zone_id=zone_id)
-    if drone_events is None:
-        raise HTTPException(
-            status_code=status.HTTP_406_NOT_ACCEPTABLE,
-            detail="Couldnt find any events.",
-        )
-
+    print(drone_events)
     return drone_events
 
-def timestamp_helper(days:int,hours:int,minutes:int) -> datetime.datetime | None:
+def timestamp_helper(days:int,hours:int,minutes:int) -> datetime | None:
     """generates a timestamp x days, y hours and z minutes before now.
 
     Args:
@@ -81,13 +78,13 @@ def timestamp_helper(days:int,hours:int,minutes:int) -> datetime.datetime | None
     Returns:
         datetime: the calculated timestamp.
     """
-    timedelta = datetime.timedelta(days=days,minutes=minutes,hours=hours)
-    if timedelta.total_seconds() == 0:
+    time_delta = timedelta(days=days,minutes=minutes,hours=hours)
+    if time_delta.total_seconds() == 0:
         return None
 
-    return datetime.datetime.utcnow() - timedelta
+    return datetime.utcnow() - timedelta
 
-@router.get("/drones/route",
+@router.get("/drones/route/",
             status_code=status.HTTP_200_OK,
             response_model=List[DroneUpdateWithRoute]
             )
@@ -151,3 +148,62 @@ async def read_drones_count(
         int: Amount of drones
     """
     return await drones.get_drone_count(zone_id,current_user.organization.id)
+
+@router.post("/drones/send-update/", status_code=status.HTTP_200_OK)
+async def drone_update(update: DroneUpdate, current_drone: Drone = Depends(get_current_drone)):
+    """Api call te recieve updates from drones
+
+    Args:
+        update (DroneUpdate): updtade object
+        current_drone (Drone, optional): drone to use. Defaults to Depends(get_current_drone).
+
+    Returns:
+        dict: response
+    """
+    if current_drone is None:
+        return {"message": "invalid drone"}
+
+    create_drone_update(
+        current_drone.id,
+        update.timestamp,
+        update.lon,
+        update.lat,
+        update.flight_range,
+        update.flight_time
+    )
+
+    return {"message": "seccess"}
+
+
+@router.post("/drones/send-event/")
+async def drone_event(
+    event: DroneEvent,
+    file: UploadFile,
+    current_drone: Drone = Depends(get_current_drone)):
+    """Api call to recieve events form drones
+
+    Args:
+        event (DroneEvent): Event from the drone
+        file (UploadFile): Associated image file
+        current_drone (Drone, optional): Drone to use. Defaults to Depends(get_current_drone).
+
+    Returns:
+        dict: response
+    """
+    #todo: add event to db + create link to saved location (path)
+    try:
+        if current_drone is None:
+            return {"message:": "Invalid drone" }
+        content = file.file.read()
+        date = str(datetime.now().timestamp())
+        new_file_name = file.filename + date
+        path = "./drone_images/" + new_file_name + ".jpg"
+        new_file = open(path, "w", encoding="utf-8")
+        new_file.write(content)
+        new_file.close()
+        #check if this is correct
+        url = "https://kiwa.tech/api/drone_images/" + new_file_name + ".jpg"
+        return {"url": url, "event": event}
+    except Exception as err:
+        print(err)
+        return {"message": "success"}

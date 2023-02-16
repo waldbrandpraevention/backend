@@ -13,10 +13,10 @@ EMAIL_REGEX = r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)"
 file_path = os.path.realpath(__file__)
 file_path= os.path.dirname(file_path)
 file_path= os.path.dirname(file_path)
-spatialite_path = 'mod_spatialite-5.0.1-win-amd64'
-spatialite_path = os.path.join(file_path,spatialite_path)
+SPARTIALITE_PATH = 'mod_spatialite-5.0.1-win-amd64'
+SPARTIALITE_PATH = os.path.join(file_path,SPARTIALITE_PATH)
 # e.g. spatialite_path  = 'C:/Users/pedro/Documents/mod_spatialite-NG-win-amd64
-os.environ['PATH'] = spatialite_path + ';' + os.environ['PATH']
+os.environ['PATH'] = SPARTIALITE_PATH + ';' + os.environ['PATH']
 
 conections = []
 

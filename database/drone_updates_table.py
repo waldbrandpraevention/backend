@@ -1,4 +1,4 @@
-
+"""DB functions for drone updates"""
 import datetime
 from typing import List
 from shapely.geometry import Point, LineString, mapping
@@ -130,7 +130,7 @@ def get_drone_updates(  polygon:str,
     output = []
     if get_coords_only:
         return get_routeobj_from_fetched(fetched_data)
-    
+
     for drone_data in fetched_data:
         dronedata = get_obj_from_fetched(drone_data)
         if dronedata:
@@ -245,7 +245,7 @@ def get_routeobj_from_fetched(fetched_dronedataarr) -> List[DroneUpdate]| None:
     """
     if fetched_dronedataarr is None:
         return None
-    
+
     drones_arr = []
     route_arr = []
     fetched_dronedataarr.sort(key=lambda x: x[0])#TODO sql sort
@@ -268,7 +268,15 @@ def get_routeobj_from_fetched(fetched_dronedataarr) -> List[DroneUpdate]| None:
     return drones_arr
 
 def create_drone_with_route(drone_update:DroneUpdate,route:List[Point]) -> DroneUpdateWithRoute:
+    """creates a drone witha route o
 
+    Args:
+        drone_update: update
+        route: rist of points
+
+    Returns:
+       DroneUpdateWithRoute: new object
+    """
     if drone_update is None:
         return None
 
