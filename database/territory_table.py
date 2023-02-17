@@ -1,31 +1,53 @@
 """This module contains the territory table and its related functions."""
 from typing import List
-from database import drone_events_table, zones_table
+from database import drone_events_table, drone_updates_table, zones_table
 import database.database as db
-from api.dependencies.classes import Territory, TerritoryWithZones, Zone
+from api.dependencies.classes import FireRisk, Territory, TerritoryWithZones, Zone
+from database.spatia import spatiageostr_to_geojson
 
 CREATE_TERRITORY_TABLE = '''CREATE TABLE IF NOT EXISTS territories
 (
 id           integer NOT NULL ,
 orga_id      integer NOT NULL ,
 name         text NOT NULL ,
-desscription text NOT NULL ,
+description text,
 PRIMARY KEY (id)
 );
 CREATE UNIQUE INDEX IF NOT EXISTS territory_AK ON territories (name,orga_id);'''
 # unique index on name and orga_id, so that no two territories
 # with the same name can be created in the same organization.
 
-INSERT_TERRITORY = 'INSERT INTO territories (orga_id, name, desscription) VALUES (?,?,?);'
+INSERT_TERRITORY = 'INSERT INTO territories (orga_id, name, description) VALUES (?,?,?);'
 UPDATE_TERRITORY = 'UPDATE territories SET {} = ? WHERE name = ?;'
-GET_TERRITORY = '''SELECT id,orga_id,name,desscription
+GET_TERRITORY = '''SELECT id,orga_id,name,description
                     FROM territories
+                    Jo
                     {};'''
 GET_TERRITORY_IDS = '''SELECT id
                     FROM territories
                     {};'''
 
-def create_territory(orga_id: int, name: str, description: str) -> int | None:
+GET_ORGA_AREA = """
+SELECT 
+territories.id,
+territories.orga_id,
+territories.name,
+territories.description,
+AsGeoJSON(GUnion(area)) as oarea,
+X(ST_Centroid(GUnion(area)))as lon,
+Y(ST_Centroid(GUnion(area)))as lat,
+MAX(drone_data.timestamp),
+COUNT(DISTINCT drone_id),
+COUNT(DISTINCT territory_zones.zone_id)
+from zones
+JOIN territory_zones 
+ON zones.id = territory_zones.zone_id
+JOIN territories ON territories.id = territory_zones.territory_id
+LEFT JOIN drone_data ON ST_Intersects(drone_data.coordinates, area)
+WHERE territories.orga_id = ?
+;"""
+
+def create_territory(orga_id: int, name: str, description: str=None) -> int | None:
     """create a territory.
 
     Args:
@@ -59,7 +81,7 @@ def get_territories(orga_id: int) -> List[Territory]:
     Returns:
         list: list of all territories.
     """
-    fetched_territories = db.fetch_all(GET_TERRITORY.format('WHERE orga_id = ?'), (orga_id,))
+    fetched_territories = db.fetch_all(GET_ORGA_AREA, (orga_id,))
     if fetched_territories is None:
         return None
     output = []
@@ -99,40 +121,40 @@ def get_obj_from_fetched(fetched_territory: tuple) -> TerritoryWithZones:
     Returns:
         Territory: the territory object.
     """
-    if not db.fetched_match_class(Territory, fetched_territory):
+    if not db.fetched_match_class(TerritoryWithZones, fetched_territory, subtract=2):
         return None
-    territory_id, orga_id, name, description = fetched_territory
 
-    areas = drone_events_table.get_areas_in_territory(territory_id)
+    geo_json = spatiageostr_to_geojson(fetched_territory[4])
 
     events = drone_events_table.get_drone_event(
-                                    polygon=fetched_zone[4], 
-                                    after=after)
+                                    polygon=fetched_territory[4])
 
-    last_update = drone_updates_table.get_lastest_update_in_zone(
-                    fetched_zone[4])
-    if last_update is not None:
-        la_timestam = last_update.timestamp
-    else:
-        la_timestam = None
+    la_timestam = fetched_territory[7]
+
 
     if events:
         ai_firerisk_enum = drone_events_table.calculate_firerisk(events)
     else:
         ai_firerisk_enum = FireRisk(1)
 
-    #dwd_fire_risk: FireRisk | None = None
-    # ai_fire_risk: FireRisk | None = None
-    # drone_count: int | None = None
-    # zone_count: int | None = None
-    # last_update: datetime | None = None
-    return TerritoryWithZones(territory_id,
-                              orga_id,
-                              name,
-                              description,
-                              ai_firerisk_enum,
-                              dwd_fire_risk,
-                              drone_count,
-                              zone_count,
-                              la_timestam)
+    zone_count = fetched_territory[9] #TODO
 
+    try:
+        lon = fetched_territory[5]
+        lat= fetched_territory[6]
+    except IndexError:
+        lon = None
+        lat= None
+
+    return TerritoryWithZones(id=fetched_territory[0],
+                              orga_id=fetched_territory[1],
+                              name=fetched_territory[2],
+                              description=fetched_territory[3],
+                              dwd_fire_risk=None,
+                              ai_fire_risk=ai_firerisk_enum,
+                              drone_count=fetched_territory[8],
+                              zone_count=zone_count,
+                              last_update=la_timestam,
+                              geo_json=geo_json,
+                              lon=lon,
+                              lat=lat)

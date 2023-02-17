@@ -35,15 +35,16 @@ INSERT INTO drone_event (drone_id,timestamp,coordinates,event_type,confidence,pi
 VALUES (? ,?,MakePoint(?, ?, 4326)  ,? ,?,?,?);'''
 
 GET_ENTRY = '''
-SELECT drone_id,timestamp, X(coordinates), Y(coordinates),event_type,confidence,picture_path,csv_file_path
-FROM drone_event 
+SELECT drone_id,timestamp, X(coordinates), Y(coordinates),event_type,confidence,picture_path,csv_file_path, zones.id
+FROM drone_event
+LEFT JOIN zones ON ST_Intersects(zones.area, coordinates)
 {}
 ORDER BY timestamp DESC;'''
 
 GET_EVENT_IN_ZONE = '''
-SELECT drone_id,timestamp, X(coordinates), Y(coordinates),event_type,confidence,picture_path,csv_file_path
+SELECT drone_id,timestamp, X(coordinates), Y(coordinates),event_type,confidence,picture_path,csv_file_path, zones.id
 FROM drone_event
-WHERE ST_Intersects(drone_event.coordinates, GeomFromGeoJSON(?)) 
+JOIN zones ON ST_Intersects(zones.area, coordinates)
 AND timestamp > ? AND timestamp < ?;'''
 
 
@@ -214,7 +215,8 @@ def get_obj_from_fetched(fetched_dronedata) -> DroneEvent | None:
             event_type=eventtype,
             confidence=fetched_dronedata[5],
             picture_path=fetched_dronedata[6],
-            csv_file_path=fetched_dronedata[7]
+            csv_file_path=fetched_dronedata[7],
+            zone_id=fetched_dronedata[8]
         )
         return drone_data_obj
     return None

@@ -6,7 +6,7 @@ import database.database as db
 from database import zones_table
 import database.organizations_table as orgas_table
 
-CREATE_ORGAZONES_TABLE = """ CREATE TABLE territory_zones
+CREATE_TERRITORYZONES_TABLE = """ CREATE TABLE territory_zones
 (
 territory_id     integer NOT NULL ,
 zone_id     integer NOT NULL ,
@@ -33,7 +33,7 @@ GET_ORGAZONES_BY_ZONE = 'SELECT territory_id FROM territory_zones WHERE zone_id=
 UPDATE_ATTRIBUTE = 'UPDATE territory_zones SET {} = ? WHERE name = ?;'
 
 
-def link_orgazone(territory_id:int,zone_id:int)->bool:
+def link_territory_zone(territory_id:int,zone_id:int)->bool:
     """link an organization with a zone.
 
     Args:
@@ -49,7 +49,7 @@ def link_orgazone(territory_id:int,zone_id:int)->bool:
 
     return False
 
-def get_zones_by_orga(territory_id:int) -> List[Zone] | None:
+def get_zones_by_orga(orga_id:int) -> List[Zone] | None:
     """fetches all zones, linked to an organization.
 
     Args:
@@ -58,7 +58,7 @@ def get_zones_by_orga(territory_id:int) -> List[Zone] | None:
     Returns:
         List[Zone] | None: list of zones.
     """
-    fetched_zones = db.fetch_all(zones_table.GET_ORGAZONES,(territory_id,))
+    fetched_zones = db.fetch_all(zones_table.GET_ORGAZONES,(orga_id,))
     if fetched_zones is None:
         return None
     output = []

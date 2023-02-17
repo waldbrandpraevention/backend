@@ -147,6 +147,7 @@ class DroneEvent(BaseModel):
     confidence: int | None = None
     picture_path :str| None = None
     csv_file_path :str| None = None
+    zone_id :int| None = None
 
 class Zone(BaseModel):
     """ Zone class. Contains all the information about a zone. """
@@ -177,6 +178,9 @@ class TerritoryWithZones(Territory):
     drone_count: int | None = None
     zone_count: int | None = None
     last_update: datetime | None = None
+    geo_json: dict | None = None
+    lon : float | None = None
+    lat : float | None = None
 
 class WindInfo(BaseModel):
     """Wind inforamtion"""

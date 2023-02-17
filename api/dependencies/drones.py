@@ -7,7 +7,7 @@ from database import (drones_table,
                       drone_events_table,
                       drone_updates_table as drone_data_table,
                       zones_table)
-from database.orga_zones_table import get_orgazones_by_id
+from database.territory_zones_table import get_orgazones_by_id
 from .authentication import create_access_token, DRONE_TOKEN_EXPIRE_WEEKS, get_email_from_token
 
 

@@ -64,7 +64,7 @@ GET_ZONES_BY_DISTRICT = '''SELECT id,name,federal_state,district,AsGeoJSON(area)
                             WHERE district = ?
                             GROUP BY name;'''
 
-GET_ORGAZONES = '''  SELECT id,name,federal_state,district,AsGeoJSON(area),
+GET_ORGAZONES = '''  SELECT zones.id,zones.name,federal_state,district,AsGeoJSON(area),
                         X(geo_point),Y(geo_point),Count(DISTINCT drone_id)
                     FROM zones
                     JOIN territory_zones 
@@ -72,17 +72,7 @@ GET_ORGAZONES = '''  SELECT id,name,federal_state,district,AsGeoJSON(area),
                     JOIN territories ON territories.id = territory_zones.territory_id
                     LEFT JOIN drone_data ON ST_Intersects(drone_data.coordinates, area)
                     WHERE territories.orga_id=?
-                    GROUP BY name;'''
-
-GET_ORGA_AREA = """   Select AsGeoJSON(GUnion(area)) as oarea,
-ST_AsText(ST_Centroid(GUnion(area)))as center, 
-Count(Distinct drone_id)
-from zones
-JOIN territory_zones 
-ON zones.id = territory_zones.zone_id
-JOIN territories ON territories.id = territory_zones.territory_id
-LEFT JOIN drone_data ON ST_Intersects(drone_data.coordinates, area)
-WHERE territory_zones.orga_id = ?;"""
+                    GROUP BY zones.name;'''
 
 
 GETWITHDRONECOUNT = """ SELECT id,name,federal_state,district,AsGeoJSON(area),

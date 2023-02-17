@@ -27,7 +27,7 @@ import database.drones_table as drones_table
 import database.drone_events_table as drones_event_table
 import database.drone_updates_table as drone_zone_data_table
 import database.zones_table as zone_table
-import database.orga_zones_table as oz_table
+import database.territory_zones_table as oz_table
 from database.organizations_table import OrgAttributes, create_orga, get_orga, update_orga
 from database import settings_table, user_settings_table
 
