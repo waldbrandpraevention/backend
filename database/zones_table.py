@@ -54,7 +54,7 @@ GET_ZONEJOINORGA ='''SELECT zones.id,zones.name,federal_state,district,AsGeoJSON
                     JOIN territories ON territories.id = territory_zones.territory_id
                     LEFT JOIN drone_data ON ST_Intersects(drone_data.coordinates, area)
                     WHERE zones.{}=? 
-                    AND territory_zones.orga_id=?
+                    AND territories.orga_id=?
                     GROUP BY name;'''
 
 GET_ZONES_BY_DISTRICT = '''SELECT zones.id,zones.name,federal_state,district,AsGeoJSON(area),
@@ -73,16 +73,6 @@ GET_ORGAZONES = '''  SELECT zones.id,zones.name,federal_state,district,AsGeoJSON
                     LEFT JOIN drone_data ON ST_Intersects(drone_data.coordinates, area)
                     WHERE territories.orga_id=?
                     GROUP BY zones.name;'''
-
-
-GETWITHDRONECOUNT = """ SELECT id,name,federal_state,district,AsGeoJSON(area),
-                        X(geo_point),Y(geo_point),Count(DISTINCT drone_id)
-                        FROM zones
-                        join organization_zones on organization_zones.zone_id = zones.id
-                        LEFT JOIN drone_data ON ST_Intersects(drone_data.coordinates, area)
-                        where organization_zones.orga_id = 1
-                        GROUP BY zones.id
-                        ORDER BY zones.name"""
 
 
 def load_from_geojson(path_to_geojson) -> int:
