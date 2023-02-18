@@ -24,7 +24,7 @@ async def test_zones():
     orga_geo = spatiageostr_to_geojson(orga_area)
     assert orga_geo == territory.geo_json
 
-    
+
     zones_arr = await zones.get_all_zones(user.organization.id)
     demo_distr = os.getenv("DEMO_DISTRICT")
     for fetched in zones_arr:

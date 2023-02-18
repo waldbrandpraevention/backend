@@ -1,6 +1,6 @@
+""" API routes for territories."""
 from typing import List
 from fastapi import Depends, APIRouter, HTTPException, status
-
 
 from api.dependencies.territories import get_territories, get_territory_by_id
 from .users import get_current_user
@@ -43,7 +43,7 @@ async def read_territory(territory_id: int, current_user: User = Depends(get_cur
     """
 
     territory = await get_territory_by_id(territory_id, current_user.organization.id)
-    if not territory:
+    if territory is None:
         raise HTTPException(
             status_code=status.HTTP_406_NOT_ACCEPTABLE,
             detail="Territory does not exist or isnt linked to your orga.",

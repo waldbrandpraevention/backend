@@ -202,7 +202,15 @@ def get_zone_of_coordinate(long, lat) -> Zone | None:
     fetched_zone = db.fetch_one(sql, (long, lat))
     return get_obj_from_fetched(fetched_zone)
 
-def get_zones_in_area(area:str) -> Zone | None:
+def get_zones_in_area(area:str) -> List[Zone] | None:
+    """fetch all zones in the given area.
+    
+    Args:
+        area (str): geojson string of the area.
+        
+    Returns:
+        List[Zone] | None: list of zones in the area.
+    """
     sql = add_where_clause(GET_ZONE,[ZoneWhereClause.GEOJSONINTERSECT])
     fetched_zones = db.fetch_all(sql, (area,))
 

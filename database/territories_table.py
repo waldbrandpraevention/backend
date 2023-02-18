@@ -1,9 +1,10 @@
 """This module contains the territory table and its related functions."""
 from typing import List
-from database import drone_events_table, drone_updates_table, zones_table
+from database import drone_events_table, zones_table
 import database.database as db
-from api.dependencies.classes import FireRisk, Territory, TerritoryWithZones, Zone
 from database.spatia import spatiageostr_to_geojson
+from api.dependencies.classes import FireRisk, Territory, TerritoryWithZones, Zone
+
 
 CREATE_TERRITORY_TABLE = '''CREATE TABLE IF NOT EXISTS territories
 (
@@ -73,7 +74,7 @@ def create_territory(orga_id: int, name: str, description: str=None) -> int | No
     """
     return db.insert(INSERT_TERRITORY, (orga_id, name, description))
 
-def get_territory(territory_id: int, orga_id : int) -> Territory:
+def get_territory(territory_id: int) -> Territory:
     """fetch a territory.
 
     Args:
@@ -82,8 +83,8 @@ def get_territory(territory_id: int, orga_id : int) -> Territory:
     Returns:
         Territory: the territory object.
     """
-    sql = GET_ORGA_TERRITORIES.format('WHERE territories.id = ? AND territories.orga_id = ?')
-    fetched_territory = db.fetch_one(sql, (territory_id,orga_id))
+    sql = GET_ORGA_TERRITORIES.format('WHERE territories.id = ?')
+    fetched_territory = db.fetch_one(sql, (territory_id))
     return get_obj_from_fetched(fetched_territory)
 
 def get_territories(orga_id: int) -> List[Territory]:
@@ -107,8 +108,15 @@ def get_territories(orga_id: int) -> List[Territory]:
     return output
 
 def get_orga_area(orga_id) -> str | None:
-    """returns geojson.
+    """fetch the area of all territories of an organization.
+
+    Args:
+        orga_id (int): id of the organization that the territories belong to.
+
+    Returns:
+        str | None: the area of all territories of an organization. As a geojson string.
     """
+
     polygon = db.fetch_one(GET_ORGA_AREA, (orga_id,))
     if polygon is not None:
         return polygon[0]
