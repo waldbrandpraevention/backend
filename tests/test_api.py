@@ -4,7 +4,7 @@ from fastapi import HTTPException
 import pytest
 from api.routers import zones,users,drones
 from database import zones_table
-from database.territory_table import get_territories
+from database.territories_table import get_territories
 
 
 

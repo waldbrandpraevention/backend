@@ -20,7 +20,7 @@ from database import (users_table,
 from database.database import create_table, initialise_spatialite
 from database.drone_events_table import CREATE_DRONE_EVENT_TABLE
 from database.territory_zones_table import CREATE_TERRITORYZONES_TABLE, link_territory_zone
-from database.territory_table import CREATE_TERRITORY_TABLE, create_territory
+from database.territories_table import CREATE_TERRITORY_TABLE, create_territory
 from database.drone_updates_table import CREATE_DRONE_DATA_TABLE
 from database.drones_table import CREATE_DRONES_TABLE
 from database.organizations_table import CREATE_ORGANISATIONS_TABLE
