@@ -46,7 +46,7 @@ GET_ZONEPOLYGON = """   SELECT AsGeoJSON(area)
                         FROM zones
                         {}"""
 
-GET_ZONEJOINORGA ='''SELECT id,name,federal_state,district,AsGeoJSON(area),
+GET_ZONEJOINORGA ='''SELECT zones.id,zones.name,federal_state,district,AsGeoJSON(area),
                         X(geo_point),Y(geo_point),Count(DISTINCT drone_id)
                     FROM zones
                     JOIN territory_zones 
@@ -57,7 +57,7 @@ GET_ZONEJOINORGA ='''SELECT id,name,federal_state,district,AsGeoJSON(area),
                     AND territory_zones.orga_id=?
                     GROUP BY name;'''
 
-GET_ZONES_BY_DISTRICT = '''SELECT id,name,federal_state,district,AsGeoJSON(area),
+GET_ZONES_BY_DISTRICT = '''SELECT zones.id,zones.name,federal_state,district,AsGeoJSON(area),
                             X(geo_point),Y(geo_point),Count(DISTINCT drone_id)
                             FROM zones 
                             LEFT JOIN drone_data ON ST_Intersects(drone_data.coordinates, area)

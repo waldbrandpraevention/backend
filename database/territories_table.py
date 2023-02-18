@@ -124,7 +124,7 @@ def get_territory_zones(orga_id: int) -> List[Zone]:
         list: list of all zones.
     """
     oraga_area = get_orga_area(orga_id)
-    return zones_table.get_zones_in_area(geo_json=oraga_area)
+    return zones_table.get_zones_in_area(oraga_area)
 
 
 def get_obj_from_fetched(fetched_territory: tuple) -> TerritoryWithZones:
