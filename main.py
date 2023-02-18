@@ -28,8 +28,7 @@ from database.users_table import CREATE_USER_TABLE
 from database.zones_table import CREATE_ZONE_TABLE
 
 app = FastAPI(  title="KIWA",
-                description="test",
-                root_path="/api",)
+                description="test")
 app.include_router(users.router)
 app.include_router(emails.router)
 app.include_router(zones.router)
