@@ -5,8 +5,7 @@ from fastapi import HTTPException, status
 from api.dependencies.classes import Drone, DroneEvent, DroneUpdate, DroneUpdateWithRoute
 from database import (drones_table,
                       drone_events_table,
-                      drone_updates_table as drone_data_table,
-                      zones_table)
+                      drone_updates_table as drone_data_table, territories_table, zones_table)
 from database.territory_zones_table import get_orgazones_by_id
 from .authentication import create_access_token, DRONE_TOKEN_EXPIRE_WEEKS, get_email_from_token
 
@@ -117,7 +116,7 @@ async def get_drone_events(orga_id:int,
             detail="Invalid Zone ID",
         )
     else:
-        polygon = zones_table.get_orga_area(orga_id)[0]
+        polygon = territories_table.get_orga_area(orga_id)[0]
 
     return drone_events_table.get_drone_event(polygon=polygon,drone_id=drone_id,after=timestamp)
 
@@ -165,7 +164,7 @@ async def get_drone_with_route( orga_id:int,
             detail="Invalid Zone ID",
         )
     else:
-        polygon = zones_table.get_orga_area(orga_id)[0]
+        polygon = territories_table.get_orga_area(orga_id)[0]
 
     return drone_data_table.get_drone_updates(polygon=polygon,
                                               drone_id=drone_id,

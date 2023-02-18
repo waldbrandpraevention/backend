@@ -19,15 +19,17 @@ CREATE UNIQUE INDEX IF NOT EXISTS territory_AK ON territories (name,orga_id);'''
 
 INSERT_TERRITORY = 'INSERT INTO territories (orga_id, name, description) VALUES (?,?,?);'
 UPDATE_TERRITORY = 'UPDATE territories SET {} = ? WHERE name = ?;'
+
 GET_TERRITORY = '''SELECT id,orga_id,name,description
                     FROM territories
                     Jo
                     {};'''
+
 GET_TERRITORY_IDS = '''SELECT id
                     FROM territories
                     {};'''
 
-GET_ORGA_AREA = """
+GET_ORGA_TERRITORIES = """
 SELECT 
 territories.id,
 territories.orga_id,
@@ -39,6 +41,17 @@ Y(ST_Centroid(GUnion(area)))as lat,
 MAX(drone_data.timestamp),
 COUNT(DISTINCT drone_id),
 COUNT(DISTINCT territory_zones.zone_id)
+from zones
+JOIN territory_zones 
+ON zones.id = territory_zones.zone_id
+JOIN territories ON territories.id = territory_zones.territory_id
+LEFT JOIN drone_data ON ST_Intersects(drone_data.coordinates, area)
+{}
+;"""
+
+GET_ORGA_AREA = """
+SELECT 
+AsGeoJSON(GUnion(area)) as oarea,
 from zones
 JOIN territory_zones 
 ON zones.id = territory_zones.zone_id
@@ -60,7 +73,7 @@ def create_territory(orga_id: int, name: str, description: str=None) -> int | No
     """
     return db.insert(INSERT_TERRITORY, (orga_id, name, description))
 
-def get_territory(territory_id: int) -> Territory:
+def get_territory(territory_id: int, orga_id : int) -> Territory:
     """fetch a territory.
 
     Args:
@@ -69,7 +82,8 @@ def get_territory(territory_id: int) -> Territory:
     Returns:
         Territory: the territory object.
     """
-    fetched_territory = db.fetch_one(GET_TERRITORY.format('WHERE id = ?'), (territory_id,))
+    sql = GET_ORGA_TERRITORIES.format('WHERE territories.id = ? AND territories.orga_id = ?')
+    fetched_territory = db.fetch_one(sql, (territory_id,orga_id))
     return get_obj_from_fetched(fetched_territory)
 
 def get_territories(orga_id: int) -> List[Territory]:
@@ -81,7 +95,8 @@ def get_territories(orga_id: int) -> List[Territory]:
     Returns:
         list: list of all territories.
     """
-    fetched_territories = db.fetch_all(GET_ORGA_AREA, (orga_id,))
+    sql = GET_ORGA_TERRITORIES.format('WHERE territories.orga_id = ?')
+    fetched_territories = db.fetch_all(sql, (orga_id,))
     if fetched_territories is None:
         return None
     output = []
@@ -90,6 +105,11 @@ def get_territories(orga_id: int) -> List[Territory]:
         if territory_obj:
             output.append(territory_obj)
     return output
+
+def get_orga_area(orga_id) -> str | None:
+    """returns geojson.
+    """
+    return db.fetch_one(GET_ORGA_AREA, (orga_id,))
 
 def get_territory_zones(orga_id: int) -> List[Zone]:
     """fetch all zones.
@@ -100,17 +120,9 @@ def get_territory_zones(orga_id: int) -> List[Zone]:
     Returns:
         list: list of all zones.
     """
-    terri_ids = db.fetch_all(GET_TERRITORY.format('WHERE orga_id = ?'), (orga_id,))
-    if terri_ids is None:
-        return None
-    output = []
-    for zone in fetched_zones:
-        zone_obj = zones_table.get_obj_from_fetched(zone)
-        if zone_obj:
-            output.append(zone_obj)
-    return output
+    oraga_area = get_orga_area(orga_id)
+    return zones_table.get_zones_in_area(geo_json=oraga_area)
 
-    
 
 def get_obj_from_fetched(fetched_territory: tuple) -> TerritoryWithZones:
     """get a territory object from a fetched tuple.
@@ -137,7 +149,7 @@ def get_obj_from_fetched(fetched_territory: tuple) -> TerritoryWithZones:
     else:
         ai_firerisk_enum = FireRisk(1)
 
-    zone_count = fetched_territory[9] #TODO
+    zone_count = fetched_territory[9]
 
     try:
         lon = fetched_territory[5]

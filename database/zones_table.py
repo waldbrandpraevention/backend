@@ -212,10 +212,19 @@ def get_zone_of_coordinate(long, lat) -> Zone | None:
     fetched_zone = db.fetch_one(sql, (long, lat))
     return get_obj_from_fetched(fetched_zone)
 
-def get_orga_area(orga_id) -> str | None:
-    """returns geojson.
-    """
-    return db.fetch_one(GET_ORGA_AREA, (orga_id,))
+def get_zones_in_area(area:str) -> Zone | None:
+    sql = add_where_clause(GET_ZONE,[ZoneWhereClause.GEOJSONINTERSECT])
+    fetched_zones = db.fetch_all(sql, (area,))
+
+    if fetched_zones is None:
+        return None
+
+    output = []
+    for zone in fetched_zones:
+        zone_obj = get_obj_from_fetched(zone)
+        if zone_obj:
+            output.append(zone_obj)
+    return output
 
 
 def get_zone_of_by_district(name: str) -> List[Zone] | None:

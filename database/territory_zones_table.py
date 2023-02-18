@@ -24,7 +24,7 @@ INSERT_ORGAZONE =  "INSERT INTO territory_zones (territory_id,zone_id) VALUES (?
 GET_ZONEORGAS = ''' SELECT *
                     FROM organizations
                     Join territories on organizations.id = territories.orga_id
-                    LEFT JOIN territory_zones 
+                    JOIN territory_zones 
                     ON territories.id = territory_zones.territory_id
                     WHERE territory_zones.zone_id=?;'''
 
@@ -85,7 +85,7 @@ def get_orgas_by_zone(zone_id:int) -> List[Organization] | None:
         output.append(orga)
     return output
 
-def get_orgazones_by_name(name,territory_id) -> Zone | None:
+def get_orgazones_by_name(name,orga_id) -> Zone | None:
     """fetch the zone by its name and make sure its a zone that the orga is allowed to see.
 
     Args:
@@ -96,10 +96,10 @@ def get_orgazones_by_name(name,territory_id) -> Zone | None:
         Zone | None: zone object.
     """
     sql = zones_table.GET_ZONEJOINORGA.format('name')
-    fetched_zone = db.fetch_one(sql,(name,territory_id))
+    fetched_zone = db.fetch_one(sql,(name,orga_id))
     return zones_table.get_obj_from_fetched(fetched_zone)
 
-def get_orgazones_by_id(zone_id,territory_id) -> Zone | None:
+def get_orgazones_by_id(zone_id,orga_id) -> Zone | None:
     """fetch the zone by its id and make sure its a zone that the orga is allowed to see.
 
     Args:
@@ -110,5 +110,5 @@ def get_orgazones_by_id(zone_id,territory_id) -> Zone | None:
         Zone | None: zone object.
     """
     sql = zones_table.GET_ZONEJOINORGA.format('id')
-    fetched_zone = db.fetch_one(sql,(zone_id,territory_id))
+    fetched_zone = db.fetch_one(sql,(zone_id,orga_id))
     return zones_table.get_obj_from_fetched(fetched_zone)
