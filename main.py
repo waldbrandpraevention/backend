@@ -28,7 +28,8 @@ from database.users_table import CREATE_USER_TABLE
 from database.zones_table import CREATE_ZONE_TABLE
 
 app = FastAPI(  title="KIWA",
-                description="test")
+                description="test",
+                swagger_ui_oauth2_redirect_url="/api/users/login",)
 app.include_router(users.router)
 app.include_router(emails.router)
 app.include_router(zones.router)
