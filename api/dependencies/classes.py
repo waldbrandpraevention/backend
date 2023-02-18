@@ -158,6 +158,8 @@ class Zone(BaseModel):
     events: List[DroneEvent] | None = None
     dwd_fire_risk: FireRisk | None = None
     ai_fire_risk: FireRisk | None = None
+    ai_fire_detection: FireRisk | None = None
+    ai_smoke_detection: FireRisk | None = None
     geo_json: dict | None = None
     lon :float | None = None
     lat :float | None = None

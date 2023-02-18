@@ -303,9 +303,9 @@ def get_obj_from_fetched(
             la_timestam = None
 
         if events:
-            ai_firerisk_enum = drone_events_table.calculate_firerisk(events)
+            ai_firerisk_enum, firerisk, smokerisk = drone_events_table.calculate_firerisk(events)
         else:
-            ai_firerisk_enum = FireRisk(1)
+            ai_firerisk_enum, firerisk, smokerisk  = FireRisk(1)
 
         try:
             lon = fetched_zone[5]
@@ -325,7 +325,9 @@ def get_obj_from_fetched(
             lon=lon,
             lat=lat,
             last_update=la_timestam,
-            drone_count=fetched_zone[7]
+            drone_count=fetched_zone[7],
+            fire_risk=firerisk,
+            smoke_risk=smokerisk
         )
         return zone_obj
     return None

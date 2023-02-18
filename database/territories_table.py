@@ -148,7 +148,7 @@ def get_obj_from_fetched(fetched_territory: tuple) -> TerritoryWithZones:
 
 
     if events:
-        ai_firerisk_enum = drone_events_table.calculate_firerisk(events)
+        ai_firerisk_enum, fire, smoke = drone_events_table.calculate_firerisk(events)[0]
     else:
         ai_firerisk_enum = FireRisk(1)
 
