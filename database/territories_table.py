@@ -51,7 +51,7 @@ LEFT JOIN drone_data ON ST_Intersects(drone_data.coordinates, area)
 
 GET_ORGA_AREA = """
 SELECT 
-AsGeoJSON(GUnion(area)) as oarea,
+AsGeoJSON(GUnion(area)) as oarea
 from zones
 JOIN territory_zones 
 ON zones.id = territory_zones.zone_id
@@ -109,7 +109,10 @@ def get_territories(orga_id: int) -> List[Territory]:
 def get_orga_area(orga_id) -> str | None:
     """returns geojson.
     """
-    return db.fetch_one(GET_ORGA_AREA, (orga_id,))
+    polygon = db.fetch_one(GET_ORGA_AREA, (orga_id,))
+    if polygon is not None:
+        return polygon[0]
+    return None
 
 def get_territory_zones(orga_id: int) -> List[Zone]:
     """fetch all zones.

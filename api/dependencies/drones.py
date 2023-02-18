@@ -116,7 +116,7 @@ async def get_drone_events(orga_id:int,
             detail="Invalid Zone ID",
         )
     else:
-        polygon = territories_table.get_orga_area(orga_id)[0]
+        polygon = territories_table.get_orga_area(orga_id)
 
     return drone_events_table.get_drone_event(polygon=polygon,drone_id=drone_id,after=timestamp)
 
@@ -164,7 +164,7 @@ async def get_drone_with_route( orga_id:int,
             detail="Invalid Zone ID",
         )
     else:
-        polygon = territories_table.get_orga_area(orga_id)[0]
+        polygon = territories_table.get_orga_area(orga_id)
 
     return drone_data_table.get_drone_updates(polygon=polygon,
                                               drone_id=drone_id,

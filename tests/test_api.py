@@ -4,7 +4,7 @@ from fastapi import HTTPException
 import pytest
 from api.routers import zones,users,drones
 from database import zones_table
-from database.territories_table import get_territories
+from database.territories_table import get_orga_area, get_territories
 
 
 
@@ -14,6 +14,7 @@ async def test_zones():
     """
     #fetched = zones_table.get_zones()
     test = get_territories(1)
+    test = get_orga_area(1)
     user = users.get_user(os.getenv("ADMIN_MAIL"))
     zones_arr = await zones.get_all_zones(user.organization.id)
     demo_distr = os.getenv("DEMO_DISTRICT")
