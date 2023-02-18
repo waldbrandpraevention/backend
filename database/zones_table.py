@@ -288,7 +288,7 @@ def get_obj_from_fetched(
     Returns:
         Zone | None: zone object or None if obj cant be generated.
     """
-    if fetched_match_class(Zone, fetched_zone,4):
+    if fetched_match_class(Zone, fetched_zone,6):
         geo_json = spatiageostr_to_geojson(fetched_zone[4])
 
         events = drone_events_table.get_drone_event(
@@ -305,7 +305,9 @@ def get_obj_from_fetched(
         if events:
             ai_firerisk_enum, firerisk, smokerisk = drone_events_table.calculate_firerisk(events)
         else:
-            ai_firerisk_enum, firerisk, smokerisk  = FireRisk(1)
+            ai_firerisk_enum= FireRisk(1)
+            firerisk= FireRisk(1)
+            smokerisk  = FireRisk(1)
 
         try:
             lon = fetched_zone[5]
@@ -326,8 +328,8 @@ def get_obj_from_fetched(
             lat=lat,
             last_update=la_timestam,
             drone_count=fetched_zone[7],
-            fire_risk=firerisk,
-            smoke_risk=smokerisk
+            ai_fire_detection=firerisk,
+            ai_smoke_detection=smokerisk
         )
         return zone_obj
     return None

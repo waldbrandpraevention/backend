@@ -246,12 +246,12 @@ def calculate_firerisk(events: List[DroneEvent]) -> tuple[FireRisk,FireRisk,Fire
                 firerisk = event.confidence
 
     try:
-        smoke_risk = EventType(round(smokerisk * 5))
+        smoke_risk = FireRisk(round(smokerisk/100 * 5))
     except TypeError:
         smoke_risk = None
     
     try:
-        fire_risk = EventType(round(firerisk * 5))
+        fire_risk = FireRisk(round(firerisk/100 * 5))
     except TypeError:
         fire_risk = None
 
