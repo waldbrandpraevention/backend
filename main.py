@@ -6,7 +6,7 @@ from threading import Thread
 from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 
-#from simulation.sim import simulate
+from simulation.sim import simulate
 from api.dependencies.authentication import get_password_hash
 from api.dependencies.emails import send_email
 from api.dependencies.classes import UserWithSensitiveInfo
@@ -33,7 +33,7 @@ app.include_router(users.router)
 app.include_router(emails.router)
 app.include_router(zones.router)
 app.include_router(drones.router)
-#app.include_router(simulation.router)
+app.include_router(simulation.router)
 app.include_router(territories.router)
 
 # CORS https://fastapi.tiangolo.com/tutorial/cors/
@@ -141,12 +141,12 @@ def main():
     load_zones_from_geojson()
 
     #make sure this actually works
-    #try:
-        #simulation_thread = Thread(target = simulate)
-        #simulation_thread.start()
+    try:
+        simulation_thread = Thread(target = simulate)
+        simulation_thread.start()
         #weather_thread.start()
-    #except Exception as err:
-      # print(err)
+    except Exception as err:
+        print(err)
 
 
 main()
