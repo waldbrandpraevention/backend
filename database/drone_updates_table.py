@@ -34,14 +34,17 @@ GET_ENTRY ='''SELECT
                 flight_range,
                 flight_time,
                 X(coordinates),
-                Y(coordinates)
-                FROM drone_data 
+                Y(coordinates),
+                zones.id
+                FROM drone_data
+                LEFT JOIN zones ON ST_Intersects(zones.area, coordinates) 
                 {}
                 ORDER BY timestamp DESC;'''
 
 GET_UPDATE_IN_ZONE = '''
-SELECT drone_id,timestamp,flight_range,flight_time, X(coordinates), Y(coordinates)
+SELECT drone_id,timestamp,flight_range,flight_time, X(coordinates), Y(coordinates),zones.id
 FROM drone_data
+LEFT JOIN zones ON ST_Intersects(zones.area, coordinates)
 WHERE ST_Intersects(drone_data.coordinates, GeomFromGeoJSON(?)) 
 AND timestamp > ? AND timestamp < ?
 ORDER BY timestamp DESC;'''
@@ -250,7 +253,8 @@ def get_obj_from_fetched(fetched_dronedata) -> DroneUpdate| None:
             lon= longitude,
             lat = latitude,
             flight_range = fetched_dronedata[2],
-            flight_time = fetched_dronedata[3]
+            flight_time = fetched_dronedata[3],
+            zone_id = fetched_dronedata[6]
         )
         return drone_data_obj
     return None
@@ -315,4 +319,5 @@ def create_drone_with_route(drone_update:DroneUpdate,route:List[Point]) -> Drone
                     lat=drone_update.lat,
                     flight_range=drone_update.flight_range,
                     flight_time=drone_update.flight_time,
-                    geojson=geojson)
+                    geojson=geojson,
+                    zone_id=drone_update.zone_id)

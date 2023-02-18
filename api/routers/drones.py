@@ -64,7 +64,6 @@ async def read_drone_events(drone_id: int=None,
                                            timestamp=timestamp,
                                            drone_id=drone_id,
                                            zone_id=zone_id)
-    print(drone_events)
     return drone_events
 
 def timestamp_helper(days:int,hours:int,minutes:int) -> datetime | None:

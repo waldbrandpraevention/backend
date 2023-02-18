@@ -123,6 +123,7 @@ class DroneUpdate(BaseModel):
     lat:float | None = None
     flight_range: float | None = None
     flight_time: float | None = None
+    zone_id :int| None = None
 
 class DroneUpdateWithRoute(DroneUpdate):
     """ DroneUpdate including its route.
