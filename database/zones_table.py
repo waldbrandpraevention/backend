@@ -55,14 +55,14 @@ GET_ZONEJOINORGA ='''SELECT zones.id,zones.name,federal_state,district,AsGeoJSON
                     LEFT JOIN drone_data ON ST_Intersects(drone_data.coordinates, area)
                     WHERE zones.{}=? 
                     AND territories.orga_id=?
-                    GROUP BY name;'''
+                    GROUP BY zones.name;'''
 
 GET_ZONES_BY_DISTRICT = '''SELECT zones.id,zones.name,federal_state,district,AsGeoJSON(area),
                             X(geo_point),Y(geo_point),Count(DISTINCT drone_id)
                             FROM zones 
                             LEFT JOIN drone_data ON ST_Intersects(drone_data.coordinates, area)
                             WHERE district = ?
-                            GROUP BY name;'''
+                            GROUP BY zones.name;'''
 
 GET_ORGAZONES = '''  SELECT zones.id,zones.name,federal_state,district,AsGeoJSON(area),
                         X(geo_point),Y(geo_point),Count(DISTINCT drone_id)
