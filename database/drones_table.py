@@ -36,9 +36,10 @@ zones.id
 FROM drones
 JOIN drone_data ON drone_data.drone_id = drones.id
 JOIN zones ON ST_Intersects(drone_data.coordinates, zones.area)
-JOIN organization_zones ON organization_zones.zone_id = zones.id
+JOIN territory_zones ON territory_zones.zone_id = zones.id
+JOIN territories ON territories.id = territory_zones.territory_id
 WHERE drones.id=?
-AND organization_zones.orga_id = ?
+AND territories.orga_id = ?
 Group by drones.id
 Order by drone_data.timestamp;'''
 
@@ -53,8 +54,9 @@ zones.id
 FROM drones
 JOIN drone_data ON drone_data.drone_id = drones.id
 JOIN zones ON ST_Intersects(drone_data.coordinates, zones.area)
-JOIN organization_zones ON organization_zones.zone_id = zones.id
-WHERE organization_zones.orga_id = ?
+JOIN territory_zones ON territory_zones.zone_id = zones.id
+JOIN territories ON territories.id = territory_zones.territory_id
+WHERE territories.orga_id = ?
 Group by drones.id
 Order by drone_data.timestamp;'''
 

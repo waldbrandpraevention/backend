@@ -15,8 +15,8 @@ FOREIGN KEY (territory_id) REFERENCES territories (id),
 FOREIGN KEY (zone_id) REFERENCES Zones (id)
 );
 
-CREATE INDEX IF NOT EXISTS organization_zones_FK_2 ON territory_zones (territory_id);
-CREATE INDEX IF NOT EXISTS organization_zones_FK_3 ON territory_zones (zone_id);"""
+CREATE INDEX IF NOT EXISTS territory_zones_FK_2 ON territory_zones (territory_id);
+CREATE INDEX IF NOT EXISTS territory_zones_FK_3 ON territory_zones (zone_id);"""
 
 INSERT_ORGAZONE =  "INSERT INTO territory_zones (territory_id,zone_id) VALUES (?,?);"
 

@@ -84,7 +84,7 @@ def get_territory(territory_id: int) -> Territory:
         Territory: the territory object.
     """
     sql = GET_ORGA_TERRITORIES.format('WHERE territories.id = ?')
-    fetched_territory = db.fetch_one(sql, (territory_id))
+    fetched_territory = db.fetch_one(sql, (territory_id,))
     return get_obj_from_fetched(fetched_territory)
 
 def get_territories(orga_id: int) -> List[Territory]:

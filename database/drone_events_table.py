@@ -150,24 +150,7 @@ def get_drone_event(drone_id: int = None,
     Returns:
         List[DroneData]: List with the fetched data.
     """
-    sql_arr = []
-    tuple_arr = []
-    if drone_id is not None:
-        sql_arr.append(db.create_where_clause_statement(f'{DRONE_ID}','='))
-        tuple_arr.append(drone_id)
-
-    if polygon is not None:
-
-        sql_arr.append(db.create_intersection_clause(COORDINATES))
-        tuple_arr.append(polygon)
-
-    if after is not None:
-        sql_arr.append(db.create_where_clause_statement(f'{TIMESTAMP}','>'))
-        tuple_arr.append(after)
-
-    if before is not None:
-        sql_arr.append(db.create_where_clause_statement(f'{TIMESTAMP}','<'))
-        tuple_arr.append(before)
+    sql_arr, tuple_arr = drone_updates_table.gernerate_drone_sql(polygon, drone_id, after, before)
 
     sql = db.add_where_clause(GET_ENTRY, sql_arr)
 
