@@ -29,7 +29,7 @@ from database.zones_table import CREATE_ZONE_TABLE
 
 app = FastAPI(  title="KIWA",
                 description="test",
-                docs_url="/docs",)
+                root_path="/api",)
 app.include_router(users.router)
 app.include_router(emails.router)
 app.include_router(zones.router)
