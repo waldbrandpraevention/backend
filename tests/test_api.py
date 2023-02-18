@@ -3,8 +3,10 @@ import os
 from fastapi import HTTPException
 import pytest
 from api.routers import zones,users,drones
+from api.routers.territories import read_territories,read_territory
 from database import zones_table
-from database.territories_table import get_orga_area, get_territories
+from database.spatia import spatiageostr_to_geojson
+from database.territories_table import get_orga_area
 
 
 
@@ -13,13 +15,21 @@ async def test_zones():
     """zone api tests.
     """
     #fetched = zones_table.get_zones()
-    test = get_territories(1)
-    test = get_orga_area(1)
     user = users.get_user(os.getenv("ADMIN_MAIL"))
+    territories = await read_territories(user)
+    assert len(territories) == 1
+    territory = await read_territory(1,user)
+    assert territory.name == 'Landkreis Potsdam-Mittelmark'
+    orga_area = get_orga_area(1)
+    orga_geo = spatiageostr_to_geojson(orga_area)
+    assert orga_geo == territory.geo_json
+
+    
     zones_arr = await zones.get_all_zones(user.organization.id)
     demo_distr = os.getenv("DEMO_DISTRICT")
-    # for fetched in zones_arr:
-    #     assert fetched.district == demo_distr, 'Wrong Zone linked.'
+    for fetched in zones_arr:
+        assert fetched.district == demo_distr, 'Wrong Zone linked.'
+
     index = len(zones_arr)-1
     zone = await zones.read_zone(zones_arr[index].id,user)
     assert zone == zones_arr[index]
