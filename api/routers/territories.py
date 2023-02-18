@@ -1,10 +1,10 @@
 from typing import List
 from fastapi import Depends, APIRouter, HTTPException, status
-from discord import User
+
 
 from api.dependencies.territories import get_territories, get_territory_by_id
 from .users import get_current_user
-from ..dependencies.classes import Territory
+from ..dependencies.classes import Territory, User
 router = APIRouter()
 
 
