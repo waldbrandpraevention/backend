@@ -129,7 +129,7 @@ def create_drone_event_entry(drone_id: int,
                             confidence,
                             picture_path,
                             csv_file_path))
-    if inserted_id:
+    if inserted_id is not None:
         return True
     return False
 
@@ -179,10 +179,10 @@ def get_drone_event(drone_id: int = None,
         return None
 
     output = []
-    for drone_data in fetched_data:
-        dronedata_obj = get_obj_from_fetched(drone_data)
-        if dronedata_obj:
-            output.append(dronedata_obj)
+    for drone_event in fetched_data:
+        droneevent_obj = get_obj_from_fetched(drone_event)
+        if droneevent_obj:
+            output.append(droneevent_obj)
     return output
 
 def get_obj_from_fetched(fetched_dronedata) -> DroneEvent | None:
