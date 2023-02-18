@@ -1,5 +1,6 @@
 """funcs to read and write on the drone_event table in database."""
 import datetime
+import math
 import random
 from typing import List
 from api.dependencies.classes import DroneEvent, EventType, FireRisk
@@ -246,12 +247,22 @@ def calculate_firerisk(events: List[DroneEvent]) -> tuple[FireRisk,FireRisk,Fire
                 firerisk = event.confidence
 
     try:
-        smoke_risk = FireRisk(round(smokerisk/100 * 5))
+        calculated_enum = round(smokerisk/100 * 5)
+        if calculated_enum > 5:
+            calculated_enum = 5
+        elif calculated_enum < 1:
+            calculated_enum = 1
+        smoke_risk = FireRisk(calculated_enum)
     except TypeError:
         smoke_risk = None
     
     try:
-        fire_risk = FireRisk(round(firerisk/100 * 5))
+        calculated_enum = round(firerisk/100 * 5)
+        if calculated_enum > 5:
+            calculated_enum = 5
+        elif calculated_enum < 1:
+            calculated_enum = 1
+        fire_risk = FireRisk(calculated_enum)
     except TypeError:
         fire_risk = None
 
