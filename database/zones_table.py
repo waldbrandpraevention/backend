@@ -46,49 +46,33 @@ GET_ZONEPOLYGON = """   SELECT AsGeoJSON(area)
                         FROM zones
                         {}"""
 
-GET_ZONEJOINORGA ='''SELECT id,name,federal_state,district,AsGeoJSON(area),
+GET_ZONEJOINORGA ='''SELECT zones.id,zones.name,federal_state,district,AsGeoJSON(area),
                         X(geo_point),Y(geo_point),Count(DISTINCT drone_id)
                     FROM zones
-                    JOIN organization_zones 
-                    ON zones.id = organization_zones.zone_id
+                    JOIN territory_zones 
+                    ON zones.id = territory_zones.zone_id
+                    JOIN territories ON territories.id = territory_zones.territory_id
                     LEFT JOIN drone_data ON ST_Intersects(drone_data.coordinates, area)
                     WHERE zones.{}=? 
-                    AND organization_zones.orga_id=?
-                    GROUP BY name;'''
+                    AND territories.orga_id=?
+                    GROUP BY zones.name;'''
 
-GET_ZONES_BY_DISTRICT = '''SELECT id,name,federal_state,district,AsGeoJSON(area),
+GET_ZONES_BY_DISTRICT = '''SELECT zones.id,zones.name,federal_state,district,AsGeoJSON(area),
                             X(geo_point),Y(geo_point),Count(DISTINCT drone_id)
                             FROM zones 
                             LEFT JOIN drone_data ON ST_Intersects(drone_data.coordinates, area)
                             WHERE district = ?
-                            GROUP BY name;'''
+                            GROUP BY zones.name;'''
 
-GET_ORGAZONES = '''  SELECT id,name,federal_state,district,AsGeoJSON(area),
+GET_ORGAZONES = '''  SELECT zones.id,zones.name,federal_state,district,AsGeoJSON(area),
                         X(geo_point),Y(geo_point),Count(DISTINCT drone_id)
                     FROM zones
-                    JOIN organization_zones 
-                    ON zones.id = organization_zones.zone_id
+                    JOIN territory_zones 
+                    ON zones.id = territory_zones.zone_id
+                    JOIN territories ON territories.id = territory_zones.territory_id
                     LEFT JOIN drone_data ON ST_Intersects(drone_data.coordinates, area)
-                    WHERE organization_zones.orga_id=?
-                    GROUP BY name;'''
-
-GET_ORGA_AREA = """   Select AsGeoJSON(GUnion(area)) as oarea,
-ST_AsText(ST_Centroid(GUnion(area)))as center, 
-Count(Distinct drone_id)
-from zones
-JOIN organization_zones on organization_zones.zone_id = zones.id
-LEFT JOIN drone_data ON ST_Intersects(drone_data.coordinates, area)
-WHERE organization_zones.orga_id = ?;"""
-
-
-GETWITHDRONECOUNT = """ SELECT id,name,federal_state,district,AsGeoJSON(area),
-                        X(geo_point),Y(geo_point),Count(DISTINCT drone_id)
-                        FROM zones
-                        join organization_zones on organization_zones.zone_id = zones.id
-                        LEFT JOIN drone_data ON ST_Intersects(drone_data.coordinates, area)
-                        where organization_zones.orga_id = 1
-                        GROUP BY zones.id
-                        ORDER BY zones.name"""
+                    WHERE territories.orga_id=?
+                    GROUP BY zones.name;'''
 
 
 def load_from_geojson(path_to_geojson) -> int:
@@ -218,10 +202,27 @@ def get_zone_of_coordinate(long, lat) -> Zone | None:
     fetched_zone = db.fetch_one(sql, (long, lat))
     return get_obj_from_fetched(fetched_zone)
 
-def get_orga_area(orga_id) -> str | None:
-    """returns geojson.
+def get_zones_in_area(area:str) -> List[Zone] | None:
+    """fetch all zones in the given area.
+    
+    Args:
+        area (str): geojson string of the area.
+        
+    Returns:
+        List[Zone] | None: list of zones in the area.
     """
-    return db.fetch_one(GET_ORGA_AREA, (orga_id,))
+    sql = add_where_clause(GET_ZONE,[ZoneWhereClause.GEOJSONINTERSECT])
+    fetched_zones = db.fetch_all(sql, (area,))
+
+    if fetched_zones is None:
+        return None
+
+    output = []
+    for zone in fetched_zones:
+        zone_obj = get_obj_from_fetched(zone)
+        if zone_obj:
+            output.append(zone_obj)
+    return output
 
 
 def get_zone_of_by_district(name: str) -> List[Zone] | None:
@@ -295,7 +296,7 @@ def get_obj_from_fetched(
     Returns:
         Zone | None: zone object or None if obj cant be generated.
     """
-    if fetched_match_class(Zone, fetched_zone,4):
+    if fetched_match_class(Zone, fetched_zone,6):
         geo_json = spatiageostr_to_geojson(fetched_zone[4])
 
         events = drone_events_table.get_drone_event(
@@ -310,9 +311,11 @@ def get_obj_from_fetched(
             la_timestam = None
 
         if events:
-            ai_firerisk_enum = drone_events_table.calculate_firerisk(events)
+            ai_firerisk_enum, firerisk, smokerisk = drone_events_table.calculate_firerisk(events)
         else:
-            ai_firerisk_enum = FireRisk(1)
+            ai_firerisk_enum= FireRisk(1)
+            firerisk= FireRisk(1)
+            smokerisk  = FireRisk(1)
 
         try:
             lon = fetched_zone[5]
@@ -332,7 +335,9 @@ def get_obj_from_fetched(
             lon=lon,
             lat=lat,
             last_update=la_timestam,
-            drone_count=fetched_zone[7]
+            drone_count=fetched_zone[7],
+            ai_fire_detection=firerisk,
+            ai_smoke_detection=smokerisk
         )
         return zone_obj
     return None

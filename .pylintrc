@@ -1,2 +1,5 @@
 [BASE]
 min-public-methods=0
+
+[MASTER]
+extension-pkg-whitelist=pydantic,fastapi

@@ -1,13 +1,11 @@
 """database tests"""
 # setting path
 import sqlite3
-import sys
 import asyncio
 import datetime
 import json
 import time
 import pytest
-sys.path.append('../backend')
 from api.routers import zones as api_zones
 from api.dependencies.authentication import get_password_hash
 from api.dependencies.classes import( Drone,
@@ -26,8 +24,6 @@ from database.users_table import create_user,get_user,UsrAttributes, update_user
 import database.drones_table as drones_table
 import database.drone_events_table as drones_event_table
 import database.drone_updates_table as drone_zone_data_table
-import database.zones_table as zone_table
-import database.orga_zones_table as oz_table
 from database.organizations_table import OrgAttributes, create_orga, get_orga, update_orga
 from database import settings_table, user_settings_table
 
@@ -226,52 +222,20 @@ def test_dronedatatable():
     drone_zone_data_table.create_drone_update(
     drone_id=testdrone.drone_id,
     timestamp=testdrone.timestamp,
-    longitude=testdrone.longitude,
-    latitude=testdrone.latitude,
+    longitude=testdrone.lon,
+    latitude=testdrone.lat,
     flight_range=testdrone.flight_range,
     flight_time=testdrone.flight_time)
 
     drone_zone_data_table.create_drone_update(
     drone_id=testdatatwo.drone_id,
     timestamp=testdatatwo.timestamp,
-    longitude=testdatatwo.longitude,
-    latitude=testdatatwo.latitude,
+    longitude=testdatatwo.lon,
+    latitude=testdatatwo.lat,
     flight_range=testdatatwo.flight_range,
     flight_time=testdatatwo.flight_time)
 
     drones_event_table.insert_demo_events(long=12.68895149, lat=52.07454738)
-
-    output = drone_zone_data_table.get_drone_data_by_timestamp(
-                                    1,
-                                    datetime.datetime.utcnow()-datetime.timedelta(minutes=5)
-                                    )
-    assert len(output) == 2, 'Something went wrong inserting the Data (2).'
-    assert output[0].latitude == testdrone.latitude, \
-        'Something went wrong with creating geo Point for testdrone.'
-    for key, value in testdrone.__dict__.items():
-        assert output[0].__dict__[key] == value, 'Objects not matching'
-    output = drone_zone_data_table.get_drone_data_by_timestamp(
-                                    1,
-                                    testdatatwo.timestamp-datetime.timedelta(seconds=1))
-    assert len(output) == 1, 'Something went wrong inserting the Data (1).'
-
-    output = drones_event_table.get_drone_event_by_timestamp(1)
-    assert len(output) == 10, 'Something went wrong inserting the Data (2).'
-    assert output[0].latitude == testdrone.latitude, \
-        'Something went wrong with creating geo Point for testdrone.'
-
-def test_zone():
-    """tests for zone table.
-    """
-    zones = zone_table.get_zone_of_by_district('Landkreis Potsdam-Mittelmark')
-    for zone in zones:
-        try:
-            oz_table.link_orgazone(testorga.id,zone.id)
-        except sqlite3.IntegrityError:
-            break
-
-    orgazones = oz_table.get_zones_by_orga(testorga.id)
-    assert zones == orgazones,'Ne'
 
 @pytest.mark.asyncio
 async def test_orgazone():

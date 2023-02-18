@@ -147,6 +147,7 @@ class DroneEvent(BaseModel):
     confidence: int | None = None
     picture_path :str| None = None
     csv_file_path :str| None = None
+    zone_id :int| None = None
 
 class Zone(BaseModel):
     """ Zone class. Contains all the information about a zone. """
@@ -157,11 +158,31 @@ class Zone(BaseModel):
     events: List[DroneEvent] | None = None
     dwd_fire_risk: FireRisk | None = None
     ai_fire_risk: FireRisk | None = None
+    ai_fire_detection: FireRisk | None = None
+    ai_smoke_detection: FireRisk | None = None
     geo_json: dict | None = None
     lon :float | None = None
     lat :float | None = None
     drone_count: int | None = None
     last_update: datetime | None = None
+
+class Territory(BaseModel):
+    """ Territory class. Contains all the information about a territory. """
+    id: int | None = None
+    name: str | None = None
+    orga_id :int | None = None
+    description: str | None = None
+
+class TerritoryWithZones(Territory):
+    """ Territory class. Contains all the information about a territory. """
+    dwd_fire_risk: FireRisk | None = None
+    ai_fire_risk: FireRisk | None = None
+    drone_count: int | None = None
+    zone_count: int | None = None
+    last_update: datetime | None = None
+    geo_json: dict | None = None
+    lon : float | None = None
+    lat : float | None = None
 
 class WindInfo(BaseModel):
     """Wind inforamtion"""

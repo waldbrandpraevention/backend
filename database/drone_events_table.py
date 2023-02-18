@@ -35,15 +35,16 @@ INSERT INTO drone_event (drone_id,timestamp,coordinates,event_type,confidence,pi
 VALUES (? ,?,MakePoint(?, ?, 4326)  ,? ,?,?,?);'''
 
 GET_ENTRY = '''
-SELECT drone_id,timestamp, X(coordinates), Y(coordinates),event_type,confidence,picture_path,csv_file_path
-FROM drone_event 
+SELECT drone_id,timestamp, X(coordinates), Y(coordinates),event_type,confidence,picture_path,csv_file_path, zones.id
+FROM drone_event
+LEFT JOIN zones ON ST_Intersects(zones.area, coordinates)
 {}
 ORDER BY timestamp DESC;'''
 
 GET_EVENT_IN_ZONE = '''
-SELECT drone_id,timestamp, X(coordinates), Y(coordinates),event_type,confidence,picture_path,csv_file_path
+SELECT drone_id,timestamp, X(coordinates), Y(coordinates),event_type,confidence,picture_path,csv_file_path, zones.id
 FROM drone_event
-WHERE ST_Intersects(drone_event.coordinates, GeomFromGeoJSON(?)) 
+JOIN zones ON ST_Intersects(zones.area, coordinates)
 AND timestamp > ? AND timestamp < ?;'''
 
 
@@ -128,7 +129,7 @@ def create_drone_event_entry(drone_id: int,
                             confidence,
                             picture_path,
                             csv_file_path))
-    if inserted_id:
+    if inserted_id is not None:
         return True
     return False
 
@@ -149,24 +150,7 @@ def get_drone_event(drone_id: int = None,
     Returns:
         List[DroneData]: List with the fetched data.
     """
-    sql_arr = []
-    tuple_arr = []
-    if drone_id is not None:
-        sql_arr.append(db.create_where_clause_statement(f'{DRONE_ID}','='))
-        tuple_arr.append(drone_id)
-
-    if polygon is not None:
-
-        sql_arr.append(db.create_intersection_clause(COORDINATES))
-        tuple_arr.append(polygon)
-
-    if after is not None:
-        sql_arr.append(db.create_where_clause_statement(f'{TIMESTAMP}','>'))
-        tuple_arr.append(after)
-
-    if before is not None:
-        sql_arr.append(db.create_where_clause_statement(f'{TIMESTAMP}','<'))
-        tuple_arr.append(before)
+    sql_arr, tuple_arr = drone_updates_table.gernerate_drone_sql(polygon, drone_id, after, before)
 
     sql = db.add_where_clause(GET_ENTRY, sql_arr)
 
@@ -178,10 +162,10 @@ def get_drone_event(drone_id: int = None,
         return None
 
     output = []
-    for drone_data in fetched_data:
-        dronedata_obj = get_obj_from_fetched(drone_data)
-        if dronedata_obj:
-            output.append(dronedata_obj)
+    for drone_event in fetched_data:
+        droneevent_obj = get_obj_from_fetched(drone_event)
+        if droneevent_obj:
+            output.append(droneevent_obj)
     return output
 
 def get_obj_from_fetched(fetched_dronedata) -> DroneEvent | None:
@@ -214,13 +198,14 @@ def get_obj_from_fetched(fetched_dronedata) -> DroneEvent | None:
             event_type=eventtype,
             confidence=fetched_dronedata[5],
             picture_path=fetched_dronedata[6],
-            csv_file_path=fetched_dronedata[7]
+            csv_file_path=fetched_dronedata[7],
+            zone_id=fetched_dronedata[8]
         )
         return drone_data_obj
     return None
 
 
-def calculate_firerisk(events: List[DroneEvent]) -> FireRisk:
+def calculate_firerisk(events: List[DroneEvent]) -> tuple[FireRisk,FireRisk,FireRisk]:
     """calculates the firerisk, based on the events fire/smoke confidences.
     sehr niedrig rauch:>5 feuer: >0
     niedrig rauch:>40 feuer: > 10
@@ -236,23 +221,43 @@ def calculate_firerisk(events: List[DroneEvent]) -> FireRisk:
     smokerisk= 0
     firerisk = 0
     for event in events:
-        if event.event_type == EventType.FIRE:
+        if event.event_type == EventType.SMOKE:
             if smokerisk < event.confidence:
                 smokerisk = event.confidence
         else:
             if firerisk < event.confidence:
                 firerisk = event.confidence
 
+    try:
+        calculated_enum = round(smokerisk/100 * 5)
+        if calculated_enum > 5:
+            calculated_enum = 5
+        elif calculated_enum < 1:
+            calculated_enum = 1
+        smoke_risk = FireRisk(calculated_enum)
+    except TypeError:
+        smoke_risk = None
+
+    try:
+        calculated_enum = round(firerisk/100 * 5)
+        if calculated_enum > 5:
+            calculated_enum = 5
+        elif calculated_enum < 1:
+            calculated_enum = 1
+        fire_risk = FireRisk(calculated_enum)
+    except TypeError:
+        fire_risk = None
+
     if smokerisk > 90 or firerisk > 90:
-        return FireRisk.VERY_HEIGH#
+        return FireRisk.VERY_HEIGH, smoke_risk, fire_risk
 
     if smokerisk > 80 or firerisk > 70:
-        return FireRisk.HEIGH
+        return FireRisk.HEIGH, smoke_risk, fire_risk
 
     if smokerisk > 60 or firerisk > 30:
-        return FireRisk.MIDDLE
+        return FireRisk.MIDDLE, smoke_risk, fire_risk
 
     if smokerisk > 40 or firerisk > 10:
-        return FireRisk.LOW
+        return FireRisk.LOW, smoke_risk, fire_risk
 
-    return FireRisk.VERY_LOW
+    return FireRisk.VERY_LOW, smoke_risk, fire_risk

@@ -95,13 +95,49 @@ def get_drone_updates(  polygon:str,
     If only drone_id is set, every entry will be fetched.
 
     Args:
-        drone_id (int): _description_
+        drone_id (int): id of the drone.
         after (datetime.datetime): fetches everything after this date (not included)
         before (datetime.datetime): fetches everything before this date (not included)
 
     Returns:
         List[DroneData]: List with the fetched data.
     """
+    sql_arr, tuple_arr = gernerate_drone_sql(polygon, drone_id, after, before)
+
+    sql = db.add_where_clause(GET_ENTRY, sql_arr)
+
+    fetched_data = db.fetch_all(sql,tuple(tuple_arr))
+
+    if fetched_data is None:
+        return None
+
+    output = []
+    if get_coords_only:
+        return get_routeobj_from_fetched(fetched_data)
+
+    for drone_data in fetched_data:
+        dronedata = get_obj_from_fetched(drone_data)
+        if dronedata:
+            output.append(dronedata)
+    return output
+
+def gernerate_drone_sql(polygon:str,
+                        drone_id:int,
+                        after:datetime.datetime,
+                        before:datetime.datetime
+                        ):
+    """generates the sql and tuple array for the get_drone_updates function.
+
+    Args:
+        polygon (str): polygon str od the area for which the events should be shown
+        drone_id (int): id of the drone.
+        after (datetime.datetime): fetches everything after this date (not included)
+        before (datetime.datetime): fetches everything before this date (not included)
+
+    Returns:
+        List[str], List[any]: sql array and tuple array
+    """
+
     sql_arr = []
     tuple_arr = []
     if drone_id is not None:
@@ -120,22 +156,7 @@ def get_drone_updates(  polygon:str,
         sql_arr.append(db.create_where_clause_statement('timestamp','<'))
         tuple_arr.append(before)
 
-    sql = db.add_where_clause(GET_ENTRY, sql_arr)
-
-    fetched_data = db.fetch_all(sql,tuple(tuple_arr))
-
-    if fetched_data is None:
-        return None
-
-    output = []
-    if get_coords_only:
-        return get_routeobj_from_fetched(fetched_data)
-
-    for drone_data in fetched_data:
-        dronedata = get_obj_from_fetched(drone_data)
-        if dronedata:
-            output.append(dronedata)
-    return output
+    return sql_arr, tuple_arr
 
 def get_latest_update(drone_id:int) -> DroneUpdate:
     """get the latest update of this drone.

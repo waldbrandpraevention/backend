@@ -21,13 +21,25 @@ FOREIGN KEY (settings_id) REFERENCES settings (id)
 CREATE INDEX user_settings_FK_2 ON user_settings (user_id);
 CREATE INDEX user_settings_FK_3 ON user_settings (settings_id);'''
 
-SET_USERSETTING = 'INSERT OR REPLACE INTO user_settings (settings_id,user_id,value) VALUES (? ,? ,?);'
-GET_USERSETTING = '''   SELECT settings_id, user_id, settings.name, settings.description, value, settings.type
+SET_USERSETTING = '''   INSERT OR REPLACE
+                        INTO user_settings (settings_id,user_id,value)
+                        VALUES (? ,? ,?);'''
+GET_USERSETTING = '''   SELECT settings_id,
+                        user_id,
+                        settings.name,
+                        settings.description,
+                        value,
+                        settings.type
                         FROM user_settings
                         JOIN settings ON settings.id = settings_id 
                         WHERE settings_id=? AND user_id=?;'''
 
-GET_DEFAULTUSERSETTING = '''    SELECT settings_id, user_id, settings.name, settings.description, settings.default_val, settings.type
+GET_DEFAULTUSERSETTING = '''    SELECT settings_id,
+                                user_id,
+                                settings.name,
+                                settings.description,
+                                settings.default_val,
+                                settings.type
                                 FROM user_settings
                                 JOIN settings ON settings.id = settings_id 
                                 WHERE settings_id=?;'''

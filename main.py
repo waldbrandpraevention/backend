@@ -10,7 +10,7 @@ from simulation.sim import simulate
 from api.dependencies.authentication import get_password_hash
 from api.dependencies.emails import send_email
 from api.dependencies.classes import UserWithSensitiveInfo
-from api.routers import emails, users, zones, drones, simulation
+from api.routers import emails, users, zones, drones, simulation,territories
 from database import (users_table,
                       organizations_table,
                       drones_table,
@@ -19,19 +19,22 @@ from database import (users_table,
 
 from database.database import create_table, initialise_spatialite
 from database.drone_events_table import CREATE_DRONE_EVENT_TABLE
-from database import orga_zones_table
+from database.territory_zones_table import CREATE_TERRITORYZONES_TABLE, link_territory_zone
+from database.territories_table import CREATE_TERRITORY_TABLE, create_territory
 from database.drone_updates_table import CREATE_DRONE_DATA_TABLE
 from database.drones_table import CREATE_DRONES_TABLE
 from database.organizations_table import CREATE_ORGANISATIONS_TABLE
 from database.users_table import CREATE_USER_TABLE
 from database.zones_table import CREATE_ZONE_TABLE
 
-app = FastAPI()
+app = FastAPI(  title="KIWA",
+                description="test")
 app.include_router(users.router)
 app.include_router(emails.router)
 app.include_router(zones.router)
 app.include_router(drones.router)
 app.include_router(simulation.router)
+app.include_router(territories.router)
 
 # CORS https://fastapi.tiangolo.com/tutorial/cors/
 app.add_middleware(
@@ -86,8 +89,8 @@ def create_drone_events():
                 flight_range=100.0,
                 flight_time=90
             )
-        drone_events_table.insert_demo_events(12.559776306152344,52.189299066349946,2)
         drone_events_table.insert_demo_events(12.559776306152344,50.189299066349946,3)
+        drone_events_table.insert_demo_events(12.559776306152344,52.189299066349946,2)
         drone_events_table.insert_demo_events(
                                             float(os.getenv("DEMO_LONG")),
                                             float(os.getenv("DEMO_LAT"))
@@ -107,9 +110,14 @@ def load_zones_from_geojson():
         if os.getenv("DEMO_DISTRICT") is not None \
                 and os.getenv("ADMIN_ORGANIZATION") is not None:
             fetched_zones = zones_table.get_zone_of_by_district(os.getenv("DEMO_DISTRICT"))
+            try:
+                create_territory(orga_id=1,name=os.getenv("DEMO_DISTRICT"))
+            except sqlite3.IntegrityError:
+                pass
+
             for zone in fetched_zones:
                 try:
-                    orga_zones_table.link_orgazone(1,zone.id)
+                    link_territory_zone(1,zone.id)
                 except sqlite3.IntegrityError:
                     pass
 
@@ -125,7 +133,8 @@ def main():
     create_table(CREATE_DRONES_TABLE)
     create_table(CREATE_DRONE_DATA_TABLE)
     create_table(CREATE_DRONE_EVENT_TABLE)
-    create_table(orga_zones_table.CREATE_ORGAZONES_TABLE)
+    create_table(CREATE_TERRITORY_TABLE)
+    create_table(CREATE_TERRITORYZONES_TABLE)
     create_default_user()
     create_drone_events()
     #create_drones()

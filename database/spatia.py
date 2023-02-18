@@ -130,7 +130,7 @@ def polygon_coordinates_helper(coordinates: List[List[float]]):
 
     return polygon_wkt
 
-def geoJSON_insert_text(geometry):
+def geojson_insert_text(geometry):
     """Inserts text into a geojson
 
     Args:
