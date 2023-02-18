@@ -66,8 +66,8 @@ def insert_demo_events(long: float, lat: float, droneid = 1):
     flight_time =0
     while num_inserted < 4:
         event_rand = random.randint(0, 2)
-        long_rand = random.randint(0, 100)/1000000
-        lat_rand = random.randint(0, 100)/1000000
+        long_rand = random.randint(0, 100)/100000
+        lat_rand = random.randint(0, 100)/100000
         long= long+long_rand
         lat = lat+lat_rand
         flight_range-=2
