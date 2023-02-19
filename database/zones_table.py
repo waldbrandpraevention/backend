@@ -312,12 +312,16 @@ def get_obj_from_fetched(
     if fetched_match_class(Zone, fetched_zone,4):
         geo_json = spatiageostr_to_geojson(fetched_zone[4])
 
-        if fetched_zone[9] > 0:
-            events = drone_events_table.get_drone_event(
-                                        polygon=fetched_zone[4],
-                                        after=after)
-        else:
+        try:
+            if fetched_zone[9] > 0:
+                events = drone_events_table.get_drone_event(
+                                            polygon=fetched_zone[4],
+                                            after=after)
+            else:
+                events = None
+        except IndexError:
             events = None
+            print('no events found')
 
         try:
             la_timestam = fetched_zone[8]
