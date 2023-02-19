@@ -1,6 +1,7 @@
 """Module for sparta lite"""
 import json
 from typing import List
+import msgspec
 
 geo_types = {'Point', 'MultiPoint', 'LineString', 'MultiLineString',
              'Polygon', 'MultiPolygon'}
@@ -38,7 +39,7 @@ def spatiageostr_to_geojson(spatia_polygon:str,properties:dict=None)-> dict:
     Returns:
         dict: the geojson.
     """
-    geometry = json.loads(spatia_polygon)
+    geometry = msgspec.json.decode(spatia_polygon)
     geo_json = {
                 "type": "Feature",
                 "geometry": geometry

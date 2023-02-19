@@ -1,14 +1,23 @@
 """api tests"""
 import os
+import cProfile
 from fastapi import HTTPException
 import pytest
 from api.routers import zones,users,drones
 from api.routers.territories import read_territories,read_territory
 from database import zones_table
+from database import territories_table
 from database.spatia import spatiageostr_to_geojson
 from database.territories_table import get_orga_area
 
 
+def test_improvements():
+    """test.
+    """
+    te = territories_table.get_territories(1)
+    print(len(te))
+
+    cProfile.run('test_improvements()',sort='tottime')
 
 @pytest.mark.asyncio
 async def test_zones():
