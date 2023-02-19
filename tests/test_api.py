@@ -18,6 +18,8 @@ async def test_zones():
     user = users.get_user(os.getenv("ADMIN_MAIL"))
     territories = await read_territories(user)
     assert len(territories) == 1
+    with pytest.raises(HTTPException):
+        await read_territory(0,user)
     territory = await read_territory(1,user)
     assert territory.name == 'Landkreis Potsdam-Mittelmark'
     orga_area = get_orga_area(1)

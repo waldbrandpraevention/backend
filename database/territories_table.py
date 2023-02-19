@@ -85,6 +85,9 @@ def get_territory(territory_id: int) -> TerritoryWithZones:
     """
     sql = GET_ORGA_TERRITORIES.format('WHERE territories.id = ?')
     fetched_territory = db.fetch_one(sql, (territory_id,))
+    if fetched_territory is None or fetched_territory[0] is None:
+        return None
+
     return get_obj_from_fetched(fetched_territory)
 
 def get_territories(orga_id: int) -> List[TerritoryWithZones]:
