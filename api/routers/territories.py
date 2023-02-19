@@ -4,11 +4,11 @@ from fastapi import Depends, APIRouter, HTTPException, status
 
 from api.dependencies.territories import get_territories, get_territory_by_id
 from .users import get_current_user
-from ..dependencies.classes import Territory, User
+from ..dependencies.classes import TerritoryWithZones, User
 router = APIRouter()
 
 
-@router.get("/territories/all/", status_code=status.HTTP_200_OK, response_model=List[Territory])
+@router.get("/territories/all/", status_code=status.HTTP_200_OK, response_model=List[TerritoryWithZones])
 async def read_territories(current_user: User = Depends(get_current_user)):
     """API call to get the all territories, linked with this users orga.
 
@@ -30,7 +30,7 @@ async def read_territories(current_user: User = Depends(get_current_user)):
         )
     return territores
 
-@router.get("/territories/", status_code=status.HTTP_200_OK, response_model=Territory)
+@router.get("/territories/", status_code=status.HTTP_200_OK, response_model=TerritoryWithZones)
 async def read_territory(territory_id: int, current_user: User = Depends(get_current_user)):
     """API call to get a specific territory. The user's orga has to be linked to the territory.
 

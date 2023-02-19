@@ -74,7 +74,7 @@ def create_territory(orga_id: int, name: str, description: str=None) -> int | No
     """
     return db.insert(INSERT_TERRITORY, (orga_id, name, description))
 
-def get_territory(territory_id: int) -> Territory:
+def get_territory(territory_id: int) -> TerritoryWithZones:
     """fetch a territory.
 
     Args:
@@ -87,7 +87,7 @@ def get_territory(territory_id: int) -> Territory:
     fetched_territory = db.fetch_one(sql, (territory_id,))
     return get_obj_from_fetched(fetched_territory)
 
-def get_territories(orga_id: int) -> List[Territory]:
+def get_territories(orga_id: int) -> List[TerritoryWithZones]:
     """fetch all territories.
 
     Args:

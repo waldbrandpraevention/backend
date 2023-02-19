@@ -1,10 +1,11 @@
 """File containing all the dependencies for the territories."""
 
-from api.dependencies.classes import Territory
+from typing import List
+from api.dependencies.classes import TerritoryWithZones
 from database import territories_table
 
 
-async def get_territories(orga_id):
+async def get_territories(orga_id) -> List[TerritoryWithZones]:
     """get all territories linked to an organization.
 
     Args:
@@ -16,7 +17,7 @@ async def get_territories(orga_id):
 
     return territories_table.get_territories(orga_id)
 
-async def get_territory_by_id(territory_id:int, orga_id:int) -> Territory | None:
+async def get_territory_by_id(territory_id:int, orga_id:int) -> TerritoryWithZones | None:
     """get a territory by id. The territory has to be linked to the orga.
 
     Args:
