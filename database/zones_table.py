@@ -36,9 +36,13 @@ CREATE_ENTRY_TEXTGEO = '''INSERT OR IGNORE
                         INTO zones (id, name,federal_state,district,area,geo_point) 
                         VALUES (?,?,?,?,GeomFromText(?,4326),MakePoint(?, ?, 4326));'''
 
-GET_ZONE = """SELECT id,name,federal_state,district,AsGeoJSON(area),
-                X(geo_point),Y(geo_point),Count(DISTINCT drone_id) FROM zones
+GET_ZONE = """SELECT zones.id,zones.name,federal_state,district,AsGeoJSON(area),
+                X(geo_point),Y(geo_point),Count(DISTINCT drone_data.drone_id),
+                MAX(drone_data.timestamp),
+                Count(DISTINCT drone_event.timestamp)
+                FROM zones
                 LEFT JOIN drone_data ON ST_Intersects(drone_data.coordinates, area)
+                Left JOIN drone_event ON ST_Intersects(drone_event.coordinates, area)
                 {}
                 GROUP BY name;"""
 
@@ -47,30 +51,39 @@ GET_ZONEPOLYGON = """   SELECT AsGeoJSON(area)
                         {}"""
 
 GET_ZONEJOINORGA ='''SELECT zones.id,zones.name,federal_state,district,AsGeoJSON(area),
-                        X(geo_point),Y(geo_point),Count(DISTINCT drone_id)
+                        X(geo_point),Y(geo_point),Count(DISTINCT drone_data.drone_id),
+                    MAX(drone_data.timestamp),
+                    Count(DISTINCT drone_event.timestamp)
                     FROM zones
                     JOIN territory_zones 
                     ON zones.id = territory_zones.zone_id
                     JOIN territories ON territories.id = territory_zones.territory_id
                     LEFT JOIN drone_data ON ST_Intersects(drone_data.coordinates, area)
+                    Left JOIN drone_event ON ST_Intersects(drone_event.coordinates, area)
                     WHERE zones.{}=? 
                     AND territories.orga_id=?
                     GROUP BY zones.name;'''
 
 GET_ZONES_BY_DISTRICT = '''SELECT zones.id,zones.name,federal_state,district,AsGeoJSON(area),
-                            X(geo_point),Y(geo_point),Count(DISTINCT drone_id)
+                            X(geo_point),Y(geo_point),Count(DISTINCT drone_data.drone_id),
+                            MAX(drone_data.timestamp),
+                            Count(DISTINCT drone_event.timestamp)
                             FROM zones 
                             LEFT JOIN drone_data ON ST_Intersects(drone_data.coordinates, area)
+                            Left JOIN drone_event ON ST_Intersects(drone_event.coordinates, area)
                             WHERE district = ?
                             GROUP BY zones.name;'''
 
 GET_ORGAZONES = '''  SELECT zones.id,zones.name,federal_state,district,AsGeoJSON(area),
-                        X(geo_point),Y(geo_point),Count(DISTINCT drone_id)
+                        X(geo_point),Y(geo_point),Count(DISTINCT drone_data.drone_id),
+                    MAX(drone_data.timestamp),
+                    Count(DISTINCT drone_event.timestamp)
                     FROM zones
                     JOIN territory_zones 
                     ON zones.id = territory_zones.zone_id
                     JOIN territories ON territories.id = territory_zones.territory_id
                     LEFT JOIN drone_data ON ST_Intersects(drone_data.coordinates, area)
+                    Left JOIN drone_event ON ST_Intersects(drone_event.coordinates, area)
                     WHERE territories.orga_id=?
                     GROUP BY zones.name;'''
 
@@ -296,18 +309,19 @@ def get_obj_from_fetched(
     Returns:
         Zone | None: zone object or None if obj cant be generated.
     """
-    if fetched_match_class(Zone, fetched_zone,6):
+    if fetched_match_class(Zone, fetched_zone,4):
         geo_json = spatiageostr_to_geojson(fetched_zone[4])
 
-        events = drone_events_table.get_drone_event(
-                                    polygon=fetched_zone[4],
-                                    after=after)
-
-        last_update = drone_updates_table.get_lastest_update_in_zone(
-                        fetched_zone[4])
-        if last_update is not None:
-            la_timestam = last_update.timestamp
+        if fetched_zone[9] > 0:
+            events = drone_events_table.get_drone_event(
+                                        polygon=fetched_zone[4],
+                                        after=after)
         else:
+            events = None
+
+        try:
+            la_timestam = fetched_zone[8]
+        except IndexError:
             la_timestam = None
 
         if events:
