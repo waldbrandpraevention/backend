@@ -62,9 +62,9 @@ Order by drone_data.timestamp;'''
 
 def create_drone(name:str,
                  drone_type:str|None,
-                 flight_range:int|None,
-                 cc_range:int|None,
-                 flight_time:int|None):
+                 flight_range:float|None,
+                 cc_range:float|None,
+                 flight_time:float|None):
     """Create an entry for a drone.
 
     Args:
@@ -108,6 +108,18 @@ def get_drone(drone_id:int,orga_id:int)-> Drone | None:
         Drone | None: the drone obj or None if not found.
     """
     fetched_drone = db.fetch_one(GET_DRONE,(drone_id,orga_id))
+    return get_obj_from_fetched(fetched_drone)
+
+def get_drone_id(drone_id: int) -> Drone | None:
+    """get the requested drone just by the id
+
+    Args:
+        name (str): name of that drone.
+
+    Returns:
+        Drone | None: the drone obj or None if not found.
+    """
+    fetched_drone = db.fetch_one(GET_DRONE,(drone_id))
     return get_obj_from_fetched(fetched_drone)
 
 def get_drones(orga_id:int) -> List[Drone]:

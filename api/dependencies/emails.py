@@ -11,6 +11,7 @@ port = os.getenv("SMTP_PORT")
 user = os.getenv("SMTP_USER")
 passsword = os.getenv("SMTP_PASSWORD")
 sender = os.getenv("SMTP_SENDER")
+domain = os.getenv("DOMAIN_API")
 
 async def send_token_email(reciever: str):
     """Sends out a new token email
@@ -28,7 +29,7 @@ async def send_token_email(reciever: str):
     )
     message = f"""
     Bitte klicken Sie auf den Link:\n
-    https://kiwa.tech/api/email/verify/?token={access_token}
+    {domain}/email/verify/?token={access_token}
     """
 
     return await send_email(reciever, "KIWA Information", message)
