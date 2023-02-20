@@ -27,8 +27,7 @@ def login():
     login_response = requests.post(URL+"/users/login/", data=login_data)
     login_json_response = login_response.json()
     token = login_json_response["access_token"]
-    return token 
-
+    return token
 
 def get_territories_local():
     territories = territories_table.get_territories(orga_id=1)
@@ -98,7 +97,6 @@ def simulate():
     next_update = datetime.now()
     delta = timedelta(minutes=10)
     while True:
-        print("Running simulation loop")
         try:
             delta_time = datetime.now() - last_execution
             last_execution = datetime.now()
