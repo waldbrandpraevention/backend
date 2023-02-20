@@ -151,7 +151,13 @@ async def read_drones_count(
     return await drones.get_drone_count(zone_id,current_user.organization.id)
 
 @router.post("/drones/send-update/", status_code=status.HTTP_200_OK)
-async def drone_update(update: DroneUpdate, current_drone: Drone = Depends(get_current_drone)):
+async def drone_update(drone_id:int,
+                        timestamp:datetime,
+                        lon:float,
+                        lat:float,
+                        flight_range:int|None,
+                        flight_time:int|None,
+                        current_drone: Drone = Depends(get_current_drone)):
     """Api call te recieve updates from drones
 
     Args:
@@ -161,27 +167,34 @@ async def drone_update(update: DroneUpdate, current_drone: Drone = Depends(get_c
     Returns:
         dict: response
     """
-    if current_drone is None:
+    if current_drone is None or current_drone.id != drone_id:
         return {"message": "invalid drone"}
 
     success = create_drone_update(
         current_drone.id,
-        update.timestamp,
-        update.lon,
-        update.lat,
-        update.flight_range,
-        update.flight_time
+        timestamp,
+        lon,
+        lat,
+        flight_range,
+        flight_time
     )
     if success:
-        return {"message": "seccess"}
+        return {"message": "success"}
     else:
         return {"message": "error"}
 
 
 @router.post("/drones/send-event/")
 async def drone_event(
-    event: DroneEvent,
-    file: UploadFile,
+    drone_id: int,
+    timestamp: datetime,
+    lon: float,
+    lat: float,
+    event_type: int,
+    confidence: int,
+    csv_file_path: str | None = None,
+    file_raw: UploadFile = File(),
+    file_predicted: UploadFile = File(),
     current_drone: Drone = Depends(get_current_drone)):
     """Api call to recieve events form drones
 
@@ -199,18 +212,24 @@ async def drone_event(
     try:
         event_location = os.getenv("EVENT_PATH")
 
-        file_location = f"{event_location}/{file.filename}-{str(datetime.now())}"
-        with open(file_location, "wb+") as file_object:
-            file_object.write(file.file.read())
+        raw_file_location = f"{event_location}/{file_raw.filename}-{str(datetime.now())}"
+        with open(raw_file_location, "wb+") as file_object:
+            file_object.write(file_raw.file.read())
 
-        create_drone_event_entry(event.drone_id, event.timestamp,
-                                event.lon, event.lat,
-                                event.event_type,
-                                event.confidence,
-                                file_location,
-                                event.csv_file_path)
+        predicted_file_location = f"{event_location}/{file_predicted.filename}-{str(datetime.now())}"
+        with open(predicted_file_location, "wb+") as file_object:
+            file_object.write(file_predicted.file.read())
 
-        return {"image_location": file_location}
+        create_drone_event_entry(drone_id,
+                                timestamp,
+                                lon,
+                                lat,
+                                event_type,
+                                confidence,
+                                predicted_file_location,
+                                csv_file_path)
+
+        return {"raw_image_location": raw_file_location, "predicted_image_location": predicted_file_location}
     except Exception as err:
         print(err)
         return {"message": "error"}
