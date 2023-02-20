@@ -167,6 +167,7 @@ def simulate():
                                 results = ai_prediction(path)
                                 for result in results:
                                     try:
+                                        #todo uniqe picture id
                                         print("Event found")
                                         event = {
                                         "drone_id": drone_entry["drone"]["id"],

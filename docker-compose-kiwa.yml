@@ -1,0 +1,46 @@
+# Used for local demo -> see install.sh
+version: '3'
+name: Waldbrandpraevention
+
+services:
+  # React
+  frontend:
+    image: waldbrandpraevention/frontend
+    ports:
+      - 8080:80
+
+  # API
+  backend:
+    image: waldbrandpraevention/backend
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --root-path /api
+    environment:
+      - ADMIN_MAIL=admin@kiwa.tech 
+      - ADMIN_PASSWORD=adminkiwa
+      - ADMIN_ORGANIZATION=KIWA
+      - DB_PATH=/api/data/testing.db
+      - DB_BACKUP_PATH=/api/data/backuptest.db
+      - DEMO_LONG=12.68895149
+      - DEMO_LAT=52.07454738
+      - GEOJSON_PATH=/api/data/zone_data.geojson
+      - DEMO_DISTRICT=Landkreis Potsdam-Mittelmark
+      - DOMAIN_API=http://localhost:8080/api/
+      - DRONE_FEEDBACK_PATH=/api/data/drone_feedback
+      - EVENT_PATH=/api/data/events
+      - ALARM_PATH=/api/data/alarms
+      - SMTP_HOST=mailhog
+      - SMTP_USER=mailhog
+      - SMTP_PASSWORD=mailhog
+      - SMTP_PORT=1025
+      - SMTP_SENDER=no-reply@kiwa.local
+    volumes:
+      - kiwa-data:/api/data
+
+  # Mail (optional, nur für lokale Demo ohne vorhandenem Mailserver)
+  mailhog:
+    image: mailhog/mailhog
+    ports:
+      - 1025:1025 # smtp server
+      - 8025:8025 # web ui
+
+volumes:
+  kiwa-data:

@@ -41,8 +41,8 @@ async def alarm_team(drone_name: str,
         type: {alarm_type}
         notes: {notes}
         """
-
-        base_dir_path = f"{alarm_location}/{str(datetime.now())}"
+        file_path = os.path.realpath(__file__)
+        base_dir_path = os.path.join(file_path,alarm_location,str(datetime.now()))
         dir_path = base_dir_path
         i = 1
         while os.path.exists(dir_path):

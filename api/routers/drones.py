@@ -212,11 +212,16 @@ async def drone_event(
     try:
         event_location = os.getenv("EVENT_PATH")
 
-        raw_file_location = f"{event_location}/{file_raw.filename}-{str(datetime.now())}"
+        file_path = os.path.realpath(__file__)
+        base_dir = os.path.join(file_path,event_location)
+        if not os.path.exists(base_dir):
+            os.makedirs(base_dir)
+
+        raw_file_location = base_dir + file_raw.filename + "-" + str(datetime.now())
         with open(raw_file_location, "wb+") as file_object:
             file_object.write(file_raw.file.read())
 
-        predicted_file_location = f"{event_location}/{file_predicted.filename}-{str(datetime.now())}"
+        predicted_file_location = base_dir + file_predicted.filename + "-" + str(datetime.now())
         with open(predicted_file_location, "wb+") as file_object:
             file_object.write(file_predicted.file.read())
 
@@ -262,7 +267,8 @@ async def drone_feedback(reason: str,
         notes: {notes}
         """
 
-        base_dir_path = f"{feedback_location}/{str(datetime.now())}"
+        file_path = os.path.realpath(__file__)
+        base_dir_path = os.path.join(file_path,feedback_location,str(datetime.now()))
         dir_path = base_dir_path
         i = 1
         while os.path.exists(dir_path):
