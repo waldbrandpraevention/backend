@@ -57,8 +57,8 @@ async def get_drone(drone_id: int,orga_id:int):
 
     return drone
 
-async def get_drone_for_token(drone_id: int):
-    """Returns a specific drone from the db
+async def get_drone_by_id(drone_id: int):
+    """Returns a specific drone from the db with only the id
 
     Returns:
         Drone: the requestesd drone
@@ -86,7 +86,7 @@ async def get_current_drone(token: str):
         headers={"WWW-Authenticate": "Bearer"},
     )
     drone_id = await get_email_from_token(token) #returns id as well
-    drone = get_drone_for_token(drone_id)
+    drone = get_drone_by_id(drone_id)
     if drone is None:
         raise credentials_exception
 
