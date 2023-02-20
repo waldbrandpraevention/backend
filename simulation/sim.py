@@ -131,9 +131,7 @@ def simulate():
 
                     distance = math.hypot(drone_entry["last_update"]["lon"] - drone_entry["lon"],
                             drone_entry["last_update"]["lat"] - drone_entry["lat"])
-                    minute = 1 if drone_entry["update_count"] % 6 == 0 else 0
 
-                    #todo float vs int (minute, full km stuff)
                     drone_id = drone_entry["drone"]["id"]
                     new_update = {
                         "drone_id": drone_id,
@@ -141,7 +139,7 @@ def simulate():
                         "lon": drone_entry["lon"],
                         "lat": drone_entry["lat"],
                         "flight_range": drone_entry["drone"]["flight_range"] - distance,
-                        "flight_time": drone_entry["drone"]["flight_time"] - minute
+                        "flight_time": drone_entry["drone"]["flight_time"] - (60/10)
                     }
 
                     print(f"Sending POST request for drone {drone_id}")

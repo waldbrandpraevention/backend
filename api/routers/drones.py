@@ -155,8 +155,8 @@ async def drone_update(drone_id:int,
                         timestamp:datetime,
                         lon:float,
                         lat:float,
-                        flight_range:int|None,
-                        flight_time:int|None,
+                        flight_range:float|None,
+                        flight_time:float|None,
                         current_drone: Drone = Depends(get_current_drone)):
     """Api call te recieve updates from drones
 

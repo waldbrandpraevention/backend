@@ -63,13 +63,15 @@ async def get_drone_by_id(drone_id: int):
     Returns:
         Drone: the requestesd drone
     """
-    #todo add proper call
-    drone = drones_table.get_drone(drone_id, 0)
-    drone_upate = drone_data_table.get_latest_update(drone.id)
-    if drone_upate:
-        set_update_and_zone(drone,drone_upate)
+    try:
+        drone = drones_table.get_drone_id(drone_id)
+        drone_upate = drone_data_table.get_latest_update(drone.id)
+        if drone_upate:
+            set_update_and_zone(drone,drone_upate)
+        return drone
+    except Exception as err:
+        print(err)
 
-    return drone
 
 async def get_current_drone(token: str):
     """Returns the current drone
