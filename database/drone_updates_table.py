@@ -9,11 +9,12 @@ import database.database as db
 
 CREATE_DRONE_DATA_TABLE = '''CREATE TABLE drone_data
 (
+id           integer NOT NULL ,
 drone_id       integer NOT NULL ,
 timestamp    timestamp NOT NULL ,
 flight_range   real,
 flight_time    real,
-PRIMARY KEY (drone_id, timestamp),
+PRIMARY KEY (id),
 FOREIGN KEY (drone_id) REFERENCES drones (id)
 );
 
@@ -29,6 +30,7 @@ CREATE_ENTRY = '''INSERT INTO drone_data
                 VALUES (? ,?,MakePoint(?, ?, 4326) ,? ,?);'''
 
 GET_ENTRY ='''SELECT
+                drone_data.id,
                 drone_id,
                 timestamp,
                 flight_range,
@@ -42,7 +44,7 @@ GET_ENTRY ='''SELECT
                 ORDER BY timestamp DESC;'''
 
 GET_UPDATE_IN_ZONE = '''
-SELECT drone_id,timestamp,flight_range,flight_time, X(coordinates), Y(coordinates),zones.id
+SELECT drone_data.id,drone_id,timestamp,flight_range,flight_time, X(coordinates), Y(coordinates),zones.id
 FROM drone_data
 LEFT JOIN zones ON ST_Intersects(zones.area, coordinates)
 WHERE ST_Intersects(drone_data.coordinates, GeomFromGeoJSON(?)) 
@@ -241,20 +243,21 @@ def get_obj_from_fetched(fetched_dronedata) -> DroneUpdate| None:
     """
     if fetched_match_class(DroneUpdate,fetched_dronedata):
         try:
-            longitude=float(fetched_dronedata[4])
-            latitude= float(fetched_dronedata[5])
+            longitude=float(fetched_dronedata[5])
+            latitude= float(fetched_dronedata[6])
         except ValueError as exception:
             print(exception)
             longitude, latitude= None, None
 
         drone_data_obj = DroneUpdate(
-            drone_id = fetched_dronedata[0],
-            timestamp = fetched_dronedata[1],
+            id = fetched_dronedata[0],
+            drone_id = fetched_dronedata[1],
+            timestamp = fetched_dronedata[2],
             lon= longitude,
             lat = latitude,
-            flight_range = fetched_dronedata[2],
-            flight_time = fetched_dronedata[3],
-            zone_id = fetched_dronedata[6]
+            flight_range = fetched_dronedata[3],
+            flight_time = fetched_dronedata[4],
+            zone_id = fetched_dronedata[7]
         )
         return drone_data_obj
     return None
@@ -273,18 +276,18 @@ def get_routeobj_from_fetched(fetched_dronedataarr) -> List[DroneUpdate]| None:
 
     drones_arr = []
     route_arr = []
-    fetched_dronedataarr.sort(key=lambda x: x[0])#TODO sql sort
+    fetched_dronedataarr.sort(key=lambda x: x[1])#TODO sql sort
     drone_update = get_obj_from_fetched(fetched_dronedataarr[0])
     for fetched_dronedata in fetched_dronedataarr:
         if fetched_match_class(DroneUpdate,fetched_dronedata):
-            if fetched_dronedata[0] != drone_update.drone_id:
+            if fetched_dronedata[1] != drone_update.drone_id:
                 drones_arr.append(create_drone_with_route(drone_update,route_arr))
                 route_arr = []
                 drone_update = get_obj_from_fetched(fetched_dronedata)
             else:
                 try:
-                    longitude=float(fetched_dronedata[4])
-                    latitude= float(fetched_dronedata[5])
+                    longitude=float(fetched_dronedata[5])
+                    latitude= float(fetched_dronedata[6])
                     route_arr.append(Point(longitude, latitude))
                 except ValueError as exception:
                     print(exception)
@@ -313,6 +316,7 @@ def create_drone_with_route(drone_update:DroneUpdate,route:List[Point]) -> Drone
         geojson = None
 
     return DroneUpdateWithRoute(
+                    id=drone_update.id,
                     drone_id=drone_update.drone_id,
                     timestamp=drone_update.timestamp,
                     lon=drone_update.lon,

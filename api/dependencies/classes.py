@@ -117,6 +117,7 @@ class DroneWithRoute(Drone):
 
 class DroneUpdate(BaseModel):
     """ DroneUpdate class. Contains all the information about a drone update."""
+    id: int | None = None
     drone_id :int | None = None
     timestamp :datetime | None = None
     lon :float | None = None
@@ -140,6 +141,7 @@ class EventType(Enum):
 
 class DroneEvent(BaseModel):
     """DroneEvent class. Contains all the information about a drone event."""
+    id :int | None = None
     drone_id :int | None = None
     timestamp :datetime | None = None
     lon :float | None = None

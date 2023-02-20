@@ -7,6 +7,7 @@ from database.database import fetched_match_class
 import database.database as db
 from database import drone_updates_table
 
+EVENT_ID = 'id'
 DRONE_ID = 'drone_id'
 TIMESTAMP = 'timestamp'
 EVENT_TYPE = 'event_type'
@@ -17,13 +18,14 @@ COORDINATES= 'coordinates'
 
 CREATE_DRONE_EVENT_TABLE = f'''CREATE TABLE drone_event
 (
+{EVENT_ID}     integer NOT NULL ,
 {DRONE_ID}     integer NOT NULL ,
 {TIMESTAMP}    timestamp NOT NULL ,
 {EVENT_TYPE}   integer NOT NULL,
 {CONFIDENCE}   integer NOT NULL,
 {PICTURE_PATH}   text,
 {CSV_FILE_PATH}  text ,
-PRIMARY KEY ({DRONE_ID}, {TIMESTAMP}),
+PRIMARY KEY ({EVENT_ID}),
 FOREIGN KEY ({DRONE_ID}) REFERENCES drones (id)
 );
 
@@ -35,14 +37,14 @@ INSERT INTO drone_event (drone_id,timestamp,coordinates,event_type,confidence,pi
 VALUES (? ,?,MakePoint(?, ?, 4326)  ,? ,?,?,?);'''
 
 GET_ENTRY = '''
-SELECT drone_id,timestamp, X(coordinates), Y(coordinates),event_type,confidence,picture_path,csv_file_path, zones.id
+SELECT drone_event.id, drone_id,timestamp, X(coordinates), Y(coordinates),event_type,confidence,picture_path,csv_file_path, zones.id
 FROM drone_event
 LEFT JOIN zones ON ST_Intersects(zones.area, coordinates)
 {}
 ORDER BY timestamp DESC;'''
 
 GET_EVENT_IN_ZONE = '''
-SELECT drone_id,timestamp, X(coordinates), Y(coordinates),event_type,confidence,picture_path,csv_file_path, zones.id
+SELECT drone_event.id,drone_id,timestamp, X(coordinates), Y(coordinates),event_type,confidence,picture_path,csv_file_path, zones.id
 FROM drone_event
 JOIN zones ON ST_Intersects(zones.area, coordinates)
 AND timestamp > ? AND timestamp < ?;'''
@@ -180,26 +182,27 @@ def get_obj_from_fetched(fetched_dronedata) -> DroneEvent | None:
     if fetched_match_class(DroneEvent, fetched_dronedata):
 
         try:
-            longitude = float(fetched_dronedata[2])
-            latitude = float(fetched_dronedata[3])
+            longitude = float(fetched_dronedata[3])
+            latitude = float(fetched_dronedata[4])
         except ValueError:
             longitude, latitude = None, None
 
         try:
-            eventtype = EventType(fetched_dronedata[4])
+            eventtype = EventType(fetched_dronedata[5])
         except ValueError:
             eventtype = None
 
         drone_data_obj = DroneEvent(
-            drone_id=fetched_dronedata[0],
-            timestamp=fetched_dronedata[1],
+            id=fetched_dronedata[0],
+            drone_id=fetched_dronedata[1],
+            timestamp=fetched_dronedata[2],
             lon =longitude,
             lat =latitude,
             event_type=eventtype,
-            confidence=fetched_dronedata[5],
-            picture_path=fetched_dronedata[6],
-            csv_file_path=fetched_dronedata[7],
-            zone_id=fetched_dronedata[8]
+            confidence=fetched_dronedata[6],
+            picture_path=fetched_dronedata[7],
+            csv_file_path=fetched_dronedata[8],
+            zone_id=fetched_dronedata[9]
         )
         return drone_data_obj
     return None
