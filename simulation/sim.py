@@ -12,22 +12,35 @@ from api.dependencies.classes import DroneUpdate, DroneEvent
 from .cv import ai_prediction
 
 ASSETS = "./simulation/assets/raw/"
-URL = "kiwa.tech/api/"
+URL = os.getenv("DOMAIN_API")
+admin_mail = os.getenv("ADMIN_MAIL")
+admin_password = os.getenv("ADMIN_PASSWORD")
 CHANCE_OF_EVENT = 0.001
 
-time.sleep(1)
 
-#load drones
-DRONES_DICT = None
-try:
-    response = requests.get(URL + "simulation/all-drones/", timeout=10)
-    text = response.text
-    DRONES_DICT = json.loads(text)
+def create_new_drone():
+    """creates a new drone
 
-except Exception as err:
-    print("error:")
-    print(err)
-    drones_dict = {}
+    Returns:
+        token + drone
+    """
+    login_data = {"username": admin_mail, "password": admin_password}
+    login_response = requests.post(URL+"/users/login/", data=login_data)
+    login_json_response = login_response.json()
+    token = login_json_response["access_token"]
+
+    drone = {
+        "name": f"Drone-{random.randint(1, 100000)}",
+        "drone_type": "Unmanned Aerial Vehicle",
+        "cc_range": random.randrange(5.0, 100.0),
+        "flight_range": random.randrange(50.0, 500.0),
+        "flight_time": random.randrange(50.0, 150.0)
+    }
+
+    header = {"Authorization:" "Bearer " + token}
+    response = requests.post(URL+"/drones/signup/", headers=header, params=drone, timeout=10)
+    json_response = response.json()
+    return json_response
 
 
 def simulate():
@@ -82,7 +95,7 @@ def simulate():
                         )
 
                     payload = {'update': new_update}
-                    response.post(URL + "drones/send-update/", params=payload)
+                    requests.post(URL + "drones/send-update/", params=payload)
 
                     if random.random() <= CHANCE_OF_EVENT: #event happens as well
                         #pick random file
@@ -107,7 +120,7 @@ def simulate():
                         img_io.seek(0)
                         files = {'file:': img_io}
                         #files = {'file:': r.picture}
-                        response.post(URL + "drones/send-event/", params=payload, files=files)
+                        requests.post(URL + "drones/send-event/", params=payload, files=files)
     except Exception as err2:
         print("Simulation failed:")
         print(err2)
