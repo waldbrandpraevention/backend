@@ -25,14 +25,14 @@ def login():
     return token
 
 
-def setup():
+def get_territories():
     token = login()
     header = {"Authorization:" "Bearer " + token}
     response = requests.post(URL+"/territories/all/", headers=header, timeout=10)
-    signup_json_response = response.json()
+    territory_json_response = response.json()
+    return territory_json_response
 
-
-def create_new_drone():
+def create_new_drone(territory):
     """creates a new drone
 
     Returns:
@@ -56,32 +56,42 @@ def create_new_drone():
     simulation_drone = {
         "drone": signup_json_response["drone"],
         "token": signup_json_response["token"],
-        "geo_json": "",
+        "geo_json": territory["geo_json"],
         "speed": random.randrange(0.00001, 0.000001),
         "direction": (math.cos(angle), math.sin(angle)),
-        "lat": zones[rand].lat,
-        "lon": zones[rand].lan
+        "lat": territory["lat"],
+        "lon": territory["lon"]
     }
-    return json_response
+    return simulation_drone
 
 
 def simulate():
     """simulates drones in a loop
     """
+    territories = get_territories()
     drones = []
-    while len(drones) < 5:
-        try:
-            drones.append(create_new_drone())
-        except Exception as err:
-            print("Simulation Error: Unable to create drone. Retrying in 5sec")
-            print(err)
-            time.sleep(5)
+    print("Creating drones")
+    for i in territories:
+        territory = territories[i]
+        territory_name = territory["name"]
+        drone_amount = random.randint(5, 20)
+        created_drones = 0
+        while created_drones < drone_amount:
+            try:
+                drones.append(create_new_drone(drone_amount))
+                created_drones += 1
+                print(f"{created_drones}/{drone_amount} drones created for {territory_name}")
+            except Exception as err:
+                print("Simulation Error: Unable to create drone. Retrying in 5sec")
+                print(err)
+                time.sleep(5)
 
-
+    print("All drones successfully created")
     last_execution = datetime.now()
     next_update = datetime.now()
     delta = timedelta(minutes=10)
     while True:
+        print("Running simulation loop")
         try:
             delta_time = datetime.now() - last_execution
             last_execution = datetime.now()
@@ -90,6 +100,7 @@ def simulate():
                 geo_json = drone_entry["geo_json"]
                 vel = drone_entry["direction"]
                 speed = drone_entry["speed"]
+                
                 new_x = drone_entry["lat"] + vel[0] * speed * delta_time
                 new_y = drone_entry["lon"] + vel[1] * speed * delta_time
 
