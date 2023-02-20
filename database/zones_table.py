@@ -25,9 +25,9 @@ SELECT AddGeometryColumn('zones', 'geo_point', 4326, 'POINT', 'XY');'''
 
 class ZoneWhereClause(str, Enum):
     """Class for zones with a where clause"""
-    MAKEPOINTINTERSECT = 'ST_Intersects(area, MakePoint(?, ?, 4326))'
-    GEOJSONINTERSECT = 'ST_Intersects(area, GeomFromGeoJSON(?))'
-    ZONE_ID = 'id'
+    MAKEPOINTINTERSECT = 'ST_Intersects(zones.area, MakePoint(?, ?, 4326))'
+    GEOJSONINTERSECT = 'ST_Intersects(zones.area, GeomFromGeoJSON(?))'
+    ZONE_ID = 'zones.id'
 
 CREATE_ENTRY = '''INSERT INTO zones (name,federal_state,district,area,geo_point)
                 VALUES (?,?,?,GeomFromGeoJSON(?),MakePoint(?, ?, 4326));'''
@@ -39,7 +39,7 @@ CREATE_ENTRY_TEXTGEO = '''INSERT OR IGNORE
 GET_ZONE = """SELECT zones.id,zones.name,federal_state,district,AsGeoJSON(area),
                 X(geo_point),Y(geo_point),Count(DISTINCT drone_data.drone_id),
                 MAX(drone_data.timestamp),
-                Count(DISTINCT drone_event.timestamp)
+                Count(DISTINCT drone_event.id)
                 FROM zones
                 LEFT JOIN drone_data ON ST_Intersects(drone_data.coordinates, area)
                 Left JOIN drone_event ON ST_Intersects(drone_event.coordinates, area)
@@ -53,7 +53,7 @@ GET_ZONEPOLYGON = """   SELECT AsGeoJSON(area)
 GET_ZONEJOINORGA ='''SELECT zones.id,zones.name,federal_state,district,AsGeoJSON(area),
                         X(geo_point),Y(geo_point),Count(DISTINCT drone_data.drone_id),
                     MAX(drone_data.timestamp),
-                    Count(DISTINCT drone_event.timestamp)
+                    Count(DISTINCT drone_event.id)
                     FROM zones
                     JOIN territory_zones 
                     ON zones.id = territory_zones.zone_id
@@ -67,7 +67,7 @@ GET_ZONEJOINORGA ='''SELECT zones.id,zones.name,federal_state,district,AsGeoJSON
 GET_ZONES_BY_DISTRICT = '''SELECT zones.id,zones.name,federal_state,district,AsGeoJSON(area),
                             X(geo_point),Y(geo_point),Count(DISTINCT drone_data.drone_id),
                             MAX(drone_data.timestamp),
-                            Count(DISTINCT drone_event.timestamp)
+                            Count(DISTINCT drone_event.id)
                             FROM zones 
                             LEFT JOIN drone_data ON ST_Intersects(drone_data.coordinates, area)
                             Left JOIN drone_event ON ST_Intersects(drone_event.coordinates, area)
@@ -77,7 +77,7 @@ GET_ZONES_BY_DISTRICT = '''SELECT zones.id,zones.name,federal_state,district,AsG
 GET_ORGAZONES = '''  SELECT zones.id,zones.name,federal_state,district,AsGeoJSON(area),
                         X(geo_point),Y(geo_point),Count(DISTINCT drone_data.drone_id),
                     MAX(drone_data.timestamp),
-                    Count(DISTINCT drone_event.timestamp)
+                    Count(DISTINCT drone_event.id)
                     FROM zones
                     JOIN territory_zones 
                     ON zones.id = territory_zones.zone_id
