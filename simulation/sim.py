@@ -17,6 +17,20 @@ admin_mail = os.getenv("ADMIN_MAIL")
 admin_password = os.getenv("ADMIN_PASSWORD")
 CHANCE_OF_EVENT = 0.001
 
+def login():
+    login_data = {"username": admin_mail, "password": admin_password}
+    login_response = requests.post(URL+"/users/login/", data=login_data)
+    login_json_response = login_response.json()
+    token = login_json_response["access_token"]
+    return token
+
+
+def setup():
+    token = login()
+    header = {"Authorization:" "Bearer " + token}
+    response = requests.post(URL+"/territories/all/", headers=header, timeout=10)
+    signup_json_response = response.json()
+
 
 def create_new_drone():
     """creates a new drone
@@ -24,10 +38,7 @@ def create_new_drone():
     Returns:
         token + drone
     """
-    login_data = {"username": admin_mail, "password": admin_password}
-    login_response = requests.post(URL+"/users/login/", data=login_data)
-    login_json_response = login_response.json()
-    token = login_json_response["access_token"]
+    token = login()
 
     drone = {
         "name": f"Drone-{random.randint(1, 100000)}",
@@ -39,22 +50,43 @@ def create_new_drone():
 
     header = {"Authorization:" "Bearer " + token}
     response = requests.post(URL+"/drones/signup/", headers=header, params=drone, timeout=10)
-    json_response = response.json()
+    signup_json_response = response.json()
+
+    angle = random.random()
+    simulation_drone = {
+        "drone": signup_json_response["drone"],
+        "token": signup_json_response["token"],
+        "geo_json": "",
+        "speed": random.randrange(0.00001, 0.000001),
+        "direction": (math.cos(angle), math.sin(angle)),
+        "lat": zones[rand].lat,
+        "lon": zones[rand].lan
+    }
     return json_response
 
 
 def simulate():
     """simulates drones in a loop
     """
+    drones = []
+    while len(drones) < 5:
+        try:
+            drones.append(create_new_drone())
+        except Exception as err:
+            print("Simulation Error: Unable to create drone. Retrying in 5sec")
+            print(err)
+            time.sleep(5)
+
+
     last_execution = datetime.now()
     next_update = datetime.now()
     delta = timedelta(minutes=10)
-    try:
-        while True:
+    while True:
+        try:
             delta_time = datetime.now() - last_execution
             last_execution = datetime.now()
 
-            for drone_entry in DRONES_DICT:
+            for drone_entry in drones:
                 geo_json = drone_entry["geo_json"]
                 vel = drone_entry["direction"]
                 speed = drone_entry["speed"]
@@ -121,6 +153,6 @@ def simulate():
                         files = {'file:': img_io}
                         #files = {'file:': r.picture}
                         requests.post(URL + "drones/send-event/", params=payload, files=files)
-    except Exception as err2:
-        print("Simulation failed:")
-        print(err2)
+        except Exception as err2:
+            print("Simulation error:\n")
+            print(err2)
