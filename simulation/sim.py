@@ -52,7 +52,7 @@ def create_new_drone(territory):
 
     header = {"Authorization:" "Bearer " + token}
     response = requests.post(URL+"/drones/signup/", headers=header, params=drone, timeout=10)
-    signup_json_response = response.json() 
+    signup_json_response = response.json()
 
     angle = random.random()
     simulation_drone = {
@@ -71,23 +71,27 @@ def create_new_drone(territory):
 def simulate():
     """simulates drones in a loop
     """
-    territories = get_territories_local()
-    drones = []
-    print("Creating drones")
-    for i in territories:
-        territory = territories[i]
-        territory_name = territory["name"]
-        drone_amount = random.randint(5, 20)
-        created_drones = 0
-        while created_drones < drone_amount:
-            try:
-                drones.append(create_new_drone(drone_amount))
-                created_drones += 1
-                print(f"{created_drones}/{drone_amount} drones created for {territory_name}")
-            except Exception as err:
-                print("Simulation Error: Unable to create drone. Retrying in 5sec")
-                print(err)
-                time.sleep(5)
+    try:
+        territories = get_territories_local()
+        drones = []
+        print("Creating drones")
+        for i in territories:
+            territory = territories[i]
+            territory_name = territory["name"]
+            drone_amount = random.randint(5, 20)
+            created_drones = 0
+            while created_drones < drone_amount:
+                try:
+                    drones.append(create_new_drone(drone_amount))
+                    created_drones += 1
+                    print(f"{created_drones}/{drone_amount} drones created for {territory_name}")
+                except Exception as err:
+                    print("Simulation Error: Unable to create drone. Retrying in 5sec")
+                    print(err)
+                    time.sleep(5)
+    except Exception as errr:
+        print("Error")
+        print(errr)
 
     print("All drones successfully created")
     last_execution = datetime.now()
