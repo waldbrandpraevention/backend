@@ -70,6 +70,8 @@ def create_new_drone(territory):
 def simulate():
     """simulates drones in a loop
     """
+    return
+
     try:
         territories = get_territories_local()
         drones = []
