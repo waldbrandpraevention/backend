@@ -9,7 +9,7 @@ from database.drone_events_table import create_drone_event_entry
 from .users import get_current_user, is_admin
 from ..dependencies import drones
 from ..dependencies.drones import get_current_drone, generate_drone_token
-from ..dependencies.classes import Drone, DroneEvent, DroneUpdateWithRoute, DroneUpdate, User
+from ..dependencies.classes import Drone, DroneEvent, DroneUpdateWithRoute, User
 
 router = APIRouter()
 
