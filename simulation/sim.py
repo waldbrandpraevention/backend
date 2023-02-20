@@ -9,7 +9,10 @@ from datetime import datetime, timedelta
 import requests
 from shapely.geometry import shape, Point
 from api.dependencies.classes import DroneUpdate, DroneEvent
+from api.dependencies.territories import get_territories
+from database.drone_updates_table import create_drone_update
 from .cv import ai_prediction
+from database import territories_table
 
 ASSETS = "./simulation/assets/raw/"
 URL = os.getenv("DOMAIN_API")
@@ -17,20 +20,19 @@ admin_mail = os.getenv("ADMIN_MAIL")
 admin_password = os.getenv("ADMIN_PASSWORD")
 CHANCE_OF_EVENT = 0.001
 
+#todo
+
 def login():
     login_data = {"username": admin_mail, "password": admin_password}
     login_response = requests.post(URL+"/users/login/", data=login_data)
     login_json_response = login_response.json()
     token = login_json_response["access_token"]
-    return token
+    return token 
 
 
-def get_territories():
-    token = login()
-    header = {"Authorization:" "Bearer " + token}
-    response = requests.post(URL+"/territories/all/", headers=header, timeout=10)
-    territory_json_response = response.json()
-    return territory_json_response
+def get_territories_local():
+    territories = territories_table.get_territories(orga_id=1)
+    return territories
 
 def create_new_drone(territory):
     """creates a new drone
@@ -50,7 +52,7 @@ def create_new_drone(territory):
 
     header = {"Authorization:" "Bearer " + token}
     response = requests.post(URL+"/drones/signup/", headers=header, params=drone, timeout=10)
-    signup_json_response = response.json()
+    signup_json_response = response.json() 
 
     angle = random.random()
     simulation_drone = {
@@ -69,7 +71,7 @@ def create_new_drone(territory):
 def simulate():
     """simulates drones in a loop
     """
-    territories = get_territories()
+    territories = get_territories_local()
     drones = []
     print("Creating drones")
     for i in territories:
