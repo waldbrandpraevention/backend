@@ -10,7 +10,7 @@ from simulation.sim import simulate
 from api.dependencies.authentication import get_password_hash
 from api.dependencies.emails import send_email
 from api.dependencies.classes import UserWithSensitiveInfo
-from api.routers import emails, users, zones, drones, simulation,territories
+from api.routers import emails, users, zones, drones, simulation,territories, alarm
 from database import (users_table,
                       organizations_table,
                       drones_table,
@@ -35,6 +35,7 @@ app.include_router(zones.router)
 app.include_router(drones.router)
 app.include_router(simulation.router)
 app.include_router(territories.router)
+app.include_router(alarm.router)
 
 # CORS https://fastapi.tiangolo.com/tutorial/cors/
 app.add_middleware(
