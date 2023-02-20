@@ -70,7 +70,8 @@ def create_new_drone(territory):
 def simulate():
     """simulates drones in a loop
     """
-    return
+    while True:
+        time.sleep(10)
 
     try:
         territories = get_territories_local()
