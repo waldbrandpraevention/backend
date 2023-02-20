@@ -102,9 +102,9 @@ def load_zones_from_geojson():
         Landkreis Potsdam-Mittelmark
     """
     if os.getenv("GEOJSON_PATH") is not None:
-        path = os.path.realpath(os.path.dirname(__file__))
-        path+=os.getenv("GEOJSON_PATH")
-        added_zones = zones_table.load_from_geojson(path)
+        main_path = os.path.realpath(os.path.dirname(__file__))
+        path_to_geo = os.path.join(main_path,os.getenv("GEOJSON_PATH"))
+        added_zones = zones_table.load_from_geojson(path_to_geo)
         print(f'Zones added: {added_zones}')
 
         if os.getenv("DEMO_DISTRICT") is not None \
