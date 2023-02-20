@@ -3,15 +3,15 @@ import os
 from datetime import datetime, timedelta
 from typing import List
 from fastapi import Depends, APIRouter, HTTPException, status, UploadFile, File
+from database.drones_table import create_drone
 from database.drone_updates_table import create_drone_update
 from database.drone_events_table import create_drone_event_entry
-from .users import get_current_user
+from .users import get_current_user, is_admin
 from ..dependencies import drones
-from ..dependencies.drones import get_current_drone
+from ..dependencies.drones import get_current_drone, generate_drone_token
 from ..dependencies.classes import Drone, DroneEvent, DroneUpdateWithRoute, DroneUpdate, User
 
 router = APIRouter()
-
 
 @router.get("/drones/", status_code=status.HTTP_200_OK, response_model=Drone)
 async def read_drone(drone_id: int, current_user: User = Depends(get_current_user)):
@@ -263,3 +263,28 @@ async def drone_feedback(reason: str,
     except Exception as err:
         print(err)
         return {"message": "Error while sending feedback"}
+
+@router.post("/drones/signup/", status_code=status.HTTP_200_OK)
+async def drone_signup(name: str,
+                    drone_type: str,
+                    flight_range: float,
+                    cc_range: float,
+                    flight_time: float,
+                    current_user: User = Depends(get_current_user)):
+    """creates a new drone
+
+    Args:
+        name (str): drone name
+        drone_type (str): drone type
+        flight_range (float): flight range
+        cc_range (float): cc range
+        flight_time (float): flight time
+        current_user (User, optional): user. Defaults to Depends(get_current_user).
+
+    Returns:
+        dict: {drone, token}
+    """
+
+    if is_admin(current_user):
+        drone = create_drone(name,drone_type,flight_range,cc_range,flight_time)
+        return {"drone": drone, "token": generate_drone_token(drone)}

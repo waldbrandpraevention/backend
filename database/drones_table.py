@@ -62,9 +62,9 @@ Order by drone_data.timestamp;'''
 
 def create_drone(name:str,
                  drone_type:str|None,
-                 flight_range:int|None,
-                 cc_range:int|None,
-                 flight_time:int|None):
+                 flight_range:float|None,
+                 cc_range:float|None,
+                 flight_time:float|None):
     """Create an entry for a drone.
 
     Args:
