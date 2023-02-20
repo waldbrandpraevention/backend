@@ -44,8 +44,8 @@ async def verify_email(token: str):
         raise invalid_token_exception from err
 
     user = get_user(token_email)
-    result = await update_user(user, email_verified=True)
-    if result:
+    try:
+        await update_user(user, email_verified=True)
         return {"message": "Email successfully verified"}
-    else:
+    except HTTPException:
         return {"message": "Errror at verification"}

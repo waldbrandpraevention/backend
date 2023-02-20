@@ -27,15 +27,17 @@ async def get_all_drones(orga_id:int):
 
     return drones
 
-async def generate_drone_token(drone_id: int):
+async def generate_drone_token(drone: Drone):
     """Returns a new drone token
 
     Returns:
         Token: new token
     """
+    #sub = str(drone.id)+"-"+done.or
+    sub = drone.id #todo unique?
     access_token_expires = timedelta(minutes=DRONE_TOKEN_EXPIRE_WEEKS)
     access_token = create_access_token(
-        data={"sub": drone_id}, expires_delta=access_token_expires
+        data={"sub": sub}, expires_delta=access_token_expires
     )
 
     return access_token

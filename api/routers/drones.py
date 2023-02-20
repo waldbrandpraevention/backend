@@ -1,8 +1,10 @@
 """api calls for drones."""
+import os
 from datetime import datetime, timedelta
 from typing import List
-from fastapi import Depends, APIRouter, HTTPException, status, UploadFile
+from fastapi import Depends, APIRouter, HTTPException, status, UploadFile, File
 from database.drone_updates_table import create_drone_update
+from database.drone_events_table import create_drone_event_entry
 from .users import get_current_user
 from ..dependencies import drones
 from ..dependencies.drones import get_current_drone
@@ -162,7 +164,7 @@ async def drone_update(update: DroneUpdate, current_drone: Drone = Depends(get_c
     if current_drone is None:
         return {"message": "invalid drone"}
 
-    create_drone_update(
+    success = create_drone_update(
         current_drone.id,
         update.timestamp,
         update.lon,
@@ -170,8 +172,10 @@ async def drone_update(update: DroneUpdate, current_drone: Drone = Depends(get_c
         update.flight_range,
         update.flight_time
     )
-
-    return {"message": "seccess"}
+    if success:
+        return {"message": "seccess"}
+    else:
+        return {"message": "error"}
 
 
 @router.post("/drones/send-event/")
@@ -189,20 +193,73 @@ async def drone_event(
     Returns:
         dict: response
     """
-    #todo: add event to db + create link to saved location (path)
+
+    if current_drone is None:
+        return {"message:": "Invalid drone" }
     try:
-        if current_drone is None:
-            return {"message:": "Invalid drone" }
-        content = file.file.read()
-        date = str(datetime.now().timestamp())
-        new_file_name = file.filename + date
-        path = "./drone_images/" + new_file_name + ".jpg"
-        new_file = open(path, "w", encoding="utf-8")
-        new_file.write(content)
-        new_file.close()
-        #check if this is correct
-        url = "https://kiwa.tech/api/drone_images/" + new_file_name + ".jpg"
-        return {"url": url, "event": event}
+        event_location = os.getenv("EVENT_PATH")
+
+        file_location = f"{event_location}/{file.filename}-{str(datetime.now())}"
+        with open(file_location, "wb+") as file_object:
+            file_object.write(file.file.read())
+
+        create_drone_event_entry(event.drone_id, event.timestamp,
+                                event.lon, event.lat,
+                                event.event_type,
+                                event.confidence,
+                                file_location,
+                                event.csv_file_path)
+
+        return {"image_location": file_location}
     except Exception as err:
         print(err)
-        return {"message": "success"}
+        return {"message": "error"}
+
+@router.post("/drones/feedback/", status_code=status.HTTP_200_OK)
+async def drone_feedback(reason: str,
+                    notes: str,
+                    file: UploadFile | None = File(),
+                    current_user: User = Depends(get_current_user)):
+    """API call to alarm the team
+
+    Args:
+        reason (str): drone
+        notes (str): notes
+        file (UploadFile | None, optional): file Defaults to File().
+        current_user (User, optional): user. Defaults to Depends(get_current_user).
+
+    Returns:
+        dict: response
+    """
+
+    if not current_user:
+        return {"message": "Invalid user"}
+
+    feedback_location = os.getenv("DRONE_FEEDBACK_PATH")
+
+    try:
+        content = f"""
+        reason: {reason}
+        notes: {notes}
+        """
+
+        base_dir_path = f"{feedback_location}/{str(datetime.now())}"
+        dir_path = base_dir_path
+        i = 1
+        while os.path.exists(dir_path):
+            dir_path = base_dir_path + " - " + str(i)
+            i = i + 1
+
+        os.makedirs(dir_path)
+
+        with open(f"{dir_path}/info.txt", "wb+") as file_object:
+            file_object.write(content)
+
+        file_location = f"{dir_path}/{file.filename}"
+        with open(file_location, "wb+") as file_object:
+            file_object.write(file.file.read())
+
+        return {"message": "Feedback was send"}
+    except Exception as err:
+        print(err)
+        return {"message": "Error while sending feedback"}
