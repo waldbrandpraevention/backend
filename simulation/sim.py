@@ -199,7 +199,7 @@ def simulate():
 
                 if random.random() <= 0.5:#CHANCE_OF_EVENT: #event happens as well
                     print(f"Events triggered for drone {drone_id}")
-                    first_event = False
+                    time_now = datetime.now()
                     #pick random file
                     try:
                         file_name = random.choice(os.listdir(ASSETS))
@@ -212,7 +212,7 @@ def simulate():
                         for result in results:
                             event = {
                             "drone_id": drone_entry["drone"]["id"],
-                            "timestamp": datetime.now(),
+                            "timestamp": time_now,
                             "lon": drone_entry["lon"],
                             "lat": drone_entry["lat"],
                             "event_type": result.event_type,

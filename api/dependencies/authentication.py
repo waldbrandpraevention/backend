@@ -77,28 +77,21 @@ async def get_email_from_token(token: str = Depends(oauth2_scheme), allow_expire
         str: email that is embedded in the token
     """
     try:
-        print("test")
-        print(token)
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM],
                                 options={"verify_signature": not allow_expired})
-        print("jola")
         email: str = str(payload.get("sub"))
-        print("mox")
         if email is None:
-            print("a")
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Token has no information",
             )
         token_data = TokenData(email=email)
     except ExpiredSignatureError as err:
-        print("b")
         raise HTTPException(
             status_code=status.HTTP_406_NOT_ACCEPTABLE,
             detail="Token is expired",
         ) from err
     except JWTError as err:
-        print("c")
         print(err)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
