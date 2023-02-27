@@ -30,10 +30,7 @@ def login():
 def get_territories_from_user(token):
     """gets the territories from the user"""
     header = {"Authorization": "Bearer " + token}
-    try:
-        territory_response = requests.get(URL+"/territories/all/", headers=header, timeout=10)
-    except TimeoutError:
-        print("TIMEOUT")
+    territory_response = requests.get(URL+"/territories/all/", headers=header, timeout=10)
     territory_response_json = territory_response.json()
     return territory_response_json
 
