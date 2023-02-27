@@ -284,13 +284,13 @@ def get_routeobj_from_fetched(fetched_dronedataarr) -> List[DroneUpdate]| None:
                 drones_arr.append(create_drone_with_route(drone_update,route_arr))
                 route_arr = []
                 drone_update = get_obj_from_fetched(fetched_dronedata)
-            else:
-                try:
-                    longitude=float(fetched_dronedata[5])
-                    latitude= float(fetched_dronedata[6])
-                    route_arr.append(Point(longitude, latitude))
-                except ValueError as exception:
-                    print(exception)
+
+            try:
+                longitude=float(fetched_dronedata[5])
+                latitude= float(fetched_dronedata[6])
+                route_arr.append(Point(longitude, latitude))
+            except ValueError as exception:
+                print(exception)
 
     drones_arr.append(create_drone_with_route(drone_update,route_arr))
     return drones_arr
