@@ -30,7 +30,10 @@ def login():
 def get_territories_from_user(token):
     """gets the territories from the user"""
     header = {"Authorization": "Bearer " + token}
-    territory_response = requests.get(URL+"/territories/all/", headers=header, timeout=10)
+    try:
+        territory_response = requests.get(URL+"/territories/all/", headers=header, timeout=10)
+    except TimeoutError:
+        print("TIMEOUT")
     territory_response_json = territory_response.json()
     return territory_response_json
 
@@ -122,6 +125,7 @@ def simulate():
                 break
         except HTTPException:
             print("Token most likely expired. Renewing token.")
+            token=''
             continue
 
     print("All drones successfully created")
@@ -197,7 +201,7 @@ def simulate():
                         print("POST updade request failed. retrying in 3 sec")
                         time.sleep(3)
 
-                if random.random() <= CHANCE_OF_EVENT: #event happens as well
+                if random.random() <= float(CHANCE_OF_EVENT): #event happens as well
                     print(f"Events triggered for drone {drone_id}")
                     time_now = datetime.now()
                     #pick random file
