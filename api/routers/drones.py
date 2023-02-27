@@ -218,18 +218,24 @@ async def drone_event(
             status_code=status.HTTP_406_NOT_ACCEPTABLE,
             detail="Invalid drone",
         )
+    print("1")
     event_location = os.getenv("EVENT_PATH")
     if not os.path.exists(event_location):
-        os.makedirs(event_type)
+        os.makedirs(event_location)
 
-    raw_file_location = f"{event_location}/{file_raw.filename}-{str(datetime.now())}"
+    sub_folder = str(datetime.now())
+    sub_path = os.path.join(event_location, sub_folder)
+    if not os.path.exists(sub_path):
+        os.makedirs(sub_path)
+    print("2")
+    raw_file_location = f"{sub_path}/raw.jpg"
     with open(raw_file_location, "wb+") as file_object:
         file_object.write(file_raw.file.read())
-
-    predicted_file_location = f"{event_location}/{file_predicted.filename}-{str(datetime.now())}"
+    print("3")
+    predicted_file_location = f"{sub_path}/predicted.jpg"
     with open(predicted_file_location, "wb+") as file_object:
         file_object.write(file_predicted.file.read())
-
+    print("4")
     create_drone_event_entry(drone_id,
                             timestamp,
                             lon,

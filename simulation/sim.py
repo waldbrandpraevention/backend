@@ -1,5 +1,4 @@
 """functions for the simulation"""
-import json
 import time
 import os
 import random
@@ -9,19 +8,16 @@ from datetime import datetime, timedelta
 import requests
 from shapely.geometry import shape, Point
 from fastapi import HTTPException
-from api.dependencies.classes import DroneUpdate, DroneEvent
-from api.dependencies.territories import get_territories
-from database.drone_updates_table import create_drone_update
 from .cv import ai_prediction
-from database import territories_table
 
 ASSETS = "./simulation/assets/raw/"
 URL = os.getenv("DOMAIN_API")
 admin_mail = os.getenv("ADMIN_MAIL")
 admin_password = os.getenv("ADMIN_PASSWORD")
-CHANCE_OF_EVENT = 0.001
-
-#todo
+CHANCE_OF_EVENT = os.getenv("SIMULATION_EVENT_CHANCE")
+SIMULATION_UPDATE_FREQUENCY = int(os.getenv("SIMULATION_UPDATE_FREQUENCY"))
+SIMULATION_DRONE_SPEED_MIN = float(os.getenv("SIMULATION_DRONE_SPEED_MIN"))
+SIMULATION_DRONE_SPEED_MAX = float(os.getenv("SIMULATION_DRONE_SPEED_MAX"))
 
 def login():
     """login for the simulation"""
@@ -62,7 +58,7 @@ def create_new_drone(token,territory):
         "drone": signup_json_response["drone"],
         "token": signup_json_response["token"],
         "geo_json": territory["geo_json"],
-        "speed": random.uniform(0.00001, 0.000001),
+        "speed": random.uniform(SIMULATION_DRONE_SPEED_MIN, SIMULATION_DRONE_SPEED_MAX),
         "direction": (math.cos(angle), math.sin(angle)),
         "lat": territory["lat"],
         "lon": territory["lon"],
@@ -78,7 +74,6 @@ def simulate():
     """
     time.sleep(3)
     print("simulation start")
-    first_event = True
     token = ''
     territories = None
     drone_amounts = []
@@ -133,112 +128,110 @@ def simulate():
 
     last_execution = datetime.now()
     next_update = datetime.now()
-    delta = timedelta(minutes=10)
-    curr_time = timedelta(seconds=0)
-    secound = timedelta(seconds=1)
+    updade_delta =  timedelta(seconds=SIMULATION_UPDATE_FREQUENCY)
+    loop_delta = timedelta(seconds=30)
     updating = True
     while True:
-        delta_time = datetime.now() - last_execution
-        curr_time += delta_time
+        diff = datetime.now() - last_execution
+        if diff < loop_delta:
+            time.sleep(loop_delta.seconds -  diff.seconds)
         last_execution = datetime.now()
-        if curr_time >= secound:
-            curr_time -= secound
-            print("looping")
-            if datetime.now() >= next_update:
-                updating = True
-                next_update = datetime.now() + delta
 
-            for drone_entry in drones:
-                geo_json = drone_entry["geo_json"]
-                direction = drone_entry["direction"]
-                speed = drone_entry["speed"]
+        if datetime.now() >= next_update:
+            updating = True
+            next_update = datetime.now() + updade_delta
 
-                new_lat = drone_entry["lat"] + direction[1] * speed * delta_time.seconds
-                new_lon= drone_entry["lon"] + direction[0] * speed * delta_time.seconds
+        for drone_entry in drones:
+            geo_json = drone_entry["geo_json"]
+            direction = drone_entry["direction"]
+            speed = drone_entry["speed"]
 
-                new_point = Point(new_lon, new_lat)
+            new_lat = drone_entry["lat"] + direction[1] * speed * loop_delta.seconds
+            new_lon= drone_entry["lon"] + direction[0] * speed * loop_delta.seconds
 
-                found = False
-                if geo_json["type"] == "Feature":
-                    polygon = shape(geo_json['geometry'])
-                    found = polygon.contains(new_point)
-                elif geo_json["type"] == "FeatureCollection":
-                    for feature in geo_json['features']:
-                        polygon = shape(feature['geometry'])
-                        if polygon.contains(new_point):
-                            found = True
-                            break
+            new_point = Point(new_lon, new_lat)
 
-                if not found: #not in polygon -> just turn randomly
-                    new_angle = random.uniform(0, 6.28318530718)
-                    dir_x = 1 * math.cos(new_angle)
-                    dir_y = 1 * math.sin(new_angle)
+            found = False
+            if geo_json["type"] == "Feature":
+                polygon = shape(geo_json['geometry'])
+                found = polygon.contains(new_point)
+            elif geo_json["type"] == "FeatureCollection":
+                for feature in geo_json['features']:
+                    polygon = shape(feature['geometry'])
+                    if polygon.contains(new_point):
+                        found = True
+                        break
 
-                    drone_entry["direction"] = (dir_x, dir_y)
-                else: #in poly -> do the movement
-                    drone_entry["lat"] = new_lat
-                    drone_entry["lon"] = new_lon
+            if not found: #not in polygon -> just turn randomly
+                new_angle = random.uniform(0, 6.28318530718)
+                dir_x = 1 * math.cos(new_angle)
+                dir_y = 1 * math.sin(new_angle)
 
-                if updating:
-                    distance = math.hypot(drone_entry["last_lon"] - drone_entry["lon"],
-                            drone_entry["last_lat"] - drone_entry["lat"])
+                drone_entry["direction"] = (dir_x, dir_y)
+            else: #in poly -> do the movement
+                drone_entry["lat"] = new_lat
+                drone_entry["lon"] = new_lon
 
-                    drone_id = drone_entry["drone"]["id"]
-                    new_update = {
-                        "drone_id": int(drone_id),
-                        "timestamp": datetime.now(),
-                        "lon": float(drone_entry["lon"]),
-                        "lat":  float(drone_entry["lat"]),
-                        "flight_range":  float(drone_entry["drone"]["flight_range"]) - distance,
-                        "flight_time":  float(drone_entry["drone"]["flight_time"]) - (1/6),
-                        "current_drone_token": drone_entry["token"]
-                    }
+            if updating:
+                distance = math.hypot(drone_entry["last_lon"] - drone_entry["lon"],
+                        drone_entry["last_lat"] - drone_entry["lat"])
 
-                    print(f"Sending POST request for drone {drone_id}")
-                    update_success = False
-                    while update_success is not True:
-                        try:
-                            requests.post(URL + "/drones/send-update/", params=new_update, timeout=10)
-                            update_success = True
-                        except HTTPException:
-                            print("POST updade request failed. retrying in 3 sec")
-                            time.sleep(3)
+                drone_id = drone_entry["drone"]["id"]
+                new_update = {
+                    "drone_id": int(drone_id),
+                    "timestamp": datetime.now(),
+                    "lon": float(drone_entry["lon"]),
+                    "lat":  float(drone_entry["lat"]),
+                    "flight_range":  float(drone_entry["drone"]["flight_range"]) - distance,
+                    "flight_time":  float(drone_entry["drone"]["flight_time"]) - (1/6),
+                    "current_drone_token": drone_entry["token"]
+                }
 
-                    if random.random() <= 0.5:#CHANCE_OF_EVENT: #event happens as well
-                        print(f"Events triggered for drone {drone_id}")
-                        first_event = False
-                        #pick random file
-                        try:
-                            file_name = random.choice(os.listdir(ASSETS))
-                            path = os.path.join(ASSETS, file_name)
+                print(f"Sending POST request for drone {drone_id}")
+                update_success = False
+                while update_success is not True:
+                    try:
+                        requests.post(URL + "/drones/send-update/", params=new_update, timeout=10)
+                        update_success = True
+                    except HTTPException:
+                        print("POST updade request failed. retrying in 3 sec")
+                        time.sleep(3)
 
-                            print("Starting AI")
-                            results = ai_prediction(path)
-                            print("AI DONE")
-                            print(results)
-                            for result in results:
-                                event = {
-                                "drone_id": drone_entry["drone"]["id"],
-                                "timestamp": datetime.now(),
-                                "lon": drone_entry["lon"],
-                                "lat": drone_entry["lat"],
-                                "event_type": result.event_type,
-                                "confidence": result.confidence,
-                                "current_drone_token": drone_entry["token"],
-                                "csv_file_path": None,
-                                }
-                                #might be needed
-                                print("Image conversion")
-                                img_mem = BytesIO()
-                                result.picture.save(img_mem, 'JPEG', quality=70)
-                                img_mem.seek(0)
-                                files = {'file_raw': open(path, "rb"), 'file_predicted': img_mem}
-                                print("Sending POST request for event")
-                                header = {"accept": "application/json"}
-                                event_response = requests.post(URL + "/drones/send-event/", headers=header, params=event, files=files, timeout=10)
-                                print("EVENT SEND")
-                                print(event_response.text)
-                        except Exception as event_error:
-                            print("Event could not be generated")
-                            print(event_error)
-            updating = False
+                if random.random() <= 0.5:#CHANCE_OF_EVENT: #event happens as well
+                    print(f"Events triggered for drone {drone_id}")
+                    first_event = False
+                    #pick random file
+                    try:
+                        file_name = random.choice(os.listdir(ASSETS))
+                        path = os.path.join(ASSETS, file_name)
+
+                        print("Starting AI")
+                        results = ai_prediction(path)
+                        print("AI DONE")
+                        print(results)
+                        for result in results:
+                            event = {
+                            "drone_id": drone_entry["drone"]["id"],
+                            "timestamp": datetime.now(),
+                            "lon": drone_entry["lon"],
+                            "lat": drone_entry["lat"],
+                            "event_type": result.event_type,
+                            "confidence": result.confidence,
+                            "current_drone_token": drone_entry["token"],
+                            "csv_file_path": None,
+                            }
+                            #might be needed
+                            print("Image conversion")
+                            img_mem = BytesIO()
+                            result.picture.save(img_mem, 'JPEG', quality=70)
+                            img_mem.seek(0)
+                            files = {'file_raw': open(path, "rb"), 'file_predicted': img_mem}
+                            print("Sending POST request for event")
+                            header = {"accept": "application/json"}
+                            event_response = requests.post(URL + "/drones/send-event/", headers=header, params=event, files=files, timeout=10)
+                            print("EVENT SEND")
+                            print(event_response.text)
+                    except Exception as event_error:
+                        print("Event could not be generated")
+                        print(event_error)
+        updating = False
