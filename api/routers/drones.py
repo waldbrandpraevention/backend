@@ -8,7 +8,7 @@ from database.drone_updates_table import create_drone_update
 from database.drone_events_table import create_drone_event_entry
 from .users import get_current_user, is_admin
 from ..dependencies import drones
-from ..dependencies.drones import get_current_drone, generate_drone_token
+from ..dependencies.drones import get_current_drone, generate_drone_token, validate_token
 from ..dependencies.classes import Drone, DroneEvent, DroneUpdateWithRoute, User
 
 router = APIRouter()
@@ -157,7 +157,7 @@ async def drone_update(drone_id:int,
                         lat:float,
                         flight_range:float|None,
                         flight_time:float|None,
-                        current_drone: Drone = Depends(get_current_drone)):
+                        current_drone_token: str):
     """Api call te recieve updates from drones
 
     Args:
@@ -167,11 +167,17 @@ async def drone_update(drone_id:int,
     Returns:
         dict: response
     """
-    if current_drone is None or current_drone.id != drone_id:
-        return {"message": "invalid drone"}
+
+    #current_drone = await get_current_drone(current_drone_token)
+
+    if not await validate_token(current_drone_token) :
+        raise HTTPException(
+            status_code=status.HTTP_406_NOT_ACCEPTABLE,
+            detail="Invalid drone",
+        )
 
     success = create_drone_update(
-        current_drone.id,
+        drone_id,
         timestamp,
         lon,
         lat,
@@ -187,15 +193,15 @@ async def drone_update(drone_id:int,
 @router.post("/drones/send-event/")
 async def drone_event(
     drone_id: int,
-    timestamp: datetime,
     lon: float,
     lat: float,
     event_type: int,
     confidence: int,
+    current_drone_token: str,
+    file_raw: UploadFile,
+    file_predicted:UploadFile,
     csv_file_path: str | None = None,
-    file_raw: UploadFile = File(),
-    file_predicted: UploadFile = File(),
-    current_drone: Drone = Depends(get_current_drone)):
+    timestamp: datetime | None = None):
     """Api call to recieve events form drones
 
     Args:
@@ -207,32 +213,42 @@ async def drone_event(
         dict: response
     """
 
-    if current_drone is None:
-        return {"message:": "Invalid drone" }
-    try:
-        event_location = os.getenv("EVENT_PATH")
+    if not await validate_token(current_drone_token):
+        raise HTTPException(
+            status_code=status.HTTP_406_NOT_ACCEPTABLE,
+            detail="Invalid drone",
+        )
 
-        raw_file_location = f"{event_location}/{file_raw.filename}-{str(datetime.now())}"
-        with open(raw_file_location, "wb+") as file_object:
-            file_object.write(file_raw.file.read())
+    event_location = os.getenv("EVENT_PATH")
+    if not os.path.exists(event_location):
+        os.makedirs(event_location)
 
-        predicted_file_location = f"{event_location}/{file_predicted.filename}-{str(datetime.now())}"
-        with open(predicted_file_location, "wb+") as file_object:
-            file_object.write(file_predicted.file.read())
+    sub_folder = str(datetime.now())
+    sub_path = os.path.join(event_location, sub_folder)
+    if not os.path.exists(sub_path):
+        os.makedirs(sub_path)
+    else:
+        return {"location": sub_path}
 
-        create_drone_event_entry(drone_id,
-                                timestamp,
-                                lon,
-                                lat,
-                                event_type,
-                                confidence,
-                                predicted_file_location,
-                                csv_file_path)
+    raw_file_location = f"{sub_path}/raw.jpg"
+    with open(raw_file_location, "wb+") as file_object:
+        file_object.write(file_raw.file.read())
 
-        return {"raw_image_location": raw_file_location, "predicted_image_location": predicted_file_location}
-    except Exception as err:
-        print(err)
-        return {"message": "error"}
+    predicted_file_location = f"{sub_path}/predicted.jpg"
+    with open(predicted_file_location, "wb+") as file_object:
+        file_object.write(file_predicted.file.read())
+
+    create_drone_event_entry(drone_id,
+                            timestamp,
+                            lon,
+                            lat,
+                            event_type,
+                            confidence,
+                            predicted_file_location,
+                            csv_file_path)
+
+    return {"location": sub_path}
+
 
 @router.post("/drones/feedback/", status_code=status.HTTP_200_OK)
 async def drone_feedback(reason: str,
@@ -255,6 +271,8 @@ async def drone_feedback(reason: str,
         return {"message": "Invalid user"}
 
     feedback_location = os.getenv("DRONE_FEEDBACK_PATH")
+    if not os.path.exists(feedback_location):
+        os.makedirs(feedback_location)
 
     try:
         content = f"""
@@ -262,26 +280,24 @@ async def drone_feedback(reason: str,
         notes: {notes}
         """
 
-        base_dir_path = f"{feedback_location}/{str(datetime.now())}"
-        dir_path = base_dir_path
-        i = 1
-        while os.path.exists(dir_path):
-            dir_path = base_dir_path + " - " + str(i)
-            i = i + 1
+        sub_path = os.path.join(feedback_location, str(datetime.now()))
 
-        os.makedirs(dir_path)
+        if not os.path.exists(sub_path):
+            os.makedirs(sub_path)
 
-        with open(f"{dir_path}/info.txt", "wb+") as file_object:
+        with open(f"{sub_path}/info.txt", "w+") as file_object:
             file_object.write(content)
 
-        file_location = f"{dir_path}/{file.filename}"
+        file_location = f"{sub_path}/{file.filename}"
         with open(file_location, "wb+") as file_object:
             file_object.write(file.file.read())
 
         return {"message": "Feedback was send"}
-    except Exception as err:
-        print(err)
-        return {"message": "Error while sending feedback"}
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_406_NOT_ACCEPTABLE,
+            detail="Error while sending",
+        )
 
 @router.post("/drones/signup/", status_code=status.HTTP_200_OK)
 async def drone_signup(name: str,
@@ -303,7 +319,6 @@ async def drone_signup(name: str,
     Returns:
         dict: {drone, token}
     """
-
-    if is_admin(current_user):
+    if await is_admin(current_user):
         drone = create_drone(name,drone_type,flight_range,cc_range,flight_time)
-        return {"drone": drone, "token": generate_drone_token(drone)}
+        return {"drone": drone, "token": await generate_drone_token(drone)}

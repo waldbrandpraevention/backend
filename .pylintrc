@@ -3,3 +3,6 @@ min-public-methods=0
 
 [MASTER]
 extension-pkg-whitelist=pydantic,fastapi
+
+[FORMAT]
+max-line-length=250

@@ -9,12 +9,13 @@ from PIL.JpegImagePlugin import JpegImageFile
 from object_detection.utils import label_map_util
 from object_detection.utils import visualization_utils as viz_utils
 from api.dependencies.classes import EventType
+from pydantic import BaseModel
 
 THRESHOLD = .30
 
 class Result():
     """Result inforamtion"""
-    event_type: EventType | None = None
+    event_type: int | None = None
     confidence: int | None = None
     picture: JpegImageFile | None = None
 
@@ -125,11 +126,10 @@ def ai_prediction(path: str):
     results = []
     size = len(classes)
     for i in range(size):
-        result = Result(
-          event_type = EventType(classes[i]),
-          confidence = int(percantages[i] * 100 + 0.5),
-          picture = image,
-        )
+        result = Result()
+        result.event_type = classes[i]
+        result.confidence = int(percantages[i] * 100 + 0.5)
+        result.picture = image
         results.append(result)
     return results
 
