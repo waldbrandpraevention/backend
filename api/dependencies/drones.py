@@ -34,7 +34,7 @@ async def generate_drone_token(drone: Drone):
         Token: new token
     """
     #sub = str(drone.id)+"-"+done.or
-    sub = drone.id #todo unique?
+    sub = str(drone.id) #todo unique?
     access_token_expires = timedelta(minutes=DRONE_TOKEN_EXPIRE_WEEKS)
     access_token = create_access_token(
         data={"sub": sub}, expires_delta=access_token_expires
@@ -63,14 +63,27 @@ async def get_drone_by_id(drone_id: int):
     Returns:
         Drone: the requestesd drone
     """
-    try:
-        drone = drones_table.get_drone_id(drone_id)
-        drone_upate = drone_data_table.get_latest_update(drone.id)
-        if drone_upate:
-            set_update_and_zone(drone,drone_upate)
-        return drone
-    except Exception as err:
-        print(err)
+
+    drone = drones_table.get_drone_id(drone_id)
+    if drone is None:
+        return None
+    drone_upate = drone_data_table.get_latest_update(drone.id)
+    if drone_upate:
+        await set_update_and_zone(drone,drone_upate)
+
+    return drone
+
+async def validate_token(token: str):
+    """Returns a specific drone from the db with only the id
+
+    Returns:
+        Drone: the requestesd drone
+    """
+
+    drone_id_str = await get_email_from_token(token, False) #returns id as well
+    if drone_id_str is None or drone_id_str == "":
+        return False
+    return True
 
 
 async def get_current_drone(token: str):
@@ -87,8 +100,15 @@ async def get_current_drone(token: str):
         detail="Token data is invalid",
         headers={"WWW-Authenticate": "Bearer"},
     )
-    drone_id = await get_email_from_token(token) #returns id as well
-    drone = get_drone_by_id(drone_id)
+
+    drone_id_str = await get_email_from_token(token, False) #returns id as well
+    if drone_id_str is None or drone_id_str == "":
+        raise credentials_exception
+
+    drone_id = int(drone_id_str)
+
+    drone = await get_drone_by_id(drone_id)
+
     if drone is None:
         raise credentials_exception
 

@@ -8,7 +8,7 @@ from database.drone_updates_table import create_drone_update
 from database.drone_events_table import create_drone_event_entry
 from .users import get_current_user, is_admin
 from ..dependencies import drones
-from ..dependencies.drones import get_current_drone, generate_drone_token
+from ..dependencies.drones import get_current_drone, generate_drone_token, validate_token
 from ..dependencies.classes import Drone, DroneEvent, DroneUpdateWithRoute, User
 
 router = APIRouter()
@@ -157,7 +157,7 @@ async def drone_update(drone_id:int,
                         lat:float,
                         flight_range:float|None,
                         flight_time:float|None,
-                        current_drone: Drone = Depends(get_current_drone)):
+                        current_drone_token: str):
     """Api call te recieve updates from drones
 
     Args:
@@ -167,11 +167,17 @@ async def drone_update(drone_id:int,
     Returns:
         dict: response
     """
-    if current_drone is None or current_drone.id != drone_id:
-        return {"message": "invalid drone"}
+
+    #current_drone = await get_current_drone(current_drone_token)
+
+    if not validate_token(current_drone_token) :
+        raise HTTPException(
+            status_code=status.HTTP_406_NOT_ACCEPTABLE,
+            detail="Invalid drone",
+        )
 
     success = create_drone_update(
-        current_drone.id,
+        drone_id,
         timestamp,
         lon,
         lat,
@@ -192,10 +198,10 @@ async def drone_event(
     lat: float,
     event_type: int,
     confidence: int,
-    csv_file_path: str | None = None,
-    file_raw: UploadFile = File(),
-    file_predicted: UploadFile = File(),
-    current_drone: Drone = Depends(get_current_drone)):
+    current_drone_token: str,
+    file_raw: UploadFile,
+    file_predicted: UploadFile,
+    csv_file_path: str | None = None,):
     """Api call to recieve events form drones
 
     Args:
@@ -206,11 +212,17 @@ async def drone_event(
     Returns:
         dict: response
     """
+    print("INSIDE")
 
-    if current_drone is None:
-        return {"message:": "Invalid drone" }
+    if not validate_token(current_drone_token):
+        raise HTTPException(
+            status_code=status.HTTP_406_NOT_ACCEPTABLE,
+            detail="Invalid drone",
+        )
     try:
         event_location = os.getenv("EVENT_PATH")
+        if not os.path.exists(event_location):
+            os.makedirs(event_type)
 
         raw_file_location = f"{event_location}/{file_raw.filename}-{str(datetime.now())}"
         with open(raw_file_location, "wb+") as file_object:
@@ -231,8 +243,10 @@ async def drone_event(
 
         return {"raw_image_location": raw_file_location, "predicted_image_location": predicted_file_location}
     except Exception as err:
-        print(err)
-        return {"message": "error"}
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="error",
+        )
 
 @router.post("/drones/feedback/", status_code=status.HTTP_200_OK)
 async def drone_feedback(reason: str,
@@ -255,6 +269,8 @@ async def drone_feedback(reason: str,
         return {"message": "Invalid user"}
 
     feedback_location = os.getenv("DRONE_FEEDBACK_PATH")
+    if not os.path.exists(feedback_location):
+            os.makedirs(feedback_location)
 
     try:
         content = f"""
@@ -303,7 +319,6 @@ async def drone_signup(name: str,
     Returns:
         dict: {drone, token}
     """
-
-    if is_admin(current_user):
+    if await is_admin(current_user):
         drone = create_drone(name,drone_type,flight_range,cc_range,flight_time)
-        return {"drone": drone, "token": generate_drone_token(drone)}
+        return {"drone": drone, "token": await generate_drone_token(drone)}

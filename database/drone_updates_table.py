@@ -61,8 +61,8 @@ def create_drone_update(drone_id:int,
                             timestamp:datetime.datetime,
                             longitude:float,
                             latitude:float,
-                            flight_range:int|None,
-                            flight_time:int|None)-> bool:
+                            flight_range:float|None,
+                            flight_time:float|None)-> bool:
     """store the data sent by the drone.
 
     Args:

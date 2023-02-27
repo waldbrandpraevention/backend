@@ -83,12 +83,13 @@ def create_drone_events():
             and os.getenv("DEMO_LAT") is not None:
 
         for i in range(3):
+            print(i)
             drones_table.create_drone(
-                name=f'Trinity F0{i}',
+                name=f'Trinity F00{i}',
                 drone_type="Unmanned Aerial Vehicle",
                 cc_range=7.5,
                 flight_range=100.0,
-                flight_time=90
+                flight_time=90.0
             )
         drone_events_table.insert_demo_events(12.559776306152344,50.189299066349946,3)
         drone_events_table.insert_demo_events(12.559776306152344,52.189299066349946,2)

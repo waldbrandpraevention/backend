@@ -43,6 +43,23 @@ AND territories.orga_id = ?
 Group by drones.id
 Order by drone_data.timestamp;'''
 
+GET_DRONE_BY_ID = '''SELECT
+drones.id, 
+drones.name, 
+drones.type, 
+drones.flight_range, 
+drones.cc_range, 
+drones.flight_time, 
+zones.id
+FROM drones
+JOIN drone_data ON drone_data.drone_id = drones.id
+JOIN zones ON ST_Intersects(drone_data.coordinates, zones.area)
+JOIN territory_zones ON territory_zones.zone_id = zones.id
+JOIN territories ON territories.id = territory_zones.territory_id
+WHERE drones.id = ?
+Group by drones.id
+Order by drone_data.timestamp;'''
+
 GET_DRONES = '''SELECT
 drones.id, 
 drones.name, 
@@ -119,7 +136,7 @@ def get_drone_id(drone_id: int) -> Drone | None:
     Returns:
         Drone | None: the drone obj or None if not found.
     """
-    fetched_drone = db.fetch_one(GET_DRONE,(drone_id))
+    fetched_drone = db.fetch_one(GET_DRONE_BY_ID,(drone_id,))
     return get_obj_from_fetched(fetched_drone)
 
 def get_drones(orga_id:int) -> List[Drone]:
