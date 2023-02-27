@@ -193,15 +193,15 @@ async def drone_update(drone_id:int,
 @router.post("/drones/send-event/")
 async def drone_event(
     drone_id: int,
-    timestamp: datetime,
     lon: float,
     lat: float,
     event_type: int,
     confidence: int,
     current_drone_token: str,
     file_raw: UploadFile,
-    file_predicted: UploadFile,
-    csv_file_path: str | None = None,):
+    file_predicted:UploadFile,
+    csv_file_path: str | None = None,
+    timestamp: datetime | None = None):
     """Api call to recieve events form drones
 
     Args:
@@ -212,41 +212,35 @@ async def drone_event(
     Returns:
         dict: response
     """
-    print("INSIDE")
 
-    if not validate_token(current_drone_token):
+    if not await validate_token(current_drone_token):
         raise HTTPException(
             status_code=status.HTTP_406_NOT_ACCEPTABLE,
             detail="Invalid drone",
         )
-    try:
-        event_location = os.getenv("EVENT_PATH")
-        if not os.path.exists(event_location):
-            os.makedirs(event_type)
+    event_location = os.getenv("EVENT_PATH")
+    if not os.path.exists(event_location):
+        os.makedirs(event_type)
 
-        raw_file_location = f"{event_location}/{file_raw.filename}-{str(datetime.now())}"
-        with open(raw_file_location, "wb+") as file_object:
-            file_object.write(file_raw.file.read())
+    raw_file_location = f"{event_location}/{file_raw.filename}-{str(datetime.now())}"
+    with open(raw_file_location, "wb+") as file_object:
+        file_object.write(file_raw.file.read())
 
-        predicted_file_location = f"{event_location}/{file_predicted.filename}-{str(datetime.now())}"
-        with open(predicted_file_location, "wb+") as file_object:
-            file_object.write(file_predicted.file.read())
+    predicted_file_location = f"{event_location}/{file_predicted.filename}-{str(datetime.now())}"
+    with open(predicted_file_location, "wb+") as file_object:
+        file_object.write(file_predicted.file.read())
 
-        create_drone_event_entry(drone_id,
-                                timestamp,
-                                lon,
-                                lat,
-                                event_type,
-                                confidence,
-                                predicted_file_location,
-                                csv_file_path)
+    create_drone_event_entry(drone_id,
+                            timestamp,
+                            lon,
+                            lat,
+                            event_type,
+                            confidence,
+                            predicted_file_location,
+                            csv_file_path)
 
-        return {"raw_image_location": raw_file_location, "predicted_image_location": predicted_file_location}
-    except Exception as err:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="error",
-        )
+    return {"raw_image_location": raw_file_location, "predicted_image_location": predicted_file_location}
+
 
 @router.post("/drones/feedback/", status_code=status.HTTP_200_OK)
 async def drone_feedback(reason: str,
@@ -270,7 +264,7 @@ async def drone_feedback(reason: str,
 
     feedback_location = os.getenv("DRONE_FEEDBACK_PATH")
     if not os.path.exists(feedback_location):
-            os.makedirs(feedback_location)
+        os.makedirs(feedback_location)
 
     try:
         content = f"""

@@ -220,8 +220,8 @@ def simulate():
                                 event = {
                                 "drone_id": drone_entry["drone"]["id"],
                                 "timestamp": datetime.now(),
-                                "longitude": drone_entry["lon"],
-                                "latitude": drone_entry["lat"],
+                                "lon": drone_entry["lon"],
+                                "lat": drone_entry["lat"],
                                 "event_type": result.event_type,
                                 "confidence": result.confidence,
                                 "current_drone_token": drone_entry["token"],
@@ -232,9 +232,12 @@ def simulate():
                                 img_mem = BytesIO()
                                 result.picture.save(img_mem, 'JPEG', quality=70)
                                 img_mem.seek(0)
-                                files = {'file_raw:': open(path, "rb"), 'file_predicted:': img_mem}
+                                files = {'file_raw': open(path, "rb"), 'file_predicted': img_mem}
                                 print("Sending POST request for event")
-                                event_response = requests.post(URL + "/drones/send-event/", params=event, files=files)
+                                header = {"accept": "application/json"}
+                                event_response = requests.post(URL + "/drones/send-event/", headers=header, params=event, files=files, timeout=10)
+                                print("EVENT SEND")
+                                print(event_response.text)
                         except Exception as event_error:
                             print("Event could not be generated")
                             print(event_error)
