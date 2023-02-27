@@ -170,7 +170,7 @@ async def drone_update(drone_id:int,
 
     #current_drone = await get_current_drone(current_drone_token)
 
-    if not validate_token(current_drone_token) :
+    if not await validate_token(current_drone_token) :
         raise HTTPException(
             status_code=status.HTTP_406_NOT_ACCEPTABLE,
             detail="Invalid drone",
@@ -218,7 +218,7 @@ async def drone_event(
             status_code=status.HTTP_406_NOT_ACCEPTABLE,
             detail="Invalid drone",
         )
-    print("1")
+
     event_location = os.getenv("EVENT_PATH")
     if not os.path.exists(event_location):
         os.makedirs(event_location)
@@ -227,15 +227,17 @@ async def drone_event(
     sub_path = os.path.join(event_location, sub_folder)
     if not os.path.exists(sub_path):
         os.makedirs(sub_path)
-    print("2")
+    else:
+        return {"location": sub_path}
+
     raw_file_location = f"{sub_path}/raw.jpg"
     with open(raw_file_location, "wb+") as file_object:
         file_object.write(file_raw.file.read())
-    print("3")
+
     predicted_file_location = f"{sub_path}/predicted.jpg"
     with open(predicted_file_location, "wb+") as file_object:
         file_object.write(file_predicted.file.read())
-    print("4")
+
     create_drone_event_entry(drone_id,
                             timestamp,
                             lon,
@@ -245,7 +247,7 @@ async def drone_event(
                             predicted_file_location,
                             csv_file_path)
 
-    return {"raw_image_location": raw_file_location, "predicted_image_location": predicted_file_location}
+    return {"location": sub_path}
 
 
 @router.post("/drones/feedback/", status_code=status.HTTP_200_OK)
@@ -278,26 +280,24 @@ async def drone_feedback(reason: str,
         notes: {notes}
         """
 
-        base_dir_path = f"{feedback_location}/{str(datetime.now())}"
-        dir_path = base_dir_path
-        i = 1
-        while os.path.exists(dir_path):
-            dir_path = base_dir_path + " - " + str(i)
-            i = i + 1
+        sub_path = os.path.join(feedback_location, str(datetime.now()))
 
-        os.makedirs(dir_path)
+        if not os.path.exists(sub_path):
+            os.makedirs(sub_path)
 
-        with open(f"{dir_path}/info.txt", "wb+") as file_object:
+        with open(f"{sub_path}/info.txt", "wb+") as file_object:
             file_object.write(content)
 
-        file_location = f"{dir_path}/{file.filename}"
+        file_location = f"{sub_path}/{file.filename}"
         with open(file_location, "wb+") as file_object:
             file_object.write(file.file.read())
 
         return {"message": "Feedback was send"}
-    except Exception as err:
-        print(err)
-        return {"message": "Error while sending feedback"}
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_406_NOT_ACCEPTABLE,
+            detail="Error while sending",
+        )
 
 @router.post("/drones/signup/", status_code=status.HTTP_200_OK)
 async def drone_signup(name: str,

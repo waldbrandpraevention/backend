@@ -42,22 +42,18 @@ async def alarm_team(drone_name: str,
         notes: {notes}
         """
 
-        base_dir_path = f"{alarm_location}/{str(datetime.now())}"
-        dir_path = base_dir_path
-        i = 1
-        while os.path.exists(dir_path):
-            dir_path = base_dir_path + " - " + str(i)
-            i = i + 1
+        sub_path = f"{alarm_location}/{str(datetime.now())}"
 
-        os.makedirs(dir_path)
-
-        with open(f"{dir_path}/info.txt", "wb+") as file_object:
+        if not os.path.exists(sub_path):
+            os.makedirs(sub_path)
+        print("ARRRR")
+        with open(f"{sub_path}/info.txt", "w+") as file_object:
             file_object.write(content)
-
-        file_location = f"{dir_path}/{file.filename}"
+        print("BRRRRRR")
+        file_location = f"{sub_path}/{file.filename}"
         with open(file_location, "wb+") as file_object:
             file_object.write(file.file.read())
-
+        print("CRRRRRRR")
         return {"message": "Alarmierung erhalten"}
     except Exception as err:
         print(err)
