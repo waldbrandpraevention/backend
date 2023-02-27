@@ -285,7 +285,7 @@ async def drone_feedback(reason: str,
         if not os.path.exists(sub_path):
             os.makedirs(sub_path)
 
-        with open(f"{sub_path}/info.txt", "wb+") as file_object:
+        with open(f"{sub_path}/info.txt", "w+") as file_object:
             file_object.write(content)
 
         file_location = f"{sub_path}/{file.filename}"
