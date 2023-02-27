@@ -197,7 +197,7 @@ def simulate():
                         print("POST updade request failed. retrying in 3 sec")
                         time.sleep(3)
 
-                if random.random() <= 0.5:#CHANCE_OF_EVENT: #event happens as well
+                if random.random() <= CHANCE_OF_EVENT: #event happens as well
                     print(f"Events triggered for drone {drone_id}")
                     time_now = datetime.now()
                     #pick random file
