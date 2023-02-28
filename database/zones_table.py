@@ -37,14 +37,16 @@ CREATE_ENTRY_TEXTGEO = '''INSERT OR IGNORE
                         VALUES (?,?,?,?,GeomFromText(?,4326),MakePoint(?, ?, 4326));'''
 
 GET_ZONE = """SELECT zones.id,zones.name,federal_state,district,AsGeoJSON(area),
-                X(geo_point),Y(geo_point),Count(DISTINCT drone_data.drone_id),
+                X(geo_point),Y(geo_point),
+                Count(DISTINCT drone_data.drone_id),
                 MAX(drone_data.timestamp),
                 Count(DISTINCT drone_event.id)
                 FROM zones
                 LEFT JOIN drone_data ON ST_Intersects(drone_data.coordinates, area)
                 Left JOIN drone_event ON ST_Intersects(drone_event.coordinates, area)
                 {}
-                GROUP BY name;"""
+                GROUP BY drone_data.drone_id
+                ORDER BY name;"""
 
 GET_ZONEPOLYGON = """   SELECT AsGeoJSON(area)
                         FROM zones
@@ -62,7 +64,8 @@ GET_ZONEJOINORGA ='''SELECT zones.id,zones.name,federal_state,district,AsGeoJSON
                     Left JOIN drone_event ON ST_Intersects(drone_event.coordinates, area)
                     WHERE zones.{}=? 
                     AND territories.orga_id=?
-                    GROUP BY zones.name;'''
+                    GROUP BY drone_data.drone_id
+                    ORDER BY zones.name;'''
 
 GET_ZONES_BY_DISTRICT = '''SELECT zones.id,zones.name,federal_state,district,AsGeoJSON(area),
                             X(geo_point),Y(geo_point),Count(DISTINCT drone_data.drone_id),

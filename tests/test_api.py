@@ -14,8 +14,8 @@ from database.territories_table import get_orga_area
 def test_improvements():
     """test.
     """
-    te = territories_table.get_territories(1)
-    print(len(te))
+    territories = territories_table.get_territories(1)
+    print(len(territories))
 
     cProfile.run('test_improvements()',sort='tottime')
 
