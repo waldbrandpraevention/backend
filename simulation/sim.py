@@ -130,7 +130,7 @@ def simulate():
     last_execution = datetime.now()
     next_update = datetime.now()
     updade_delta =  timedelta(seconds=SIMULATION_UPDATE_FREQUENCY)
-    loop_delta = timedelta(seconds=30)
+    loop_delta = timedelta(seconds=math.ceil(SIMULATION_UPDATE_FREQUENCY / 10))
     updating = True
     while True:
         diff = datetime.now() - last_execution
@@ -152,7 +152,8 @@ def simulate():
 
             new_point = Point(new_lon, new_lat)
 
-            found = False
+            found = True
+            """ found = False
             if geo_json["type"] == "Feature":
                 polygon = shape(geo_json['geometry'])
                 found = polygon.contains(new_point)
@@ -161,7 +162,7 @@ def simulate():
                     polygon = shape(feature['geometry'])
                     if polygon.contains(new_point):
                         found = True
-                        break
+                        break """
 
             if not found: #not in polygon -> just turn randomly
                 new_angle = random.uniform(0, 6.28318530718)

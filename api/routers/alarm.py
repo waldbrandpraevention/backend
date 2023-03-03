@@ -46,10 +46,8 @@ async def alarm_team(drone_name: str,
 
         if not os.path.exists(sub_path):
             os.makedirs(sub_path)
-        print("ARRRR")
         with open(f"{sub_path}/info.txt", "w+") as file_object:
             file_object.write(content)
-        print("BRRRRRR")
         file_location = f"{sub_path}/{file.filename}"
         with open(file_location, "wb+") as file_object:
             file_object.write(file.file.read())
@@ -58,3 +56,18 @@ async def alarm_team(drone_name: str,
     except Exception as err:
         print(err)
         return {"message": "Alarmierung fehlgeschlagen"}
+
+
+@router.get("/alarm/get-all/", status_code=status.HTTP_200_OK)
+async def get_incidents(current_user: User = Depends(get_current_user)):
+    """API cal te get all incidents
+
+    Args:
+        current_user (User, optional): current user. Defaults to Depends(get_current_user).
+
+    Returns:
+        Alarm[]: list of alarms
+    """
+    alarms = []
+    return alarms
+    
