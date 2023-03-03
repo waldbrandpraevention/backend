@@ -84,7 +84,7 @@ def simulate():
         if token == '':
             try:
                 token = login()
-            except ConnectionError:
+            except Exception:
                 print("Login with demo admin account failed. retrying in 3 sec")
                 time.sleep(3)
                 continue
@@ -97,7 +97,7 @@ def simulate():
                     for _ in territories:
                         drone_amounts.append(random.randint(5, 20))
                         drones_created.append(0)
-                except ConnectionError:
+                except Exception:
                     print("Territorries of the demo account could not be retrieved. retrying in 3 sec")
                     time.sleep(3)
                     continue
@@ -109,7 +109,7 @@ def simulate():
                         drones.append(new_drone)
                         drones_created[i] += 1
                         print(f"{drones_created[i]}/{drone_amounts[i]} drones created for {territory['name']}")
-                    except ConnectionError:
+                    except Exception:
                         print("Could not create drone. retrying in 3 sec")
                         time.sleep(3)
                         continue
@@ -194,7 +194,7 @@ def simulate():
                     try:
                         requests.post(URL + "/drones/send-update/", params=new_update, timeout=10)
                         update_success = True
-                    except HTTPException:
+                    except Exception:
                         print("POST updade request failed. retrying in 3 sec")
                         time.sleep(3)
 
