@@ -4,7 +4,7 @@ import os
 from datetime import datetime
 from fastapi import status, APIRouter, UploadFile,File, Depends
 from ..dependencies.users import get_current_user
-from ..dependencies.classes import User
+from ..dependencies.classes import User, Incident
 
 alarm_location = os.getenv("ALARM_PATH")
 
@@ -51,7 +51,6 @@ async def alarm_team(drone_name: str,
         file_location = f"{sub_path}/{file.filename}"
         with open(file_location, "wb+") as file_object:
             file_object.write(file.file.read())
-        print("CRRRRRRR")
         return {"message": "Alarmierung erhalten"}
     except Exception as err:
         print(err)
@@ -68,6 +67,37 @@ async def get_incidents(current_user: User = Depends(get_current_user)):
     Returns:
         Alarm[]: list of alarms
     """
+
+    #todo: create db stuff
     alarms = []
+    i_1 = Incident(
+        id = 1,
+        drone_name = "Fake-Drone-1",
+        location = "Somewhere-1",
+        alarm_type = "type-1",
+        notes = "note-1",
+        file_location = "/fakepath/",
+    )
+    i_2 = Incident(
+        id = 1,
+        drone_name = "Fake-Drone-2",
+        location = "Somewhere-2",
+        alarm_type = "type-2",
+        notes = "note-2",
+        file_location = "/fakepath/",
+    )
+    i_3 = Incident(
+        id = 1,
+        drone_name = "Fake-Drone-3",
+        location = "Somewhere-3",
+        alarm_type = "type-3",
+        notes = "note-3",
+        file_location = "/fakepath/",
+    )
+
+
+    alarms.append(i_1)
+    alarms.append(i_2)
+    alarms.append(i_3)
+
     return alarms
-    

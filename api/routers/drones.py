@@ -3,13 +3,15 @@ import os
 from datetime import datetime, timedelta
 from typing import List
 from fastapi import Depends, APIRouter, HTTPException, status, UploadFile, File
+from fastapi.responses import FileResponse
 from database.drones_table import create_drone
 from database.drone_updates_table import create_drone_update
-from database.drone_events_table import create_drone_event_entry
+from database.drone_events_table import create_drone_event_entry, get_event_by_id
 from .users import get_current_user, is_admin
 from ..dependencies import drones
-from ..dependencies.drones import get_current_drone, generate_drone_token, validate_token
+from ..dependencies.drones import generate_drone_token, validate_token
 from ..dependencies.classes import Drone, DroneEvent, DroneUpdateWithRoute, User
+from ..dependencies.zones import get_zone_by_id
 
 router = APIRouter()
 
@@ -223,7 +225,7 @@ async def drone_event(
     if not os.path.exists(event_location):
         os.makedirs(event_location)
 
-    sub_folder = str(datetime.now())
+    sub_folder = str(timestamp)
     sub_path = os.path.join(event_location, sub_folder)
     if not os.path.exists(sub_path):
         os.makedirs(sub_path)
@@ -322,3 +324,38 @@ async def drone_signup(name: str,
     if await is_admin(current_user):
         drone = create_drone(name,drone_type,flight_range,cc_range,flight_time)
         return {"drone": drone, "token": await generate_drone_token(drone)}
+
+
+@router.get("/drones/get-event-images/") #""" , response_model=List[FileResponse] """
+async def get_images(
+                        event_id: int,
+                        current_user: User = Depends(get_current_user)):
+    """Returns the images related to an event
+
+    Args:
+        drone_id (int): drone id of the event. Used to validate if the user is allawed to read the event
+        zone_id (int): zone id of the event. Used to validate if the user is allawed to read the event
+        event_id (int): event id of the event
+        current_user (User, optional): _description_. Defaults to Depends(get_current_user).
+
+    Returns:
+        _type_: _description_
+    """
+
+    curr_drone_event = get_event_by_id(event_id)
+    if get_zone_by_id(drone_event.zone_id, current_user.organization.id) is None:
+        raise HTTPException(
+            status_code=status.HTTP_406_NOT_ACCEPTABLE,
+            detail="User is not allowed to access this event. The zone of the event is most likly not part of your organization.",
+        )
+
+    feedback_location = os.getenv("DRONE_FEEDBACK_PATH")
+    try:
+        raw_file_path = os.path.join(feedback_location, str(curr_drone_event.timestamp), "raw.jpg")
+        predicted_file_path = os.path.join(feedback_location, str(curr_drone_event.timestamp), "predicted.jpg")
+        return FileResponse(raw_file_path), FileResponse(predicted_file_path)
+    except Exception as err:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Unable to load images",
+        ) from err

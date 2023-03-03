@@ -141,6 +141,7 @@ class EventType(Enum):
 
 class Incident(BaseModel):
     """ Incident class."""
+    id:int | None = None
     drone_name: str | None = None
     location: str | None = None
     alarm_type: str | None = None

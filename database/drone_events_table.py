@@ -49,6 +49,12 @@ FROM drone_event
 JOIN zones ON ST_Intersects(zones.area, coordinates)
 AND timestamp > ? AND timestamp < ?;'''
 
+GET_EVENT_BY_ID = '''
+SELECT drone_event.id,drone_id,timestamp, X(coordinates), Y(coordinates),event_type,confidence,picture_path,csv_file_path, zones.id
+FROM drone_event
+JOIN zones ON ST_Intersects(zones.area, coordinates)
+AND drone_event.id = ?;'''
+
 
 def insert_demo_events(long: float, lat: float, droneid = 1):
     """insert 5 demo drone events.
@@ -135,6 +141,18 @@ def create_drone_event_entry(drone_id: int,
         return True
     return False
 
+
+def get_event_by_id(event_id: int) -> DroneEvent | None:
+    """get the requested drone just by the id
+
+    Args:
+        name (str): name of that drone.
+
+    Returns:
+        Drone | None: the drone obj or None if not found.
+    """
+    fetched_event = db.fetch_one(GET_EVENT_BY_ID, (event_id,))
+    return get_obj_from_fetched(fetched_event)
 
 def get_drone_event(drone_id: int = None,
                     polygon: str=None,
