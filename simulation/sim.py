@@ -187,6 +187,7 @@ def send_event(drone_entry):
         print("Event could not be send. skipping event")
 
 def is_in_poly(geo_json, lon, lat):
+    """checks of a point is in a geo_json polygon"""
     new_point = Point(lon, lat)
 
     if geo_json["type"] == "Feature":
@@ -234,9 +235,7 @@ def simulate():
             new_lat = drone_entry["lat"] + direction[1] * speed * loop_delta.seconds
             new_lon= drone_entry["lon"] + direction[0] * speed * loop_delta.seconds
 
-            new_point = Point(new_lon, new_lat)
-            
-            found = is_in_poly[geo_json["type"], new_lon, new_lat]
+            found = is_in_poly(geo_json["type"], new_lon, new_lat)
 
             if not found: #not in polygon -> just turn randomly
                 new_angle = random.uniform(0, 6.28318530718)
