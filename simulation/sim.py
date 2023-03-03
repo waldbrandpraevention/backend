@@ -53,7 +53,7 @@ def create_new_drone(token,territory):
     response = requests.post(URL+"/drones/signup/", headers=header, params=drone, timeout=10)
     signup_json_response = response.json()
 
-    angle = random.random()
+    angle = 2 * math.pi * random.random()
     simulation_drone = {
         "drone": signup_json_response["drone"],
         "token": signup_json_response["token"],
@@ -150,6 +150,7 @@ def update(drone_entry):
             time.sleep(3)
 
 def send_event(drone_entry):
+    """sends an event"""
     print(f"Events triggered for drone {drone_entry['drone']['id']}")
     time_now = datetime.now()
     #pick random file
@@ -235,17 +236,14 @@ def simulate():
             new_lat = drone_entry["lat"] + direction[1] * speed * loop_delta.seconds
             new_lon= drone_entry["lon"] + direction[0] * speed * loop_delta.seconds
 
-            found = is_in_poly(geo_json["type"], new_lon, new_lat)
-
-            if not found: #not in polygon -> just turn randomly
-                new_angle = random.uniform(0, 6.28318530718)
-                dir_x = 1 * math.cos(new_angle)
-                dir_y = 1 * math.sin(new_angle)
-
-                drone_entry["direction"] = (dir_x, dir_y)
-            else: #in poly -> do the movement
+            if is_in_poly(geo_json["type"], new_lon, new_lat):
                 drone_entry["lat"] = new_lat
                 drone_entry["lon"] = new_lon
+            else:
+                new_angle = 2 * math.pi * random.random()
+                dir_x = 1 * math.cos(new_angle)
+                dir_y = 1 * math.sin(new_angle)
+                drone_entry["direction"] = (dir_x, dir_y)
 
             if updating:
                 update(drone_entry)

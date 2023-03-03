@@ -295,11 +295,11 @@ async def drone_feedback(reason: str,
             file_object.write(file.file.read())
 
         return {"message": "Feedback was send"}
-    except Exception:
+    except Exception as err:
         raise HTTPException(
             status_code=status.HTTP_406_NOT_ACCEPTABLE,
             detail="Error while sending",
-        )
+        ) from err
 
 @router.post("/drones/signup/", status_code=status.HTTP_200_OK)
 async def drone_signup(name: str,
