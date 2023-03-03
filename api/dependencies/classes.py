@@ -139,6 +139,14 @@ class EventType(Enum):
     SMOKE = 1
     FIRE = 2
 
+class Incident(BaseModel):
+    """ Incident class."""
+    drone_name: str | None = None
+    location: str | None = None
+    alarm_type: str | None = None
+    notes: str | None = None
+    file_location: str | None = None
+
 class DroneEvent(BaseModel):
     """DroneEvent class. Contains all the information about a drone event."""
     id :int | None = None
