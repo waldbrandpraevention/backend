@@ -246,7 +246,7 @@ async def drone_event(
                             lat,
                             event_type,
                             confidence,
-                            predicted_file_location,
+                            sub_path,
                             csv_file_path)
 
     return {"location": sub_path}
@@ -287,7 +287,7 @@ async def drone_feedback(reason: str,
         if not os.path.exists(sub_path):
             os.makedirs(sub_path)
 
-        with open(f"{sub_path}/info.txt", "w+") as file_object:
+        with open(f"{sub_path}/info.txt", "wb+") as file_object:
             file_object.write(content)
 
         file_location = f"{sub_path}/{file.filename}"
@@ -326,20 +326,17 @@ async def drone_signup(name: str,
         return {"drone": drone, "token": await generate_drone_token(drone)}
 
 
-@router.get("/drones/get-event-images/") #""" , response_model=List[FileResponse] """
-async def get_images(
-                        event_id: int,
-                        current_user: User = Depends(get_current_user)):
-    """Returns the images related to an event
+@router.get("/drones/get-event-image-raw/", response_class=FileResponse)
+async def get_image_raw(event_id: int,
+                    current_user: User = Depends(get_current_user)):
+    """Returns the raw image related to an event
 
     Args:
-        drone_id (int): drone id of the event. Used to validate if the user is allawed to read the event
-        zone_id (int): zone id of the event. Used to validate if the user is allawed to read the event
         event_id (int): event id of the event
         current_user (User, optional): _description_. Defaults to Depends(get_current_user).
 
     Returns:
-        _type_: _description_
+        FileResponse: image
     """
 
     curr_drone_event = get_event_by_id(event_id)
@@ -348,14 +345,27 @@ async def get_images(
             status_code=status.HTTP_406_NOT_ACCEPTABLE,
             detail="User is not allowed to access this event. The zone of the event is most likly not part of your organization.",
         )
+    path = os.path.join(curr_drone_event.picture_path, "raw.jpg")
+    return path
 
-    feedback_location = os.getenv("DRONE_FEEDBACK_PATH")
-    try:
-        raw_file_path = os.path.join(feedback_location, str(curr_drone_event.timestamp), "raw.jpg")
-        predicted_file_path = os.path.join(feedback_location, str(curr_drone_event.timestamp), "predicted.jpg")
-        return FileResponse(raw_file_path), FileResponse(predicted_file_path)
-    except Exception as err:
+@router.get("/drones/get-event-image-predicted/", response_class=FileResponse)
+async def get_image_predicted(event_id: int,
+                    current_user: User = Depends(get_current_user)):
+    """Returns the predicted image related to an event
+
+    Args:
+        event_id (int): event id of the event
+        current_user (User, optional): _description_. Defaults to Depends(get_current_user).
+
+    Returns:
+        FileResponse: image
+    """
+
+    curr_drone_event = get_event_by_id(event_id)
+    if get_zone_by_id(drone_event.zone_id, current_user.organization.id) is None:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Unable to load images",
-        ) from err
+            status_code=status.HTTP_406_NOT_ACCEPTABLE,
+            detail="User is not allowed to access this event. The zone of the event is most likly not part of your organization.",
+        )
+    path = os.path.join(curr_drone_event.picture_path, "raw.jpg")
+    return path
