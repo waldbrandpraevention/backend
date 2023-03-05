@@ -42,15 +42,16 @@ async def alarm_team(drone_name: str,
     return {"message:": "success"}
 
 
-@router.get("/alarm/get-all/", status_code=status.HTTP_200_OK)
+@router.get("/alarm/get/", status_code=status.HTTP_200_OK)
 async def get_incidents(amount: int, current_user: User = Depends(get_current_user)):
-    """API cal te get all incidents
+    """API call to get the last x incidents
 
     Args:
+        amount (int): amount to get
         current_user (User, optional): current user. Defaults to Depends(get_current_user).
 
     Returns:
-        Alarm[]: list of alarms
+        Incident[]: list of incidents
     """
 
     if not current_user:
