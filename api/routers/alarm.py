@@ -53,6 +53,12 @@ async def get_incidents(amount: int, current_user: User = Depends(get_current_us
         Alarm[]: list of alarms
     """
 
+    if not current_user:
+        raise HTTPException(
+            status_code=status.HTTP_406_NOT_ACCEPTABLE,
+            detail="Invalid user",
+        )
+
     if amount < 0:
         raise HTTPException(
             status_code=status.HTTP_406_NOT_ACCEPTABLE,
