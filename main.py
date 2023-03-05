@@ -169,8 +169,3 @@ async def test(test_input: str):
     """ Test function to check if the server is running."""
     return {"message": test_input}
 
-
-@app.get("/test-mail/")
-async def test_mail(reciever: str, subject: str, message: str):
-    """ Test function to check if the server is running."""
-    return await send_email(reciever, subject, message)
