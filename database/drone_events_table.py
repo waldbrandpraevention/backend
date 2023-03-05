@@ -36,7 +36,7 @@ CREATE_ENTRY = '''
 INSERT INTO drone_event (drone_id,timestamp,coordinates,event_type,confidence,picture_path,csv_file_path) 
 VALUES (? ,?,MakePoint(?, ?, 4326)  ,? ,?,?,?);'''
 
-GET_ENfTRY = '''
+GET_ENTRY = '''
 SELECT drone_event.id, drone_id,timestamp, X(coordinates), Y(coordinates),event_type,confidence,picture_path,csv_file_path, zones.id
 FROM drone_event
 LEFT JOIN zones ON ST_Intersects(zones.area, coordinates)

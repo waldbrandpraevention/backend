@@ -236,7 +236,7 @@ def simulate():
             new_lat = drone_entry["lat"] + direction[1] * speed * loop_delta.seconds
             new_lon= drone_entry["lon"] + direction[0] * speed * loop_delta.seconds
 
-            if is_in_poly(geo_json["type"], new_lon, new_lat):
+            if is_in_poly(geo_json, new_lon, new_lat):
                 drone_entry["lat"] = new_lat
                 drone_entry["lon"] = new_lon
             else:
