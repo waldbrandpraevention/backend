@@ -146,7 +146,7 @@ class Incident(BaseModel):
     location: str | None = None
     alarm_type: str | None = None
     notes: str | None = None
-    file_location: str | None = None
+    timestamp :datetime | None = None
 
 class DroneEvent(BaseModel):
     """DroneEvent class. Contains all the information about a drone event."""
