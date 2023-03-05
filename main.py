@@ -144,13 +144,12 @@ def main():
     #create_drones()
     load_zones_from_geojson()
 
-    #make sure this actually works
-    try:
-        simulation_thread = Thread(target = simulate)
-        simulation_thread.start()
-        #weather_thread.start()
-    except Exception as err:
-        print(err)
+    if bool(os.getenv("RUN_SIMULATION")):
+        try:
+            simulation_thread = Thread(target = simulate)
+            simulation_thread.start()
+        except Exception as err:
+            print(err)
 
 
 main()
@@ -162,8 +161,7 @@ async def root():
     number_two = random.randint(0,100)
     raise HTTPException(
                 status_code=status.HTTP_418_IM_A_TEAPOT,
-                detail=f"""Random addition: {number_one}
-                        {number_one} {number_one +number_two}""",
+                detail=f"""Random addition: {number_one} + {number_one} = {number_one + number_two}""",
             )
 
 @app.get("/test")
