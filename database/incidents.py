@@ -18,15 +18,8 @@ PRIMARY KEY (id)
 
 INSERT_INCIDENT= 'INSERT INTO incidents (drone_name, location, alarm_type, notes) VALUES (?,?,?,?);'
 
-GET_INCIDENT = '''SELECT id,dr,name,description
-                    FROM territories
-                    Jo
-                    {};'''
-
-GET_TERRITORY_IDS = '''SELECT id
-                    FROM territories
-                    {};'''
-
+GET_INCIDENT = '''SELECT * FROM incidents
+                    ORDER BY timestamp DESC LIMIT {};'''
 
 def create_incident(drone_name: str, location: str, alarm_type: str, notes: str, timestamp: datetime.datetime) -> int | None:
     """create an incident.
@@ -51,9 +44,19 @@ def get_last_incidents(amount: int) -> List[Incident]:
     Returns:
         List[Incident]: list of incidents.
     """
+    sql = GET_INCIDENT.format(amount)
+
+    fetched_data = db.fetch_all(sql)
+
+    if fetched_data is None:
+        return None
+
     incidents = []
 
-    #todo get last x inicdents by timestamp, if less than x exist -> return as many as exist
+    for incident_data in fetched_data:
+        incident_obj = get_obj_from_fetched(incident_data)
+        if incident_obj:
+            incidents.append(incident_obj)
 
     return incidents
 
