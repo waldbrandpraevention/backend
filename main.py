@@ -26,6 +26,7 @@ from database.drones_table import CREATE_DRONES_TABLE
 from database.organizations_table import CREATE_ORGANISATIONS_TABLE
 from database.users_table import CREATE_USER_TABLE
 from database.zones_table import CREATE_ZONE_TABLE
+from database.incidents import CREATE_INCIDENTS_TABLE
 
 app = FastAPI(  title="KIWA",
                 description="test")
@@ -137,6 +138,7 @@ def main():
     create_table(CREATE_DRONE_EVENT_TABLE)
     create_table(CREATE_TERRITORY_TABLE)
     create_table(CREATE_TERRITORYZONES_TABLE)
+    create_table(CREATE_INCIDENTS_TABLE)
     create_default_user()
     create_drone_events()
     #create_drones()
