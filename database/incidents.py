@@ -11,8 +11,8 @@ id          integer NOT NULL ,
 drone_name  text NOT NULL ,
 location    text NOT NULL ,
 alarm_type  text NOT NULL,
-notes       text NOT NULL
-timestamp   timestamp NOT NULL
+notes       text NOT NULL,
+timestamp   timestamp NOT NULL,
 PRIMARY KEY (id)
 );'''
 

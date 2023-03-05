@@ -8,7 +8,6 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from simulation.sim import simulate
 from api.dependencies.authentication import get_password_hash
-from api.dependencies.emails import send_email
 from api.dependencies.classes import UserWithSensitiveInfo
 from api.routers import emails, users, zones, drones, simulation,territories, alarm
 from database import (users_table,
@@ -151,7 +150,6 @@ def main():
         except Exception as err:
             print(err)
 
-
 main()
 
 @app.get("/")
@@ -168,4 +166,3 @@ async def root():
 async def test(test_input: str):
     """ Test function to check if the server is running."""
     return {"message": test_input}
-
