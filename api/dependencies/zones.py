@@ -36,7 +36,7 @@ async def get_zone_by_id(zone_id: int, orga_id:int):
     Returns:
         Zone | None: zone object.
     """
-    return territory_zones_table.get_orgazones_by_id(zone_id,orga_id)
+    return territory_zones_table.get_orgazone_by_id(zone_id,orga_id)
 
 async def get_zone_count(orga_id:int):
     """Returns the amount of zones of this organization.

@@ -65,6 +65,7 @@ async def test_drones():
                                             1,
                                             True
                                             )
+    drone_routes = await drones.read_drone_route(current_user=user)
     assert zone_events == zone.events
     assert zone_updates[0].timestamp == zone.last_update
     with pytest.raises(HTTPException):

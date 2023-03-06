@@ -1,9 +1,13 @@
-"""This module contains the territory table and its related functions."""
+""" This module contains the territory table and its related functions.
+    A Territory is a collection of zones.
+    It is used to group zones together and to assign them to a specific organization.
+
+"""
 from typing import List
 from database import drone_events_table, zones_table
 import database.database as db
 from database.spatia import spatiageostr_to_geojson
-from api.dependencies.classes import FireRisk, Territory, TerritoryWithZones, Zone
+from api.dependencies.classes import FireRisk, TerritoryWithZones, Zone
 
 
 CREATE_TERRITORY_TABLE = '''CREATE TABLE IF NOT EXISTS territories
@@ -67,7 +71,7 @@ def create_territory(orga_id: int, name: str, description: str=None) -> int | No
     Args:
         orga_id (int): id of the organization that the territory belongs to.
         name (str): name of the territory.
-        description (str): description of the territory.
+        description (str): description of the territory. Defaults to None.
 
     Returns:
         int | None: Id of the inserted entry, None if an error occurs.
@@ -75,7 +79,7 @@ def create_territory(orga_id: int, name: str, description: str=None) -> int | No
     return db.insert(INSERT_TERRITORY, (orga_id, name, description))
 
 def get_territory(territory_id: int) -> TerritoryWithZones:
-    """fetch a territory.
+    """get a territory by its id.
 
     Args:
         territory_id (int): id of the territory to fetch.
@@ -97,7 +101,7 @@ def get_territories(orga_id: int) -> List[TerritoryWithZones]:
         orga_id (int): id of the organization that the territories belong to.
 
     Returns:
-        list: list of all territories.
+        list: list of all territories, linked to the organization.
     """
     sql = GET_ORGA_TERRITORIES.format('WHERE territories.orga_id = ?')
     fetched_territories = db.fetch_all(sql, (orga_id,))
@@ -126,7 +130,7 @@ def get_orga_area(orga_id) -> str | None:
     return None
 
 def get_territory_zones(orga_id: int) -> List[Zone]:
-    """fetch all zones.
+    """fetch all zones of all territories of an organization.
 
     Args:
         orga_id (int): id of the organization that the zones belong to.

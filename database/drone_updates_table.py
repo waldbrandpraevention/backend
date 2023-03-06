@@ -41,7 +41,7 @@ GET_ENTRY ='''SELECT
                 FROM drone_data
                 LEFT JOIN zones ON ST_Intersects(zones.area, coordinates) 
                 {}
-                ORDER BY timestamp DESC;'''
+                ORDER BY drone_id, timestamp DESC;'''
 
 GET_UPDATE_IN_ZONE = '''
 SELECT drone_data.id,drone_id,timestamp,flight_range,flight_time, X(coordinates), Y(coordinates),zones.id
@@ -107,6 +107,7 @@ def get_drone_updates(  polygon:str,
     Returns:
         List[DroneData]: List with the fetched data.
     """
+
     sql_arr, tuple_arr = gernerate_drone_sql(polygon, drone_id, after, before)
 
     sql = db.add_where_clause(GET_ENTRY, sql_arr)
@@ -276,7 +277,7 @@ def get_routeobj_from_fetched(fetched_dronedataarr) -> List[DroneUpdate]| None:
 
     drones_arr = []
     route_arr = []
-    fetched_dronedataarr.sort(key=lambda x: x[1])#TODO sql sort
+    #fetched_dronedataarr.sort(key=lambda x: x[1])#TODO sql sort
     drone_update = get_obj_from_fetched(fetched_dronedataarr[0])
     for fetched_dronedata in fetched_dronedataarr:
         if fetched_match_class(DroneUpdate,fetched_dronedata):

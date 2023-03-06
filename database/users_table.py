@@ -64,9 +64,10 @@ def create_user(user:UserWithSensitiveInfo) -> bool:
     """Create an entry for an user.
 
     Args:
-        conn (sqlite3.Connection): Connection to a sqlite database.
-        email (str): email adress of the user.
-        pass_hash (str): hash of the entered password.
+        user (UserWithSensitiveInfo): User object.
+
+    Returns:
+        bool: True if the user was created, False otherwise.
     """
     inserted_id = db.insert(INSERT_USER,
                             (user.email,
@@ -87,6 +88,7 @@ def get_user(email, with_sensitive_info:bool=True) -> UserWithSensitiveInfo | No
 
     Args:
         email (str): email adress of the user.
+        with_sensitive_info (bool, optional): if the user object should contain sensitive information. Defaults to True.
 
     Returns:
         user: User object or None.
@@ -101,10 +103,11 @@ def get_user(email, with_sensitive_info:bool=True) -> UserWithSensitiveInfo | No
     return user
 
 def get_user_by_id(user_id:int, with_sensitive_info:bool=False) -> UserWithSensitiveInfo | None:
-    """Get the user object by email.
+    """Get the user object by id.
 
     Args:
         email (str): email adress of the user.
+        with_sensitive_info (bool, optional): if the user object should contain sensitive information. Defaults to True.
 
     Returns:
         user: User object or None.
@@ -163,17 +166,18 @@ def delete_user(user_id:int)->bool:
     """
     return db.update(DELETE,(user_id,))
 
-def update_user_withsql(user_id:int, col_str: str, update_arr:List):
+def update_user_withsql(user_id:int, set_sql: str, update_arr:List):
     """updates the user with the given sql str.
 
     Args:
-        user_id (int): _description_
-        set_sql (str): _description_
+        user_id (int): id of the user.
+        set_sql (str): sql str to update the user.
+        update_arr (List): list of values to update the user.
 
     Returns:
         bool: if the update was successful.
     """
-    update_str = UPDATE_STR.format(col_str)
+    update_str = UPDATE_STR.format(set_sql)
     update_arr.append(user_id)
     update_tuple = tuple(update_arr)
     return db.update(update_str,update_tuple)
