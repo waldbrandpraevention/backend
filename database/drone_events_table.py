@@ -50,17 +50,18 @@ JOIN zones ON ST_Intersects(zones.area, coordinates)
 AND timestamp > ? AND timestamp < ?;'''
 
 
-def insert_demo_events(long: float, lat: float, droneid = 1):
+def insert_demo_events(long: float, lat: float, droneid = 1, ignore_existing: bool = False):
     """insert 5 demo drone events.
 
     Args:
         long (float): long of the coordinate.
         lat (float): lat of the coordinate.
     """
-    update = drone_updates_table.get_latest_update(droneid)
-    if update is not None:
-        print('already created drone events.')
-        return
+    if not ignore_existing:
+        update = drone_updates_table.get_latest_update(droneid)
+        if update is not None:
+            print('already created drone events.')
+            return
     timestamp = datetime.datetime.utcnow()
     i = 0
     num_inserted = 0

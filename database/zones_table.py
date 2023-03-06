@@ -38,14 +38,19 @@ CREATE_ENTRY_TEXTGEO = '''INSERT OR IGNORE
 
 GET_ZONE = """SELECT zones.id,zones.name,federal_state,district,AsGeoJSON(area),
                 X(geo_point),Y(geo_point),
-                Count(DISTINCT drone_data.drone_id),
-                MAX(drone_data.timestamp),
+                Count(DISTINCT newdrone_data.drone_id),
+                newdrone_data.ts,
                 Count(DISTINCT drone_event.id)
                 FROM zones
-                LEFT JOIN drone_data ON ST_Intersects(drone_data.coordinates, area)
-                Left JOIN drone_event ON ST_Intersects(drone_event.coordinates, area)
+                LEFT OUTER JOIN drone_event ON ST_Intersects(drone_event.coordinates, area)
+                LEFT OUTER JOIN ( 
+                            SELECT coordinates, MAX(timestamp) as ts, drone_id
+                            from drone_data
+                            group by drone_data.drone_id
+                    ) AS newdrone_data
+                ON ST_Intersects(newdrone_data.coordinates, area)
                 {}
-                GROUP BY drone_data.drone_id
+                GROUP BY name
                 ORDER BY name;"""
 
 GET_ZONEPOLYGON = """   SELECT AsGeoJSON(area)
@@ -53,39 +58,55 @@ GET_ZONEPOLYGON = """   SELECT AsGeoJSON(area)
                         {}"""
 
 GET_ZONEJOINORGA ='''SELECT zones.id,zones.name,federal_state,district,AsGeoJSON(area),
-                        X(geo_point),Y(geo_point),Count(DISTINCT drone_data.drone_id),
-                    MAX(drone_data.timestamp),
+                        X(geo_point),Y(geo_point),
+                        Count(DISTINCT newdrone_data.drone_id),
+                    newdrone_data.ts,
                     Count(DISTINCT drone_event.id)
                     FROM zones
                     JOIN territory_zones 
                     ON zones.id = territory_zones.zone_id
                     JOIN territories ON territories.id = territory_zones.territory_id
-                    LEFT JOIN drone_data ON ST_Intersects(drone_data.coordinates, area)
-                    Left JOIN drone_event ON ST_Intersects(drone_event.coordinates, area)
+                    LEFT OUTER JOIN drone_event ON ST_Intersects(drone_event.coordinates, area)
+                    LEFT OUTER JOIN (  
+                            SELECT coordinates, MAX(timestamp) as ts, drone_id
+                            from drone_data
+                            group by drone_data.drone_id
+                    ) AS newdrone_data
+                    ON ST_Intersects(newdrone_data.coordinates, area)
+
                     WHERE zones.{}=? 
                     AND territories.orga_id=?
-                    GROUP BY drone_data.drone_id
+                    GROUP BY zones.name
                     ORDER BY zones.name;'''
 
 GET_ZONES_BY_DISTRICT = '''SELECT zones.id,zones.name,federal_state,district,AsGeoJSON(area),
-                            X(geo_point),Y(geo_point),Count(DISTINCT drone_data.drone_id),
-                            MAX(drone_data.timestamp),
+                            X(geo_point),Y(geo_point),Count(DISTINCT newdrone_data.drone_id),
+                            newdrone_data.ts,
                             Count(DISTINCT drone_event.id)
-                            FROM zones 
-                            LEFT JOIN drone_data ON ST_Intersects(drone_data.coordinates, area)
-                            Left JOIN drone_event ON ST_Intersects(drone_event.coordinates, area)
+                            FROM zones
+                            LEFT OUTER JOIN drone_event ON ST_Intersects(drone_event.coordinates, area)
+                            LEFT OUTER JOIN ( 
+                                    SELECT coordinates, MAX(timestamp) as ts, drone_id
+                                    from drone_data
+                                    group by drone_data.drone_id
+                            ) AS newdrone_data
+                            ON ST_Intersects(newdrone_data.coordinates, area)
                             WHERE district = ?
                             GROUP BY zones.name;'''
 
 GET_ORGAZONES = '''  SELECT zones.id,zones.name,federal_state,district,AsGeoJSON(area),
                         X(geo_point),Y(geo_point),Count(DISTINCT drone_data.drone_id),
-                    MAX(drone_data.timestamp),
+                    newdrone_data.ts,
                     Count(DISTINCT drone_event.id)
                     FROM zones
                     JOIN territory_zones 
                     ON zones.id = territory_zones.zone_id
-                    JOIN territories ON territories.id = territory_zones.territory_id
-                    LEFT JOIN drone_data ON ST_Intersects(drone_data.coordinates, area)
+                    LEFT OUTER JOIN drone_event ON ST_Intersects(drone_event.coordinates, area)
+                    LEFT OUTER JOIN ( 
+                                    SELECT coordinates, MAX(timestamp) as ts, drone_id
+                                    from drone_data
+                                    group by drone_data.drone_id
+                            ) AS newdrone_data
                     Left JOIN drone_event ON ST_Intersects(drone_event.coordinates, area)
                     WHERE territories.orga_id=?
                     GROUP BY zones.name;'''
