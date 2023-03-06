@@ -96,7 +96,9 @@ GET_ZONES_BY_DISTRICT = '''SELECT zones.id,zones.name,federal_state,district,AsG
                             GROUP BY zones.name;'''
 
 GET_ORGAZONES = '''  SELECT zones.id,zones.name,federal_state,district,AsGeoJSON(area),
-                        X(geo_point),Y(geo_point),Count(DISTINCT drone_data.drone_id),
+                    X(geo_point),
+                    Y(geo_point),
+                    Count(DISTINCT newdrone_data.drone_id),
                     newdrone_data.ts,
                     Count(DISTINCT drone_event.id)
                     FROM zones
