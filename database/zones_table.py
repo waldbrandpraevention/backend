@@ -104,13 +104,14 @@ GET_ORGAZONES = '''  SELECT zones.id,zones.name,federal_state,district,AsGeoJSON
                     FROM zones
                     JOIN territory_zones 
                     ON zones.id = territory_zones.zone_id
+                    JOIN territories ON territories.id = territory_zones.territory_id
                     LEFT OUTER JOIN drone_event ON ST_Intersects(drone_event.coordinates, area)
                     LEFT OUTER JOIN ( 
                                     SELECT coordinates, MAX(timestamp) as ts, drone_id
                                     from drone_data
                                     group by drone_data.drone_id
                             ) AS newdrone_data
-                    Left JOIN drone_event ON ST_Intersects(drone_event.coordinates, area)
+                    ON ST_Intersects(newdrone_data.coordinates, area)
                     WHERE territories.orga_id=?
                     GROUP BY zones.name;'''
 
