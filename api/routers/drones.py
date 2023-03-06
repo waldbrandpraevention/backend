@@ -67,6 +67,13 @@ async def read_drone_events(drone_id: int=None,
                                            timestamp=timestamp,
                                            drone_id=drone_id,
                                            zone_id=zone_id)
+
+    if drone_events is None:
+        raise HTTPException(
+            status_code=status.HTTP_406_NOT_ACCEPTABLE,
+            detail="Couldnt find any events.",
+        )
+
     return drone_events
 
 @router.get("/drones/route/",
@@ -97,17 +104,17 @@ async def read_drone_route( drone_id: int=None,
     """
 
     timestamp = drones.timestamp_helper(days,hours,minutes)
-    drone_events = await drones.get_drone_with_route(orga_id=current_user.organization.id,
+    drone_updates = await drones.get_drone_with_route(orga_id=current_user.organization.id,
                                            timestamp=timestamp,
                                            drone_id=drone_id,
                                            zone_id=zone_id)
-    if drone_events is None:
+    if drone_updates is None:
         raise HTTPException(
             status_code=status.HTTP_406_NOT_ACCEPTABLE,
             detail="Couldnt find any updates.",
         )
 
-    return drone_events
+    return drone_updates
 
 @router.get("/drones/all/",
             status_code=status.HTTP_200_OK,

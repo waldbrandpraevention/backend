@@ -106,6 +106,7 @@ def get_drone_updates(  polygon:str,
 
     Returns:
         List[DroneData]: List with the fetched data.
+        None: if no data was found.
     """
 
     sql_arr, tuple_arr = gernerate_drone_sql(polygon, drone_id, after, before)
@@ -123,7 +124,7 @@ def get_drone_updates(  polygon:str,
 
     for drone_data in fetched_data:
         dronedata = get_obj_from_fetched(drone_data)
-        if dronedata:
+        if dronedata is not None:
             output.append(dronedata)
     return output
 
@@ -263,14 +264,14 @@ def get_obj_from_fetched(fetched_dronedata) -> DroneUpdate| None:
         return drone_data_obj
     return None
 
-def get_routeobj_from_fetched(fetched_dronedataarr) -> List[DroneUpdate]| None:
+def get_routeobj_from_fetched(fetched_dronedataarr) -> List[DroneUpdateWithRoute]| None:
     """generating DroneUpdate object with the fetched data.
 
     Args:
         fetched_dronedata: the fetched data from the sqlite cursor.
 
     Returns:
-        DroneData| None: the generated object.
+        List[DroneUpdateWithRoute]| None: the generated object.
     """
     if fetched_dronedataarr is None:
         return None

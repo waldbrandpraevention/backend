@@ -159,7 +159,7 @@ def get_drone_event(drone_id: int = None,
                     polygon: str=None,
                     after: datetime.datetime = None,
                     before: datetime.datetime = None
-                    ) -> List[DroneEvent]:
+                    ) -> List[DroneEvent] | None:
     """fetches all entrys that are within the choosen timeframe.
     If only drone_id is set, every entry will be fetched.
 
@@ -183,6 +183,7 @@ def get_drone_event(drone_id: int = None,
         return None
 
     output = []
+
     for drone_event in fetched_data:
         droneevent_obj = get_obj_from_fetched(drone_event)
         if droneevent_obj:
