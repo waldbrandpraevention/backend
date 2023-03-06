@@ -12,7 +12,7 @@ async def read_zone(zone_id: int, current_user: User = Depends(get_current_user)
 
     Args:
         name (str): Name of the zone
-        current_user (User, optional): User. Defaults to Depends(get_current_user).
+        current_user (User): User. Defaults to User that is logged in.
 
     Returns:
         Zone: zone
@@ -31,7 +31,7 @@ async def read_zones_all(current_user: User = Depends(get_current_user)):
     """API call to get the all zones, linked with this users orga.
 
     Args:
-        current_user (User, optional): User. Defaults to Depends(get_current_user).
+        current_user (User): User. Defaults to User that is logged in.
 
     Returns:
         Zone[]: List of Zones.
@@ -48,7 +48,7 @@ async def read_zones_all(current_user: User = Depends(get_current_user)):
 async def read_zones_count(current_user: User = Depends(get_current_user)):
     """API call to get the amount of zones, linked with this users orga.
     Args:
-        current_user (User, optional): User. Defaults to Depends(get_current_user).
+        current_user (User): User. Defaults to User that is logged in.
 
     Returns:
         int: amount of zones.

@@ -210,3 +210,20 @@ async def get_drone_count(zone_id:int,orga_id:int):
             status_code=status.HTTP_406_NOT_ACCEPTABLE,
             detail="Zone ID invalid or not linked to your Orga.",
         )
+
+def timestamp_helper(days:int,hours:int,minutes:int) -> datetime | None:
+    """generates a timestamp x days, y hours and z minutes before now.
+
+    Args:
+        days (int): number of days.
+        hours (int): number of hours.
+        minutes (int): number of minutes.
+
+    Returns:
+        datetime: the calculated timestamp.
+    """
+    time_delta = timedelta(days=days,minutes=minutes,hours=hours)
+    if time_delta.total_seconds() == 0:
+        return None
+
+    return datetime.utcnow() - timedelta

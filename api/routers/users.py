@@ -42,7 +42,7 @@ async def read_users_me(current_user: User = Depends(get_current_user)):
     """API call to get the curret user we are communicating with
 
     Args:
-        current_user (User, optional): User. Defaults to Depends(get_current_user).
+        current_user (User, optional): User. Defaults to User that is logged in.
 
     Returns:
         User: Current user with only the basic infos (no password)
@@ -55,7 +55,7 @@ async def delete_users( user_id:int,
     """API call to get the curret user we are communicating with
 
     Args:
-        current_user (User, optional): User. Defaults to Depends(get_current_user).
+        current_user (User, optional): User. Defaults to User that is logged in.
 
     Returns:
         User: Current user with only the basic infos (no password)
@@ -71,7 +71,7 @@ async def read_users_me_allerts(current_user: User = Depends(get_current_user)):
     """API call to get the curret users allerts
 
     Args:
-        current_user (User, optional): User. Defaults to Depends(get_current_user).
+        current_user (User, optional): User. Defaults to User that is logged in.
 
     Returns:
         str[]: List of allerts
@@ -80,13 +80,13 @@ async def read_users_me_allerts(current_user: User = Depends(get_current_user)):
 
 @router.get("/users/all/", response_model=List[User])
 async def read_users(current_user: User = Depends(get_current_user)):
-    """_summary_
+    """API call to get all users. Only admins can do this.
 
     Args:
-        current_user (User, optional): _description_. Defaults to Depends(get_current_user).
+        current_user (User, optional): User. Defaults to User that is logged in.
 
     Returns:
-        _type_: _description_
+        List[User]: List of users
     """
     await is_admin(current_user)
     return get_all_users(current_user.organization.id)
@@ -191,23 +191,25 @@ async def register( email: str = Form(),
 @router.post("/users/me/update", status_code=status.HTTP_200_OK)
 async def update_user_info(current_user: User = Depends(get_current_user),
                            email: str | None = None, password: str | None = None,
-                           first_name: str | None = None, last_name: str | None = None)-> bool:
-    """API call to update the current user
+                           first_name: str | None = None, last_name: str | None = None):
+    """API call to update the current user, only set the attributes that should be updated.
 
     Args:
-        current_user (User, optional): _description_. Defaults to Depends(get_current_user).
+        current_user (User, optional): User. Defaults to User that is logged in.
         email (str | None, optional): new email. Defaults to None.
         password (str | None, optional): password. Defaults to None.
         first_name (str | None, optional): new first name. Defaults to None.
         last_name (str | None, optional): new last name. Defaults to None.
 
     Returns:
-        bool: _description_
+        sucess message
     """
 
     success = await update_user_func(current_user,email,password,first_name,last_name)
 
-    return success
+    if success:
+        return {"message": "success"}
+    return {"message": "couldnt update user."}
 
 @router.post("/users/update", status_code=status.HTTP_200_OK)
 async def admin_update_user_info(
@@ -217,23 +219,24 @@ async def admin_update_user_info(
                                 first_name: str | None = None, last_name: str | None = None,
                                 organization_name: str | None = None, permission: int | None=None,
                                 disabled: bool |None=None, email_verified:bool|None=None) -> bool:
-    """API call to update the selected user.
+    """API call to update the selected user, only set the attributes that should be updated.
+        current_user needs to be an admin of the organization the user is part of.
 
     Args:
-        update_user_email (str): _description_
-        current_user (User, optional): _description_. Defaults to Depends(get_current_user).
-        email (str | None, optional): _description_. Defaults to None.
-        password (str | None, optional): _description_. Defaults to None.
-        first_name (str | None, optional): _description_. Defaults to None.
-        last_name (str | None, optional): _description_. Defaults to None.
-        organization_name (str | None, optional): _description_. Defaults to None.
-        permission (int | None, optional): _description_. Defaults to None.
-        disabled (bool | None, optional): _description_. Defaults to None.
-        email_verified (bool | None, optional): _description_. Defaults to None.
+        update_user_id (int): id of the user that should be updated.
+        current_user (User, optional): User. Defaults to User that is logged in.
+        email (str | None, optional): new email. Defaults to None.
+        password (str | None, optional): password. Defaults to None.
+        first_name (str | None, optional): new first name. Defaults to None.
+        last_name (str | None, optional): new last name. Defaults to None.
+        organization_name (str | None, optional): new organization name. Defaults to None.
+        permission (int | None, optional): new permission. Defaults to None.
+        disabled (bool | None, optional): wether the user should be disabled or not. Defaults to None.
+        email_verified (bool | None, optional): wether the email should was verified or not. Defaults to None.
 
     Raises:
-        HTTPException: if you dont have the permission to do this (youre not an admin).
-        HTTPException: if youre not part of the orga, the user is part of.
+        HTTPException: if current_user is not an admin.
+        HTTPException: if the user to update is not part of the organization of the admin.
 
     Returns:
         bool: if the update was successful.

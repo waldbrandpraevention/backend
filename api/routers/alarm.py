@@ -25,7 +25,7 @@ async def alarm_team(drone_name: str,
         alarm_type (str): type
         notes (str): notes
         file (UploadFile | None, optional): file Defaults to File().
-        current_user (User, optional): user. Defaults to Depends(get_current_user).
+        current_user (User, optional): User. Defaults to User that is logged in.
 
     Returns:
         dict: response

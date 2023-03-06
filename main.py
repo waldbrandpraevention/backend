@@ -6,7 +6,7 @@ from threading import Thread
 from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 
-from simulation.sim import simulate
+#from simulation.sim import simulate
 from api.dependencies.authentication import get_password_hash
 from api.dependencies.emails import send_email
 from api.dependencies.classes import UserWithSensitiveInfo
@@ -143,12 +143,12 @@ def main():
     load_zones_from_geojson()
 
     #make sure this actually works
-    try:
-        simulation_thread = Thread(target = simulate)
-        simulation_thread.start()
-        #weather_thread.start()
-    except Exception as err:
-        print(err)
+    # try:
+    #     simulation_thread = Thread(target = simulate)
+    #     simulation_thread.start()
+    #     #weather_thread.start()
+    # except Exception as err:
+    #     print(err)
 
 
 main()

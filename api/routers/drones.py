@@ -1,6 +1,6 @@
 """api calls for drones."""
 import os
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import List
 from fastapi import Depends, APIRouter, HTTPException, status, UploadFile, File
 from database.drones_table import create_drone
@@ -8,7 +8,7 @@ from database.drone_updates_table import create_drone_update
 from database.drone_events_table import create_drone_event_entry
 from .users import get_current_user, is_admin
 from ..dependencies import drones
-from ..dependencies.drones import get_current_drone, generate_drone_token, validate_token
+from ..dependencies.drones import generate_drone_token, validate_token
 from ..dependencies.classes import Drone, DroneEvent, DroneUpdateWithRoute, User
 
 router = APIRouter()
@@ -19,7 +19,7 @@ async def read_drone(drone_id: int, current_user: User = Depends(get_current_use
 
     Args:
         name (str): Name of the drone
-        current_user (User, optional): User. Defaults to Depends(get_current_user).
+        current_user (User, optional): User. Defaults to User that is logged in.
 
     Returns:
         Drone: drone
@@ -47,43 +47,25 @@ async def read_drone_events(drone_id: int=None,
 
     Args:
         drone_id (int, optional): id of the drone. Defaults to None.
-        zone_id (int, optional): zone id. Defaults to None.
+        zone_id (int, optional): id of the zone the drone is in. Defaults to None.
         days (int, optional): days before now. Defaults to 0.
         hours (int, optional): hours before now. Defaults to 0.
         minutes (int, optional): minutes before now. Defaults to 0.
-        current_user (User, optional): current user that is logged in.
-        Defaults to Depends(get_current_user).
+        current_user (User, optional): User. Defaults to User that is logged in.
 
     Raises:
         HTTPException: if no events are found.
 
     Returns:
-        _type_: _description_
+        List[DroneEvent]: List of drone events.
     """
 
-    timestamp = timestamp_helper(days,hours,minutes)
+    timestamp = drones.timestamp_helper(days,hours,minutes)
     drone_events = await drones.get_drone_events(orga_id=current_user.organization.id,
                                            timestamp=timestamp,
                                            drone_id=drone_id,
                                            zone_id=zone_id)
     return drone_events
-
-def timestamp_helper(days:int,hours:int,minutes:int) -> datetime | None:
-    """generates a timestamp x days, y hours and z minutes before now.
-
-    Args:
-        days (int): number of days.
-        hours (int): number of hours.
-        minutes (int): number of minutes.
-
-    Returns:
-        datetime: the calculated timestamp.
-    """
-    time_delta = timedelta(days=days,minutes=minutes,hours=hours)
-    if time_delta.total_seconds() == 0:
-        return None
-
-    return datetime.utcnow() - timedelta
 
 @router.get("/drones/route/",
             status_code=status.HTTP_200_OK,
@@ -95,17 +77,24 @@ async def read_drone_route( drone_id: int=None,
                             hours:int =0,
                             minutes:int =0,
                             current_user: User = Depends(get_current_user)):
-    """API call to get a specific drone
+    """API call to get the route of a drone in a specific time frame and/or zone.
 
     Args:
-        name (str): Name of the drone
-        current_user (User, optional): User. Defaults to Depends(get_current_user).
+        drone_id (int, optional): id of the drone. Defaults to None.
+        zone_id (int, optional): id of the zone the drone is in. Defaults to None.
+        days (int, optional): days before now. Defaults to 0.
+        hours (int, optional): hours before now. Defaults to 0.
+        minutes (int, optional): minutes before now. Defaults to 0.
+        current_user (User, optional): User. Defaults to User that is logged in.
+
+    Raises:
+        HTTPException: if no events are found.
 
     Returns:
-        Drone: drone
+        List[DroneUpdateWithRoute]: List of drones updates with their route.
     """
 
-    timestamp = timestamp_helper(days,hours,minutes)
+    timestamp = drones.timestamp_helper(days,hours,minutes)
     drone_events = await drones.get_drone_with_route(orga_id=current_user.organization.id,
                                            timestamp=timestamp,
                                            drone_id=drone_id,
@@ -125,7 +114,7 @@ async def read_drones_all(current_user: User = Depends(get_current_user)):
     """API call to get the all drones
 
     Args:
-        current_user (User, optional): User. Defaults to Depends(get_current_user).
+        current_user (User, optional): User. Defaults to User that is logged in.
 
     Returns:
         Drone[]: List of all drones
@@ -140,13 +129,14 @@ async def read_drones_count(
                             zone_id: int,
                             current_user: User = Depends(get_current_user)
                             ):
-    """API call to get the amount of drones in a zone
+    """API call to get the count of drones in a zone
 
     Args:
-        current_user (User, optional): User. Defaults to Depends(get_current_user).
+        zone_id (int): id of the zone
+        current_user (User, optional): User. Defaults to User that is logged in.
 
     Returns:
-        int: Amount of drones
+        int: count of drones
     """
     return await drones.get_drone_count(zone_id,current_user.organization.id)
 
@@ -261,7 +251,7 @@ async def drone_feedback(reason: str,
         reason (str): drone
         notes (str): notes
         file (UploadFile | None, optional): file Defaults to File().
-        current_user (User, optional): user. Defaults to Depends(get_current_user).
+        current_user (User, optional): User. Defaults to User that is logged in.
 
     Returns:
         dict: response
@@ -314,7 +304,7 @@ async def drone_signup(name: str,
         flight_range (float): flight range
         cc_range (float): cc range
         flight_time (float): flight time
-        current_user (User, optional): user. Defaults to Depends(get_current_user).
+        current_user (User, optional): User. Defaults to User that is logged in.
 
     Returns:
         dict: {drone, token}
