@@ -338,15 +338,20 @@ async def get_image_raw(event_id: int,
     Returns:
         FileResponse: image
     """
-
-    curr_drone_event = get_event_by_id(event_id)
-    if get_zone_by_id(drone_event.zone_id, current_user.organization.id) is None:
+    try:
+        curr_drone_event = get_event_by_id(event_id)
+        if get_zone_by_id(drone_event.zone_id, current_user.organization.id) is None:
+            raise HTTPException(
+                status_code=status.HTTP_406_NOT_ACCEPTABLE,
+                detail="User is not allowed to access this event. The zone of the event is most likly not part of your organization.",
+            )
+        path = os.path.join(curr_drone_event.picture_path, "raw.jpg")
+        return path
+    except Exception as err:
         raise HTTPException(
-            status_code=status.HTTP_406_NOT_ACCEPTABLE,
-            detail="User is not allowed to access this event. The zone of the event is most likly not part of your organization.",
-        )
-    path = os.path.join(curr_drone_event.picture_path, "raw.jpg")
-    return path
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="API call was recieved but something went wrong internally",
+            ) from err
 
 @router.get("/drones/get-event-image-predicted/", response_class=FileResponse)
 async def get_image_predicted(event_id: int,
@@ -360,12 +365,17 @@ async def get_image_predicted(event_id: int,
     Returns:
         FileResponse: image
     """
-
-    curr_drone_event = get_event_by_id(event_id)
-    if get_zone_by_id(drone_event.zone_id, current_user.organization.id) is None:
+    try:
+        curr_drone_event = get_event_by_id(event_id)
+        if get_zone_by_id(drone_event.zone_id, current_user.organization.id) is None:
+            raise HTTPException(
+                status_code=status.HTTP_406_NOT_ACCEPTABLE,
+                detail="User is not allowed to access this event. The zone of the event is most likly not part of your organization.",
+            )
+        path = os.path.join(curr_drone_event.picture_path, "raw.jpg")
+        return path
+    except Exception as err:
         raise HTTPException(
-            status_code=status.HTTP_406_NOT_ACCEPTABLE,
-            detail="User is not allowed to access this event. The zone of the event is most likly not part of your organization.",
-        )
-    path = os.path.join(curr_drone_event.picture_path, "raw.jpg")
-    return path
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="API call was recieved but something went wrong internally",
+            ) from err

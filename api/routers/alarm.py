@@ -26,20 +26,25 @@ async def alarm_team(drone_name: str,
     Returns:
         dict: response
     """
+    try:
+        if not current_user:
+            raise HTTPException(
+                status_code=status.HTTP_406_NOT_ACCEPTABLE,
+                detail="Invalid user",
+            )
 
-    if not current_user:
+        incident = create_incident(drone_name, location, alarm_type, notes, datetime.now())
+        if incident is None:
+            raise HTTPException(
+                status_code=status.HTTP_406_NOT_ACCEPTABLE,
+                detail="Error while tring to process the incident",
+            )
+        return {"message:": "success"}
+    except Exception as err:
         raise HTTPException(
-            status_code=status.HTTP_406_NOT_ACCEPTABLE,
-            detail="Invalid user",
-        )
-
-    incident = create_incident(drone_name, location, alarm_type, notes, datetime.now())
-    if incident is None:
-        raise HTTPException(
-            status_code=status.HTTP_406_NOT_ACCEPTABLE,
-            detail="Error while tring to process the incident",
-        )
-    return {"message:": "success"}
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="API call was recieved but something went wrong internally",
+            ) from err
 
 
 @router.get("/alarm/get/", status_code=status.HTTP_200_OK)
@@ -53,18 +58,23 @@ async def get_incidents(amount: int, current_user: User = Depends(get_current_us
     Returns:
         Incident[]: list of incidents
     """
+    try:
+        if not current_user:
+            raise HTTPException(
+                status_code=status.HTTP_406_NOT_ACCEPTABLE,
+                detail="Invalid user",
+            )
 
-    if not current_user:
+        if amount < 0:
+            raise HTTPException(
+                status_code=status.HTTP_406_NOT_ACCEPTABLE,
+                detail="Amount must be >= 0",
+            )
+
+        alarms = get_last_incidents(amount)
+        return alarms
+    except Exception as err:
         raise HTTPException(
-            status_code=status.HTTP_406_NOT_ACCEPTABLE,
-            detail="Invalid user",
-        )
-
-    if amount < 0:
-        raise HTTPException(
-            status_code=status.HTTP_406_NOT_ACCEPTABLE,
-            detail="Amount must be >= 0",
-        )
-
-    alarms = get_last_incidents(amount)
-    return alarms
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="API call was recieved but something went wrong internally",
+            ) from err
