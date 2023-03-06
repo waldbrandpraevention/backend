@@ -117,7 +117,7 @@ async def get_current_drone(token: str):
 async def get_drone_events(orga_id:int,
                            timestamp: datetime,
                            drone_id:int =None,
-                           zone_id:int=None) -> List[DroneEvent]:
+                           zone_id:int=None) -> List[DroneEvent] | None:
     """get all drone events in a zone or the whole orga area after a timestamp.
 
     Args:
@@ -131,6 +131,7 @@ async def get_drone_events(orga_id:int,
 
     Returns:
         List[DroneEvent]: list of drone events filtered by the given parameters.
+        None: if no drone events are found.
     """
     if zone_id is not None:
         polygon = zones_table.get_zone_polygon(zone_id)

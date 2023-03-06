@@ -119,6 +119,9 @@ async def get_user_allerts(user: User) -> List[Allert]:
     events = await get_drone_events(user.organization.id,
                            datetime.utcnow() - timedelta(days=1)
     )
+    if events is None:
+        return []
+    
     allerts = []
     for event in events:
         content = await generate_event_string(event)
