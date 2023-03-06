@@ -8,7 +8,6 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from simulation.sim import simulate
 from api.dependencies.authentication import get_password_hash
-from api.dependencies.emails import send_email
 from api.dependencies.classes import UserWithSensitiveInfo
 from api.routers import emails, users, zones, drones, simulation,territories, alarm
 from database import (users_table,
@@ -26,6 +25,7 @@ from database.drones_table import CREATE_DRONES_TABLE
 from database.organizations_table import CREATE_ORGANISATIONS_TABLE
 from database.users_table import CREATE_USER_TABLE
 from database.zones_table import CREATE_ZONE_TABLE
+from database.incidents import CREATE_INCIDENTS_TABLE
 
 app = FastAPI(  title="KIWA",
                 description="test")
@@ -137,19 +137,18 @@ def main():
     create_table(CREATE_DRONE_EVENT_TABLE)
     create_table(CREATE_TERRITORY_TABLE)
     create_table(CREATE_TERRITORYZONES_TABLE)
+    create_table(CREATE_INCIDENTS_TABLE)
     create_default_user()
     create_drone_events()
     #create_drones()
     load_zones_from_geojson()
 
-    #make sure this actually works
-    try:
-        simulation_thread = Thread(target = simulate)
-        simulation_thread.start()
-        #weather_thread.start()
-    except Exception as err:
-        print(err)
-
+    if bool(os.getenv("RUN_SIMULATION")):
+        try:
+            simulation_thread = Thread(target = simulate)
+            simulation_thread.start()
+        except Exception as err:
+            print(err)
 
 main()
 
@@ -160,17 +159,10 @@ async def root():
     number_two = random.randint(0,100)
     raise HTTPException(
                 status_code=status.HTTP_418_IM_A_TEAPOT,
-                detail=f"""Random addition: {number_one}
-                        {number_one} {number_one +number_two}""",
+                detail=f"""Random addition: {number_one} + {number_one} = {number_one + number_two}""",
             )
 
 @app.get("/test")
 async def test(test_input: str):
     """ Test function to check if the server is running."""
     return {"message": test_input}
-
-
-@app.get("/test-mail/")
-async def test_mail(reciever: str, subject: str, message: str):
-    """ Test function to check if the server is running."""
-    return await send_email(reciever, subject, message)
