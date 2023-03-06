@@ -8,10 +8,10 @@ router = APIRouter()
 
 @router.get("/zones/", status_code=status.HTTP_200_OK, response_model=Zone)
 async def read_zone(zone_id: int, current_user: User = Depends(get_current_user)):
-    """API call to get a specific zone. The user's orga has to be linked to the zone.
+    """API call to get a specific zone. The zone has to be linked to the current_user's orga.
 
     Args:
-        name (str): Name of the zone
+        zone_id (int): id of the zone.
         current_user (User): User. Defaults to User that is logged in.
 
     Returns:
@@ -28,7 +28,7 @@ async def read_zone(zone_id: int, current_user: User = Depends(get_current_user)
 
 @router.get("/zones/all/", status_code=status.HTTP_200_OK, response_model=list[Zone])
 async def read_zones_all(current_user: User = Depends(get_current_user)):
-    """API call to get the all zones, linked with this users orga.
+    """API call to get the all zones, linked with current_user's orga.
 
     Args:
         current_user (User): User. Defaults to User that is logged in.
@@ -46,7 +46,8 @@ async def read_zones_all(current_user: User = Depends(get_current_user)):
 
 @router.get("/zones/count/", status_code=status.HTTP_200_OK, response_model=dict)
 async def read_zones_count(current_user: User = Depends(get_current_user)):
-    """API call to get the amount of zones, linked with this users orga.
+    """API call to get the amount of zones, linked with current_user's orga.
+
     Args:
         current_user (User): User. Defaults to User that is logged in.
 

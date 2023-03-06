@@ -10,7 +10,7 @@ router = APIRouter()
 
 @router.get("/territories/all/", status_code=status.HTTP_200_OK, response_model=List[TerritoryWithZones])
 async def read_territories(current_user: User = Depends(get_current_user)):
-    """API call to get the all territories, linked with this users orga.
+    """API call to get the all territories, linked with current_user's orga.
 
     Args:
         current_user (User, optional): User. Defaults to User that is logged in.
@@ -32,7 +32,7 @@ async def read_territories(current_user: User = Depends(get_current_user)):
 
 @router.get("/territories/", status_code=status.HTTP_200_OK, response_model=TerritoryWithZones)
 async def read_territory(territory_id: int, current_user: User = Depends(get_current_user)):
-    """API call to get a specific territory. The user's orga has to be linked to the territory.
+    """API call to get a specific territory. current_user's orga has to be linked to the territory.
 
     Args:
         territory_id (int): id of the territory.

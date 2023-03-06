@@ -52,14 +52,16 @@ async def read_users_me(current_user: User = Depends(get_current_user)):
 @router.post("/users/delete/", status_code=status.HTTP_200_OK)
 async def delete_users( user_id:int,
                         current_user: User = Depends(get_current_user)):
-    """API call to get the curret user we are communicating with
+    """API call to delete a user. Current_user has to be an admin of the organization the user is in.
 
     Args:
+        user_id (int): id of the user to delete
         current_user (User, optional): User. Defaults to User that is logged in.
 
     Returns:
-        User: Current user with only the basic infos (no password)
+        dict: success message in json format
     """
+
     await is_admin(current_user)
     if users_table.delete_user(user_id):
         return {"message": "success"}
@@ -80,7 +82,7 @@ async def read_users_me_allerts(current_user: User = Depends(get_current_user)):
 
 @router.get("/users/all/", response_model=List[User])
 async def read_users(current_user: User = Depends(get_current_user)):
-    """API call to get all users. Only admins can do this.
+    """API call to get all users of the current_user's organization. Only admins can do this.
 
     Args:
         current_user (User, optional): User. Defaults to User that is logged in.
@@ -202,7 +204,7 @@ async def update_user_info(current_user: User = Depends(get_current_user),
         last_name (str | None, optional): new last name. Defaults to None.
 
     Returns:
-        sucess message
+        dict: success message in json format
     """
 
     success = await update_user_func(current_user,email,password,first_name,last_name)

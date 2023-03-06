@@ -112,8 +112,8 @@ GET_ORGAZONES = '''  SELECT zones.id,zones.name,federal_state,district,AsGeoJSON
                     GROUP BY zones.name;'''
 
 
-def load_from_geojson(path_to_geojson) -> int:
-    """load data from a geojson file to the db.
+def add_from_geojson(path_to_geojson) -> int:
+    """add zone data from a geojson file to the db.
     required fields:
     'features':[
         {
@@ -132,7 +132,7 @@ def load_from_geojson(path_to_geojson) -> int:
     ]
 
     Args:
-        path_to_geojson (_type_): path to the geojson that should be imported.
+        path_to_geojson (str): path to the geojson that should be imported.
 
     Returns:
         int: number of inserted zones.
