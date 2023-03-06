@@ -106,7 +106,7 @@ def load_zones_from_geojson():
 
         if os.getenv("DEMO_DISTRICT") is not None \
                 and os.getenv("ADMIN_ORGANIZATION") is not None:
-            fetched_zones = zones_table.get_zone_of_by_district(os.getenv("DEMO_DISTRICT"))
+            fetched_zones = zones_table.get_zone_of_district(os.getenv("DEMO_DISTRICT"))
             try:
                 create_territory(orga_id=1,name=os.getenv("DEMO_DISTRICT"))
             except sqlite3.IntegrityError:
