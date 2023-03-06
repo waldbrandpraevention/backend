@@ -1,4 +1,4 @@
-"""Module for sparta lite"""
+"""Module for sparta lite related helper functions."""
 import json
 from typing import List
 import msgspec
@@ -30,16 +30,16 @@ def spatiapoint_to_long_lat(spatia_point:str)-> tuple[float, float]:
     return long, lat
 
 
-def spatiageostr_to_geojson(spatia_polygon:str,properties:dict=None)-> dict:
+def spatiageostr_to_geojson(spatia_str:str,properties:dict=None)-> dict:
     """converts an spatia geojson str into a geodict.\n
 
     Args:
-        spatia_polygon (str): the geodict geometry as text.
+        spatia_str (str): the geodict geometry as text.
 
     Returns:
         dict: the geojson.
     """
-    geometry = msgspec.json.decode(spatia_polygon)
+    geometry = msgspec.json.decode(spatia_str)
     geo_json = {
                 "type": "Feature",
                 "geometry": geometry

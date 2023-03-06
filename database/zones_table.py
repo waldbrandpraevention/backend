@@ -1,4 +1,5 @@
-"This module contains functions to create and fetch zones, stored in the db"
+"""This module contains functions to create and fetch zones, stored in the db.
+we used https://data.opendatasoft.com/explore/dataset/georef-germany-gemeinde%40public/table for the zone_data geoJSON"""
 import datetime
 from enum import Enum
 import json
@@ -37,59 +38,84 @@ CREATE_ENTRY_TEXTGEO = '''INSERT OR IGNORE
                         VALUES (?,?,?,?,GeomFromText(?,4326),MakePoint(?, ?, 4326));'''
 
 GET_ZONE = """SELECT zones.id,zones.name,federal_state,district,AsGeoJSON(area),
-                X(geo_point),Y(geo_point),Count(DISTINCT drone_data.drone_id),
-                MAX(drone_data.timestamp),
+                X(geo_point),Y(geo_point),
+                Count(DISTINCT newdrone_data.drone_id),
+                newdrone_data.ts,
                 Count(DISTINCT drone_event.id)
                 FROM zones
-                LEFT JOIN drone_data ON ST_Intersects(drone_data.coordinates, area)
-                Left JOIN drone_event ON ST_Intersects(drone_event.coordinates, area)
+                LEFT OUTER JOIN drone_event ON ST_Intersects(drone_event.coordinates, area)
+                LEFT OUTER JOIN ( 
+                            SELECT coordinates, MAX(timestamp) as ts, drone_id
+                            from drone_data
+                            group by drone_data.drone_id
+                    ) AS newdrone_data
+                ON ST_Intersects(newdrone_data.coordinates, area)
                 {}
-                GROUP BY name;"""
+                GROUP BY name
+                ORDER BY name;"""
 
 GET_ZONEPOLYGON = """   SELECT AsGeoJSON(area)
                         FROM zones
                         {}"""
 
 GET_ZONEJOINORGA ='''SELECT zones.id,zones.name,federal_state,district,AsGeoJSON(area),
-                        X(geo_point),Y(geo_point),Count(DISTINCT drone_data.drone_id),
-                    MAX(drone_data.timestamp),
+                        X(geo_point),Y(geo_point),
+                        Count(DISTINCT newdrone_data.drone_id),
+                    newdrone_data.ts,
                     Count(DISTINCT drone_event.id)
                     FROM zones
                     JOIN territory_zones 
                     ON zones.id = territory_zones.zone_id
                     JOIN territories ON territories.id = territory_zones.territory_id
-                    LEFT JOIN drone_data ON ST_Intersects(drone_data.coordinates, area)
-                    Left JOIN drone_event ON ST_Intersects(drone_event.coordinates, area)
+                    LEFT OUTER JOIN drone_event ON ST_Intersects(drone_event.coordinates, area)
+                    LEFT OUTER JOIN (  
+                            SELECT coordinates, MAX(timestamp) as ts, drone_id
+                            from drone_data
+                            group by drone_data.drone_id
+                    ) AS newdrone_data
+                    ON ST_Intersects(newdrone_data.coordinates, area)
+
                     WHERE zones.{}=? 
                     AND territories.orga_id=?
-                    GROUP BY zones.name;'''
+                    GROUP BY zones.name
+                    ORDER BY zones.name;'''
 
 GET_ZONES_BY_DISTRICT = '''SELECT zones.id,zones.name,federal_state,district,AsGeoJSON(area),
-                            X(geo_point),Y(geo_point),Count(DISTINCT drone_data.drone_id),
-                            MAX(drone_data.timestamp),
+                            X(geo_point),Y(geo_point),Count(DISTINCT newdrone_data.drone_id),
+                            newdrone_data.ts,
                             Count(DISTINCT drone_event.id)
-                            FROM zones 
-                            LEFT JOIN drone_data ON ST_Intersects(drone_data.coordinates, area)
-                            Left JOIN drone_event ON ST_Intersects(drone_event.coordinates, area)
+                            FROM zones
+                            LEFT OUTER JOIN drone_event ON ST_Intersects(drone_event.coordinates, area)
+                            LEFT OUTER JOIN ( 
+                                    SELECT coordinates, MAX(timestamp) as ts, drone_id
+                                    from drone_data
+                                    group by drone_data.drone_id
+                            ) AS newdrone_data
+                            ON ST_Intersects(newdrone_data.coordinates, area)
                             WHERE district = ?
                             GROUP BY zones.name;'''
 
 GET_ORGAZONES = '''  SELECT zones.id,zones.name,federal_state,district,AsGeoJSON(area),
                         X(geo_point),Y(geo_point),Count(DISTINCT drone_data.drone_id),
-                    MAX(drone_data.timestamp),
+                    newdrone_data.ts,
                     Count(DISTINCT drone_event.id)
                     FROM zones
                     JOIN territory_zones 
                     ON zones.id = territory_zones.zone_id
-                    JOIN territories ON territories.id = territory_zones.territory_id
-                    LEFT JOIN drone_data ON ST_Intersects(drone_data.coordinates, area)
+                    LEFT OUTER JOIN drone_event ON ST_Intersects(drone_event.coordinates, area)
+                    LEFT OUTER JOIN ( 
+                                    SELECT coordinates, MAX(timestamp) as ts, drone_id
+                                    from drone_data
+                                    group by drone_data.drone_id
+                            ) AS newdrone_data
                     Left JOIN drone_event ON ST_Intersects(drone_event.coordinates, area)
                     WHERE territories.orga_id=?
                     GROUP BY zones.name;'''
 
 
-def load_from_geojson(path_to_geojson) -> int:
-    """load data from a geojson file to the db.
+def add_from_geojson(path_to_geojson) -> int:
+    """add zone data from a geojson file to the db.
+    https://data.opendatasoft.com/explore/dataset/georef-germany-gemeinde%40public/table
     required fields:
     'features':[
         {
@@ -108,7 +134,7 @@ def load_from_geojson(path_to_geojson) -> int:
     ]
 
     Args:
-        path_to_geojson (_type_): path to the geojson that should be imported.
+        path_to_geojson (str): path to the geojson that should be imported.
 
     Returns:
         int: number of inserted zones.
@@ -185,13 +211,14 @@ def get_zone(zone_id:int) -> Zone | None:
     return get_obj_from_fetched(fetched_zone)
 
 def get_zone_polygon(zone_id:int) -> str:
-    """fetch the zone.
+    """get the polygon of a zone.
 
     Args:
         zone_id (int): id of the zone.
 
     Returns:
-        Zone | None: the Zone.
+        str: the polygon of the zone as geo_json str.
+
     """
     stm = create_where_clause_statement(ZoneWhereClause.ZONE_ID,'=')
     sql = add_where_clause(GET_ZONEPOLYGON,[stm])
@@ -201,12 +228,12 @@ def get_zone_polygon(zone_id:int) -> str:
     return None
 
 
-def get_zone_of_coordinate(long, lat) -> Zone | None:
-    """fetch the zone, the described point is in.
+def get_zone_of_coordinate(long:float, lat:float) -> Zone | None:
+    """fetch the zone, the given lat lon tuple is in.
 
     Args:
-        long (_type_): longitude of the point.
-        lat (_type_): latitude of the point.
+        long (float): longitude of the point.
+        lat (float): latitude of the point.
 
     Returns:
         Zone | None: the Zone if the point is inside a zones area, None if not.
@@ -217,10 +244,10 @@ def get_zone_of_coordinate(long, lat) -> Zone | None:
 
 def get_zones_in_area(area:str) -> List[Zone] | None:
     """fetch all zones in the given area.
-    
+
     Args:
         area (str): geojson string of the area.
-        
+
     Returns:
         List[Zone] | None: list of zones in the area.
     """
@@ -238,15 +265,14 @@ def get_zones_in_area(area:str) -> List[Zone] | None:
     return output
 
 
-def get_zone_of_by_district(name: str) -> List[Zone] | None:
-    """fetch the list of zones, in this district.
+def get_zone_of_district(name: str) -> List[Zone] | None:
+    """list all zones of this district.
 
     Args:
-        long (_type_): longitude of the point.
-        lat (_type_): latitude of the point.
+        name (str): name of the district.
 
     Returns:
-        Zone | None: the Zone if the point is inside a zones area, None if not.
+        List[Zone] | None: list of zones in the district.
     """
     fetched_zones = db.fetch_all(GET_ZONES_BY_DISTRICT, (name,))
     if fetched_zones is None:
@@ -302,7 +328,7 @@ def get_obj_from_fetched(
     """generate Zone obj from fetched element.
 
     Args:
-        fetched_zone (list): fetched attributes from zone.
+        fetched_zone (list): fetched attributes from the zone.
         after (datetime): restriction to only select events that where created after this timestamp,
         defaults to 24h ago.
 

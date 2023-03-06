@@ -75,24 +75,19 @@ def create_default_user():
         print("user done")
 
 def create_drone_events():
-    """ set demo events with env vars
-        long=12.68895149
-        lat=52.07454738
+    """ Creates drone events for demo purposes.
+        set demo events with env vars DEMO_LONG and DEMO_LAT
     """
     if os.getenv("DEMO_LONG") is not None \
             and os.getenv("DEMO_LAT") is not None:
 
-        for i in range(3):
-            print(i)
-            drones_table.create_drone(
-                name=f'Trinity F00{i}',
+        drones_table.create_drone(
+                name='Trinity F01',
                 drone_type="Unmanned Aerial Vehicle",
                 cc_range=7.5,
                 flight_range=100.0,
                 flight_time=90.0
             )
-        drone_events_table.insert_demo_events(12.559776306152344,50.189299066349946,3)
-        drone_events_table.insert_demo_events(12.559776306152344,52.189299066349946,2)
         drone_events_table.insert_demo_events(
                                             float(os.getenv("DEMO_LONG")),
                                             float(os.getenv("DEMO_LAT"))
@@ -100,33 +95,35 @@ def create_drone_events():
     print("drone_events done")
 
 def load_zones_from_geojson():
-    """ for demo set
-        Landkreis Potsdam-Mittelmark
+    """ store all zones from geojson file in the database.
+        link the zones, of the DEMO_DISTRICT env var, to the territory of the ADMIN_ORGANIZATION.
     """
     if os.getenv("GEOJSON_PATH") is not None:
         main_path = os.path.realpath(os.path.dirname(__file__))
         path_to_geo = os.path.join(main_path,os.getenv("GEOJSON_PATH"))
-        added_zones = zones_table.load_from_geojson(path_to_geo)
+        added_zones = zones_table.add_from_geojson(path_to_geo)
         print(f'Zones added: {added_zones}')
 
         if os.getenv("DEMO_DISTRICT") is not None \
                 and os.getenv("ADMIN_ORGANIZATION") is not None:
-            fetched_zones = zones_table.get_zone_of_by_district(os.getenv("DEMO_DISTRICT"))
+            fetched_zones = zones_table.get_zone_of_district(os.getenv("DEMO_DISTRICT"))
             try:
                 create_territory(orga_id=1,name=os.getenv("DEMO_DISTRICT"))
             except sqlite3.IntegrityError:
-                pass
+                print('couldnt create territory')
 
             for zone in fetched_zones:
                 try:
                     link_territory_zone(1,zone.id)
                 except sqlite3.IntegrityError:
-                    pass
+                    print(f'couldnt link {zone.name} to the territory')
 
             print("zones linked")
 
 def main():
     """ Initialise the database and create the tables.
+        Create a default user if the environment variables are set.
+        Create a default territory and link zones to it, if the environment variables are set.
     """
     initialise_spatialite()
     create_table(CREATE_ORGANISATIONS_TABLE)
@@ -139,7 +136,7 @@ def main():
     create_table(CREATE_TERRITORYZONES_TABLE)
     create_table(CREATE_INCIDENTS_TABLE)
     create_default_user()
-    create_drone_events()
+    #create_drone_events()
     #create_drones()
     load_zones_from_geojson()
 

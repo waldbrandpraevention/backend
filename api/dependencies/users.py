@@ -27,13 +27,13 @@ def get_user(email: str) -> UserWithSensitiveInfo | None:
     return users_table.get_user(email)
 
 def get_all_users(orga_id: int) -> List[User]:
-    """Creates a list of user objects from the information in the db
+    """fetches all users which are linked to the given organization
 
     Args:
         orga_id (int): orga the users are linked to.
 
     Returns:
-        List[User]: list of User objects filled with the user information
+        List[User]: list of User objects
     """
 
     return users_table.get_all_users(orga_id)
@@ -42,17 +42,17 @@ def get_user_by_id(user_id: int) -> UserWithSensitiveInfo | None:
     """fetches the user object by its id.
 
     Args:
-        email (str): Email of the user
+        user_id (int): id of the user
 
     Returns:
-        User: User object filled with the user information
-        None: if no user exists with the given email
+        User: User object
+        None: if no user exists with the given id
     """
 
     return users_table.get_user_by_id(user_id)
 
 def authenticate_user(email: str, password: str):
-    """Creates a user if the given password matches the users password
+    """Returns user object if the given password matches the users password
 
     Args:
         email (str): Email of the user
@@ -63,12 +63,12 @@ def authenticate_user(email: str, password: str):
         None: If user does not exists or the passowrd is wrong
     """
     user = get_user(email)
-    if user and verify_password(password, user.hashed_password):
+    if user is not None and verify_password(password, user.hashed_password):
         return user
     return None
 
-async def get_current_user(token: str = Depends(oauth2_scheme)):
-    """_summary_
+async def get_current_user(token: str = Depends(oauth2_scheme)) -> UserWithSensitiveInfo :
+    """Returns the user object of the current user
 
     Args:
         token (str, optional): _description_. Defaults to Depends(oauth2_scheme).
@@ -79,7 +79,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
         email_verification_exception: Raises orror if the email of the user did not get verified yet
 
     Returns:
-        User: User object of the current user
+        UserWithSensitiveInfo: User object of the current user
     """
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -105,14 +105,16 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
     #     raise email_verification_exception
     return user
 
-async def get_user_allerts(user: User):
-    """_summary_
+async def get_user_allerts(user: User) -> List[Allert]:
+    """
+    ONLY FOR TESTING PURPOSES
+    fetches all events from the last 24 hours and generates a string for each event.
 
     Args:
-        user (User): _description_
+        user (User): user of which organization the events should be fetched.
 
     Returns:
-        _type_: _description_
+        List[Allert]: list of allerts.
     """
     events = await get_drone_events(user.organization.id,
                            datetime.utcnow() - timedelta(days=1)
@@ -125,7 +127,8 @@ async def get_user_allerts(user: User):
     return allerts
 
 async def generate_event_string(event:DroneEvent):
-    """generates a string for an event allert.
+    """
+    generates a string for an event.
 
     Args:
         event (DroneEvent): the event to generate the string for.
@@ -149,11 +152,18 @@ async def update_user(user_to_update:User,
                   email_verified:bool|None=None
                   ) -> bool:
     """update attributes of a user in the database.
+        generates sql query based on the given parameters.
+
+        example:
+            update_user(user, email="new_email", password="new_password")
+            set_sql = "email = ?, password = ?"
+            valarr = ["new_email", hashed_pw]
+
 
     Args:
         user_to_update (User): user to update
         email (str | None): new email. Defaults to None.
-        password (str | None): new password. Defaults to None.
+        password (str | None): new unhashed password. Defaults to None.
         first_name (str | None): new first_name. Defaults to None.
         last_name (str | None): new last_name. Defaults to None.
         organization_name (str | None, optional): new organization_name. Defaults to None.
@@ -214,14 +224,14 @@ async def update_user(user_to_update:User,
             detail='Nothing to update.',
         )
 
-    col_str =""
+    set_sql =""
     valarr= []
-    for col, value in update_sql_dictr.items():
-        col_str+= f'{col}=?,'
+    for col_name, value in update_sql_dictr.items():
+        set_sql+= f'{col_name}=?,'
         valarr.append(value)
-    col_str = col_str[:-1]
+    set_sql = set_sql[:-1]
 
-    success = users_table.update_user_withsql(user_to_update.id,col_str,valarr)
+    success = users_table.update_user_withsql(user_to_update.id,set_sql,valarr)
 
     if not success:
         raise HTTPException(
@@ -235,7 +245,7 @@ async def is_admin(user:User)->bool:
     """checks wether user has admin rights.
 
     Args:
-        user (User): user that wants to do admin stuff.
+        user (User): user to check.
 
     Raises:
         HTTPException: if not an admin.

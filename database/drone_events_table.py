@@ -56,17 +56,18 @@ JOIN zones ON ST_Intersects(zones.area, coordinates)
 AND drone_event.id = ?;'''
 
 
-def insert_demo_events(long: float, lat: float, droneid = 1):
+def insert_demo_events(long: float, lat: float, droneid = 1, ignore_existing: bool = False):
     """insert 5 demo drone events.
 
     Args:
         long (float): long of the coordinate.
         lat (float): lat of the coordinate.
     """
-    update = drone_updates_table.get_latest_update(droneid)
-    if update is not None:
-        print('already created drone events.')
-        return
+    if not ignore_existing:
+        update = drone_updates_table.get_latest_update(droneid)
+        if update is not None:
+            print('already created drone events.')
+            return
     timestamp = datetime.datetime.utcnow()
     i = 0
     num_inserted = 0
@@ -228,16 +229,17 @@ def get_obj_from_fetched(fetched_dronedata) -> DroneEvent | None:
 
 def calculate_firerisk(events: List[DroneEvent]) -> tuple[FireRisk,FireRisk,FireRisk]:
     """calculates the firerisk, based on the events fire/smoke confidences.
-    sehr niedrig rauch:>5 feuer: >0
-    niedrig rauch:>40 feuer: > 10
-    mittel rauch:>60 feuer: >30
-    hoch rauch:>80 feuer: >70
-    sehr hoch rauch:>... feuer: >90
+
+    very low        rauch: >5 feuer: >0
+    low             rauch:>40 feuer: > 10
+    middle          rauch: >60 feuer: >30
+    high            rauch: >80 feuer: >70
+    very high       rauch: >90 feuer: >90
     Args:
         events (List[DroneEvent]): list of drone events.
 
     Returns:
-        FireRisk: the calculated risk.
+        tuple[FireRisk,FireRisk,FireRisk]: tuple with the calculated firerisk. (gernal, fire, smoke)
     """
     smokerisk= 0
     firerisk = 0
@@ -270,15 +272,15 @@ def calculate_firerisk(events: List[DroneEvent]) -> tuple[FireRisk,FireRisk,Fire
         fire_risk = None
 
     if smokerisk > 90 or firerisk > 90:
-        return FireRisk.VERY_HEIGH, smoke_risk, fire_risk
+        return FireRisk.VERY_HEIGH, fire_risk, smoke_risk
 
     if smokerisk > 80 or firerisk > 70:
-        return FireRisk.HEIGH, smoke_risk, fire_risk
+        return FireRisk.HEIGH, fire_risk, smoke_risk
 
     if smokerisk > 60 or firerisk > 30:
-        return FireRisk.MIDDLE, smoke_risk, fire_risk
+        return FireRisk.MIDDLE, fire_risk, smoke_risk
 
     if smokerisk > 40 or firerisk > 10:
-        return FireRisk.LOW, smoke_risk, fire_risk
+        return FireRisk.LOW, fire_risk, smoke_risk
 
-    return FireRisk.VERY_LOW, smoke_risk, fire_risk
+    return FireRisk.VERY_LOW, fire_risk, smoke_risk

@@ -1,4 +1,9 @@
-"""DB functions for user settings"""
+"""DB functions for user settings, NOT USED YET.
+Gerneral idea is to have a table for user settings, that can be set by the user.
+The user can set the value of the setting. If the user doesnt set a value, the default value of the setting is used
+(located in the settings table).
+"""
+
 from enum import Enum
 import json
 
@@ -84,6 +89,7 @@ def get_usersetting(setting_id:int, user_id:int) -> UserSetting:
     """
     fetched_setting = db.fetch_one(GET_USERSETTING,(setting_id, user_id))
     user_setting_obj = get_obj_from_fetched(fetched_setting)
+
     #if not setting set, use the default value.
     if not user_setting_obj:
         setting_obj = settings_table.get_setting(setting_id)
@@ -124,11 +130,11 @@ def get_obj_from_fetched(fetched_setting) -> UserSetting:
         return setting_obj
     return None
 
-def get_value(value,settings_type) -> int|str|dict:
+def get_value(value:str,settings_type: int) -> int|str|dict:
     """convert stored text value into the given type.
 
     Args:
-        value (_type_): stored value.
+        value (str): stored value.
         type (int): stored type.
 
     Returns:

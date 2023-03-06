@@ -5,19 +5,19 @@ from fastapi import HTTPException
 import pytest
 from api.routers import zones,users,drones
 from api.routers.territories import read_territories,read_territory
-from database import zones_table
+from database import drone_events_table, zones_table
 from database import territories_table
 from database.spatia import spatiageostr_to_geojson
 from database.territories_table import get_orga_area
 
-
 def test_improvements():
     """test.
     """
-    te = territories_table.get_territories(1)
-    print(len(te))
+    territories = territories_table.get_territories(1)
+    print(len(territories))
 
     cProfile.run('test_improvements()',sort='tottime')
+
 
 @pytest.mark.asyncio
 async def test_zones():
@@ -56,15 +56,30 @@ async def test_drones():
     zone = zones_table.get_zone(drone.zone_id)
     with pytest.raises(HTTPException):
         await drones.read_drone_events(current_user=user,zone_id=-1)
+
     zone_events = await drones.read_drone_events(current_user=user,zone_id=zone.id)
-    assert zone_events == zone.events
     zone_updates = await drones.read_drone_route(current_user=user,zone_id=zone.id)
+    drone_events_table.insert_demo_events(
+                                            zone.lon,
+                                            zone.lat,
+                                            1,
+                                            True
+                                            )
+    drone_routes = await drones.read_drone_route(current_user=user)
+    assert zone_events == zone.events
     assert zone_updates[0].timestamp == zone.last_update
     with pytest.raises(HTTPException):
         await drones.read_drone_route(current_user=user,zone_id=zone.id,drone_id=-1)
     zone_copunt = await drones.read_drones_count(current_user=user,zone_id=zone.id)
-    zone_copunt = await drones.read_drones_count(current_user=user,zone_id=zone.id)
     assert zone_copunt == zone.drone_count
+    drone_events_table.insert_demo_events(
+                                            8.66697,
+                                            49.54887,
+                                            1,
+                                            True
+                                            )
+    zone_copunt = await drones.read_drones_count(current_user=user,zone_id=zone.id)
+    assert zone_copunt == zone.drone_count-1
     d1events = await drones.read_drone_events(current_user=user,drone_id=1)
     allevents = await drones.read_drone_events(current_user=user)
 

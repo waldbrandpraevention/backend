@@ -19,7 +19,7 @@ async def get_sim_drones():
     try:
         sim_drones = []
         drones =  drones_table.get_all_drones()
-        zones = zones_table.get_zone_of_by_district(os.getenv("DEMO_DISTRICT"))
+        zones = zones_table.get_zone_of_district(os.getenv("DEMO_DISTRICT"))
 
         for drone in drones:
             rand = random.randrange(0, len(zones) - 1)

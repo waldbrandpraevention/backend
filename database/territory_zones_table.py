@@ -1,4 +1,6 @@
-"""DB functions for orga zones"""
+"""DB functions for orga teritories.
+    Here you can link zones to territories, which are linked to organizations. 
+"""
 from typing import List
 
 from api.dependencies.classes import Organization, Zone
@@ -34,7 +36,7 @@ UPDATE_ATTRIBUTE = 'UPDATE territory_zones SET {} = ? WHERE name = ?;'
 
 
 def link_territory_zone(territory_id:int,zone_id:int)->bool:
-    """link an organization with a zone.
+    """link a territory with a zone.
 
     Args:
         territory_id (int): id of the territory that should be linked.
@@ -89,8 +91,8 @@ def get_orgazones_by_name(name,orga_id) -> Zone | None:
     """fetch the zone by its name and make sure its a zone that the orga is allowed to see.
 
     Args:
-        name (_type_): name of the zone.
-        territory_id (_type_): id of the orga that want to access this zones data.
+        name (str): name of the zone.
+        orga_id (int): id of the orga that want to access this zones data.
 
     Returns:
         Zone | None: zone object.
@@ -99,12 +101,12 @@ def get_orgazones_by_name(name,orga_id) -> Zone | None:
     fetched_zone = db.fetch_one(sql,(name,orga_id))
     return zones_table.get_obj_from_fetched(fetched_zone)
 
-def get_orgazones_by_id(zone_id,orga_id) -> Zone | None:
+def get_orgazone_by_id(zone_id,orga_id) -> Zone | None:
     """fetch the zone by its id and make sure its a zone that the orga is allowed to see.
 
     Args:
-        zone_id (_type_): id of the zone.
-        territory_id (_type_): id of the orga that want to access this zones data.
+        zone_id (int): id of the zone.
+        orga_id (int): id of the orga that want to access this zones data.
 
     Returns:
         Zone | None: zone object.
