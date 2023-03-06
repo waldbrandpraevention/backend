@@ -1,12 +1,10 @@
 """Code for email api"""
 
-import os
 from datetime import datetime
-from fastapi import status, APIRouter, UploadFile,File, Depends
+from fastapi import status, APIRouter, Depends, HTTPException
+from database.incidents import create_incident, get_last_incidents
 from ..dependencies.users import get_current_user
 from ..dependencies.classes import User
-
-alarm_location = os.getenv("ALARM_PATH")
 
 router = APIRouter()
 
@@ -15,7 +13,6 @@ async def alarm_team(drone_name: str,
                     location: str,
                     alarm_type: str,
                     notes: str,
-                    file: UploadFile | None = File(),
                     current_user: User = Depends(get_current_user)):
     """API call to alarm the team
 
@@ -24,37 +21,60 @@ async def alarm_team(drone_name: str,
         location (str): location
         alarm_type (str): type
         notes (str): notes
-        file (UploadFile | None, optional): file Defaults to File().
         current_user (User, optional): User. Defaults to User that is logged in.
 
     Returns:
         dict: response
     """
-
-    if not current_user:
-        return {"message": "Invalid user"}
-
     try:
-        content = f"""
-        Drone: {drone_name}
-        location: {location}
-        type: {alarm_type}
-        notes: {notes}
-        """
+        if not current_user:
+            raise HTTPException(
+                status_code=status.HTTP_406_NOT_ACCEPTABLE,
+                detail="Invalid user",
+            )
 
-        sub_path = f"{alarm_location}/{str(datetime.now())}"
-
-        if not os.path.exists(sub_path):
-            os.makedirs(sub_path)
-        print("ARRRR")
-        with open(f"{sub_path}/info.txt", "w+") as file_object:
-            file_object.write(content)
-        print("BRRRRRR")
-        file_location = f"{sub_path}/{file.filename}"
-        with open(file_location, "wb+") as file_object:
-            file_object.write(file.file.read())
-        print("CRRRRRRR")
-        return {"message": "Alarmierung erhalten"}
+        incident = create_incident(drone_name, location, alarm_type, notes, datetime.now())
+        if incident is None:
+            raise HTTPException(
+                status_code=status.HTTP_406_NOT_ACCEPTABLE,
+                detail="Error while tring to process the incident",
+            )
+        return {"message:": "success"}
     except Exception as err:
-        print(err)
-        return {"message": "Alarmierung fehlgeschlagen"}
+        raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="API call was recieved but something went wrong internally",
+            ) from err
+
+
+@router.get("/alarm/get/", status_code=status.HTTP_200_OK)
+async def get_incidents(amount: int, current_user: User = Depends(get_current_user)):
+    """API call to get the last x incidents
+
+    Args:
+        amount (int): amount to get
+        current_user (User, optional): current user. Defaults to Depends(get_current_user).
+
+    Returns:
+        Incident[]: list of incidents
+    """
+    try:
+        if not current_user:
+            raise HTTPException(
+                status_code=status.HTTP_406_NOT_ACCEPTABLE,
+                detail="Invalid user",
+            )
+
+        if amount < 0:
+            raise HTTPException(
+                status_code=status.HTTP_406_NOT_ACCEPTABLE,
+                detail="Amount must be >= 0",
+            )
+
+        alarms = get_last_incidents(amount)
+        return alarms
+    except Exception as err:
+        raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="API call was recieved but something went wrong internally",
+            ) from err
