@@ -315,7 +315,15 @@ def create_drone_with_route(drone_update:DroneUpdate,route:List[Point]) -> Drone
                     'properties': {},
                     'geometry': mapping(LineString(route))}
     else:
-        geojson = None
+        try:
+            point = Point(drone_update.lon, drone_update.lat)
+            geometry = mapping(point)
+        except ValueError:
+            geometry = None
+
+        geojson = {'type': 'Feature',
+                    'properties': {},
+                    'geometry': geometry}
 
     return DroneUpdateWithRoute(
                     id=drone_update.id,
