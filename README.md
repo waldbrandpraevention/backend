@@ -72,13 +72,17 @@ brew install sqlite3 libspatialite
 apk add libspatialite=5.0.1-r5
 ```
 
-[ 6 ] 
+[ 6 ]
+TF2 Object detection installieren
+https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/tf2.md
+
+[ 7 ] 
 
 Bei Linux/MacOS muss noch in der `demo.env` die `\\` auf `/` geändert werden.
 
 Eventuell vorhandene Datenbank löschen `rm -f testing.db`
 
-[ 7 ]
+[ 8 ]
 ```
 uvicorn main:app --reload --env-file demo.env
 ```
