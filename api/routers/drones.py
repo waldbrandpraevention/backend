@@ -103,11 +103,6 @@ async def read_drone_route( drone_id: int=None,
         List[DroneUpdateWithRoute]: List of drones updates with their route.
     """
 
-    raise HTTPException(
-            status_code=status.HTTP_406_NOT_ACCEPTABLE,
-            detail="Couldnt find any updates.",
-        )
-    
     timestamp = drones.timestamp_helper(days,hours,minutes)
     drone_updates = await drones.get_drone_with_route(orga_id=current_user.organization.id,
                                            timestamp=timestamp,
