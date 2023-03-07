@@ -199,7 +199,7 @@ async def post_event(events,loop:asyncio.BaseEventLoop):
             for result in results:
                 drone_event = {
                     'drone_id' : drone_entry["drone"]["id"],
-                    'timestamp':unix_timestamp,
+                    'unixtimestamp':unix_timestamp,
                     'lon':drone_entry["lon"],
                     'lat':drone_entry["lat"],
                     'event_type':result.event_type,
