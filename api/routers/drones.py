@@ -248,6 +248,64 @@ async def drone_event(
 
     return {"location": sub_path}
 
+@router.post("/drones/send-events/")
+async def drone_events(events: List[DroneEvent], files: UploadFile, token: str):
+    """Api call to recieve multiple events from one drone
+
+    Args:
+        event (DroneEvent): Event from the drone
+        file (UploadFile): Associated image file
+        current_drone (Drone, optional): Drone to use. Defaults to Depends(get_current_drone).
+
+    Returns:
+        dict: response
+    """
+    try:
+        file_raw = files[0]
+        file_predicted = files[1]
+    except IndexError:
+        raise HTTPException(
+            status_code=status.HTTP_406_NOT_ACCEPTABLE,
+            detail="Invalid number of files",
+        )
+
+    for event in events:
+        if not await validate_token(token):
+            raise HTTPException(
+                status_code=status.HTTP_406_NOT_ACCEPTABLE,
+                detail="Invalid drone",
+            )
+
+        event_location = os.getenv("EVENT_PATH")
+        if not os.path.exists(event_location):
+            os.makedirs(event_location)
+
+        sub_folder = str(event.timestamp)
+        sub_path = os.path.join(event_location, sub_folder)
+        if not os.path.exists(sub_path):
+            os.makedirs(sub_path)
+        else:
+            return {"location": sub_path}
+
+        raw_file_location = f"{sub_path}/raw.jpg"
+        with open(raw_file_location, "wb+") as file_object:
+            file_object.write(file_raw.file.read())
+
+        predicted_file_location = f"{sub_path}/predicted.jpg"
+        with open(predicted_file_location, "wb+") as file_object:
+            file_object.write(file_predicted.file.read())
+
+        create_drone_event_entry(event.drone_id,
+                                event.timestamp,
+                                event.lon,
+                                event.lat,
+                                event.event_type,
+                                event.confidence,
+                                sub_path,
+                                event.csv_file_path)
+
+    return {"location": sub_path}
+
 
 @router.post("/drones/feedback/", status_code=status.HTTP_200_OK)
 async def drone_feedback(reason: str,

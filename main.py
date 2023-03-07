@@ -6,7 +6,7 @@ from threading import Thread
 from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 
-from simulation.sim import simulate
+from simulation.sim import start_simulation
 from api.dependencies.authentication import get_password_hash
 from api.dependencies.classes import UserWithSensitiveInfo
 from api.routers import emails, users, zones, drones, simulation,territories, alarm
@@ -142,7 +142,7 @@ def main():
 
     if bool(os.getenv("RUN_SIMULATION")):
         try:
-            simulation_thread = Thread(target = simulate)
+            simulation_thread = Thread(target = start_simulation)
             simulation_thread.start()
         except Exception as err:
             print(err)
