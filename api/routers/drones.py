@@ -348,12 +348,18 @@ async def get_image_raw(event_id: int,
             detail="User is not allowed to access this event. The zone of the event is most likly not part of your organization.",
         )
     path = os.path.join(curr_drone_event.picture_path, "raw.jpg").strip("/")
+    if os.path.exists(path):
+        return path
+
+    path = path.strip("/")
     if not os.path.exists(path):
-        raise HTTPException(
-            status_code=status.HTTP_406_NOT_ACCEPTABLE,
-            detail="Event exists but there are no images for it",
-        )
-    return path
+        return path
+
+    raise HTTPException(
+        status_code=status.HTTP_406_NOT_ACCEPTABLE,
+        detail=f"Event exists but there are no images for it. Path = {path}",
+    )
+
 
 @router.get("/drones/get-event-image-predicted/", response_class=FileResponse)
 async def get_image_predicted(event_id: int,
@@ -380,10 +386,15 @@ async def get_image_predicted(event_id: int,
             status_code=status.HTTP_406_NOT_ACCEPTABLE,
             detail="User is not allowed to access this event. The zone of the event is most likly not part of your organization.",
         )
-    path = os.path.join(curr_drone_event.picture_path, "predicted.jpg").strip("/")
+    path = os.path.join(curr_drone_event.picture_path, "predicted.jpg")
+    if os.path.exists(path):
+        return path
+
+    path = path.strip("/")
     if not os.path.exists(path):
-        raise HTTPException(
-            status_code=status.HTTP_406_NOT_ACCEPTABLE,
-            detail="Event exists but there are no images for it",
-        )
-    return path
+        return path
+
+    raise HTTPException(
+        status_code=status.HTTP_406_NOT_ACCEPTABLE,
+        detail=f"Event exists but there are no images for it. Path = {path}",
+    )
