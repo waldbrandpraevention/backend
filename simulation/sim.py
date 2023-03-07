@@ -99,7 +99,7 @@ async def generate_drones():
                     drones_created = []
                     territories = await get_territories_from_user(token)
                     for _ in territories:
-                        drone_amounts.append(2)#random.randint(5, 20))
+                        drone_amounts.append(40)#random.randint(5, 20))
                         drones_created.append(0)
                 except Exception:
                     print("Territorries of the demo account could not be retrieved. retrying in 3 sec")
