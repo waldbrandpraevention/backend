@@ -136,11 +136,12 @@ def main():
     create_table(CREATE_TERRITORYZONES_TABLE)
     create_table(CREATE_INCIDENTS_TABLE)
     create_default_user()
-    #create_drone_events()
+    create_drone_events()
     #create_drones()
     load_zones_from_geojson()
 
-    if bool(os.getenv("RUN_SIMULATION")):
+    run_sim = (os.getenv("RUN_SIMULATION"))
+    if run_sim == 'True':
         try:
             simulation_thread = Thread(target = simulate)
             simulation_thread.start()
