@@ -2,6 +2,7 @@
 
 import os
 import time
+from typing import Tuple
 import tensorflow as tf
 import numpy as np
 from PIL import Image
@@ -56,7 +57,7 @@ print(f'Done! Took {elapsed_time} seconds')
 IMG_PATH = "./assets/raw"
 directory = os.fsencode(IMG_PATH)
 
-def ai_prediction(path: str):
+def ai_prediction(path: str) -> Tuple[Result, JpegImageFile]:
     """Generates an ai prediction using computer vision and object detection
 
     Args:
@@ -64,6 +65,7 @@ def ai_prediction(path: str):
 
     Returns:
         Result: result
+
     """
     #for file in os.listdir(directory):
 
@@ -129,9 +131,8 @@ def ai_prediction(path: str):
         result = Result()
         result.event_type = classes[i]
         result.confidence = int(percantages[i] * 100 + 0.5)
-        result.picture = image
         results.append(result)
-    return results
+    return results, image
 
 
 #ai_prediction("./assets/raw/111171_waldbrand-longEdge512.jpg")
