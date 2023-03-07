@@ -144,7 +144,7 @@ async def post_update(updates, loop:asyncio.BaseEventLoop):
         unix_timestamp = datetime.timestamp(datetime_now)*1000
         new_update = {
             "drone_id": int(drone_id),
-            "timestamp": unix_timestamp,
+            "unixtimestamp": unix_timestamp,
             "lon": float(drone_entry["lon"]),
             "lat":  float(drone_entry["lat"]),
             "flight_range":  float(drone_entry["drone"]["flight_range"]) - distance,
@@ -199,7 +199,7 @@ async def post_event(events,loop:asyncio.BaseEventLoop):
             for result in results:
                 drone_event = {
                     'drone_id' : drone_entry["drone"]["id"],
-                    'timestamp':unix_timestamp,
+                    'unixtimestamp':unix_timestamp,
                     'lon':drone_entry["lon"],
                     'lat':drone_entry["lat"],
                     'event_type':result.event_type,
