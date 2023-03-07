@@ -141,7 +141,7 @@ async def post_update(updates, loop:asyncio.BaseEventLoop):
 
         drone_id = drone_entry["drone"]["id"]
         datetime_now = datetime.now()
-        unix_timestamp = datetime.timestamp(datetime_now)*1000
+        unix_timestamp = int(datetime.timestamp(datetime_now))
         new_update = {
             "drone_id": int(drone_id),
             "unixtimestamp": unix_timestamp,
@@ -183,7 +183,7 @@ async def post_event(events,loop:asyncio.BaseEventLoop):
     for drone_entry in events:
         print(f"Events triggered for drone {drone_entry['drone']['id']}")
         datetime_now = datetime.now()
-        unix_timestamp = datetime.timestamp(datetime_now)*1000
+        unix_timestamp = int(datetime.timestamp(datetime_now))
         #pick random file
         try:
             file_name = random.choice(os.listdir(ASSETS))
