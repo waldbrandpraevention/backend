@@ -133,17 +133,8 @@ async def get_drone_events(orga_id:int,
         List[DroneEvent]: list of drone events filtered by the given parameters.
         None: if no drone events are found.
     """
-    if zone_id is not None:
-        polygon = zones_table.get_zone_polygon(zone_id)
-        if polygon is None:
-            raise HTTPException(
-            status_code=status.HTTP_406_NOT_ACCEPTABLE,
-            detail="Invalid Zone ID",
-        )
-    else:
-        polygon = territories_table.get_orga_area(orga_id)
 
-    return drone_events_table.get_drone_event(polygon=polygon,drone_id=drone_id,after=timestamp)
+    return drone_events_table.get_drone_event(zone_id=zone_id,org_id=orga_id, drone_id=drone_id,after=timestamp)
 
 
 
@@ -193,6 +184,7 @@ async def get_drone_with_route( orga_id:int,
 
     return drone_data_table.get_drone_updates(polygon=polygon,
                                               drone_id=drone_id,
+                                              orga_id=orga_id,
                                               after=timestamp,
                                               get_coords_only=True)
 

@@ -63,18 +63,18 @@ async def read_drone_events(drone_id: int=None,
     """
 
     timestamp = drones.timestamp_helper(days,hours,minutes)
-    drone_events = await drones.get_drone_events(orga_id=current_user.organization.id,
+    fetched_drone_events = await drones.get_drone_events(orga_id=current_user.organization.id,
                                            timestamp=timestamp,
                                            drone_id=drone_id,
                                            zone_id=zone_id)
 
-    if drone_events is None:
+    if fetched_drone_events is None:
         raise HTTPException(
             status_code=status.HTTP_204_NO_CONTENT,
             detail="Couldnt find any events.",
         )
 
-    return drone_events
+    return fetched_drone_events
 
 @router.get("/drones/route/",
             status_code=status.HTTP_200_OK,
