@@ -70,7 +70,7 @@ async def read_drone_events(drone_id: int=None,
 
     if drone_events is None:
         raise HTTPException(
-            status_code=status.HTTP_406_NOT_ACCEPTABLE,
+            status_code=status.HTTP_204_NO_CONTENT,
             detail="Couldnt find any events.",
         )
 
@@ -110,7 +110,7 @@ async def read_drone_route( drone_id: int=None,
                                            zone_id=zone_id)
     if drone_updates is None:
         raise HTTPException(
-            status_code=status.HTTP_406_NOT_ACCEPTABLE,
+            status_code=status.HTTP_204_NO_CONTENT,
             detail="Couldnt find any updates.",
         )
 
