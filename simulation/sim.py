@@ -140,9 +140,11 @@ async def post_update(updates, loop:asyncio.BaseEventLoop):
                             drone_entry["last_lat"] - drone_entry["lat"])
 
         drone_id = drone_entry["drone"]["id"]
+        datetime_now = datetime.now()
+        unix_timestamp = datetime.timestamp(datetime_now)*1000
         new_update = {
             "drone_id": int(drone_id),
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": unix_timestamp,
             "lon": float(drone_entry["lon"]),
             "lat":  float(drone_entry["lat"]),
             "flight_range":  float(drone_entry["drone"]["flight_range"]) - distance,
@@ -180,7 +182,8 @@ async def post_event(events,loop:asyncio.BaseEventLoop):
 
     for drone_entry in events:
         print(f"Events triggered for drone {drone_entry['drone']['id']}")
-        time_now = datetime.now().isoformat()
+        datetime_now = datetime.now()
+        unix_timestamp = datetime.timestamp(datetime_now)*1000
         #pick random file
         try:
             file_name = random.choice(os.listdir(ASSETS))
@@ -196,7 +199,7 @@ async def post_event(events,loop:asyncio.BaseEventLoop):
             for result in results:
                 drone_event = {
                     'drone_id' : drone_entry["drone"]["id"],
-                    'timestamp':time_now,
+                    'timestamp':unix_timestamp,
                     'lon':drone_entry["lon"],
                     'lat':drone_entry["lat"],
                     'event_type':result.event_type,
