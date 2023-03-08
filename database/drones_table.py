@@ -34,14 +34,19 @@ drones.cc_range,
 drones.flight_time, 
 zones.id
 FROM drones
-JOIN drone_data ON drone_data.drone_id = drones.id
-JOIN zones ON ST_Intersects(drone_data.coordinates, zones.area)
+LEFT OUTER JOIN  ( 
+        SELECT coordinates, MAX(timestamp) as ts, drone_id
+        from drone_data
+        group by drone_data.drone_id
+    ) AS newdrone_data
+ON newdrone_data.drone_id = drones.id
+JOIN zones ON ST_Intersects(newdrone_data.coordinates, zones.area)
 JOIN territory_zones ON territory_zones.zone_id = zones.id
 JOIN territories ON territories.id = territory_zones.territory_id
 WHERE drones.id=?
 AND territories.orga_id = ?
 Group by drones.id
-Order by drone_data.timestamp;'''
+Order by newdrone_data.ts;'''
 
 GET_DRONE_BY_ID = '''SELECT
 drones.id, 
@@ -52,13 +57,18 @@ drones.cc_range,
 drones.flight_time, 
 zones.id
 FROM drones
-JOIN drone_data ON drone_data.drone_id = drones.id
-JOIN zones ON ST_Intersects(drone_data.coordinates, zones.area)
+LEFT OUTER JOIN  ( 
+        SELECT coordinates, MAX(timestamp) as ts, drone_id
+        from drone_data
+        group by drone_data.drone_id
+    ) AS newdrone_data
+ON newdrone_data.drone_id = drones.id
+JOIN zones ON ST_Intersects(newdrone_data.coordinates, zones.area)
 JOIN territory_zones ON territory_zones.zone_id = zones.id
 JOIN territories ON territories.id = territory_zones.territory_id
 WHERE drones.id = ?
 Group by drones.id
-Order by drone_data.timestamp;'''
+Order by newdrone_data.ts;'''
 
 GET_DRONES = '''SELECT
 drones.id, 
@@ -69,13 +79,18 @@ drones.cc_range,
 drones.flight_time, 
 zones.id
 FROM drones
-JOIN drone_data ON drone_data.drone_id = drones.id
-JOIN zones ON ST_Intersects(drone_data.coordinates, zones.area)
+LEFT OUTER JOIN  ( 
+        SELECT coordinates, MAX(timestamp) as ts, drone_id
+        from drone_data
+        group by drone_data.drone_id
+    ) AS newdrone_data
+ON newdrone_data.drone_id = drones.id
+JOIN zones ON ST_Intersects(newdrone_data.coordinates, zones.area)
 JOIN territory_zones ON territory_zones.zone_id = zones.id
 JOIN territories ON territories.id = territory_zones.territory_id
 WHERE territories.orga_id = ?
 Group by drones.id
-Order by drone_data.timestamp;'''
+Order by newdrone_data.ts;'''
 
 def create_drone(name:str,
                  drone_type:str|None,
