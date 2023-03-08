@@ -360,9 +360,9 @@ def get_obj_from_fetched(
         if events:
             ai_firerisk_enum, firerisk, smokerisk = drone_events_table.calculate_firerisk(events)
         else:
-            ai_firerisk_enum= FireRisk(1)
-            firerisk= FireRisk(1)
-            smokerisk  = FireRisk(1)
+            ai_firerisk_enum= FireRisk(0)
+            firerisk= FireRisk(0)
+            smokerisk  = FireRisk(0)
 
         try:
             lon = fetched_zone[5]

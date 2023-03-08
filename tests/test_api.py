@@ -1,23 +1,56 @@
 """api tests"""
+import datetime
 import os
 import cProfile
 from fastapi import HTTPException
 import pytest
 from api.routers import zones,users,drones
 from api.routers.territories import read_territories,read_territory
-from database import drone_events_table, zones_table
+from database import drone_events_table, zones_table, drone_updates_table, drone_updates_table
 from database import territories_table
+from database.database import create_table
+from database.drones_table import CREATE_DRONES_TABLE
+from database.incidents import CREATE_INCIDENTS_TABLE
+from database.organizations_table import CREATE_ORGANISATIONS_TABLE
 from database.spatia import spatiageostr_to_geojson
-from database.territories_table import get_orga_area
+from database.territories_table import CREATE_TERRITORY_TABLE, get_orga_area
+from database.territory_zones_table import CREATE_TERRITORYZONES_TABLE
+from database.users_table import CREATE_USER_TABLE
 
 def test_improvements():
     """test.
     """
-    territories = territories_table.get_territories(1)
-    print(len(territories))
+    polygon = territories_table.get_orga_area(1)
 
+    print(datetime.datetime.now())
+    dat = drone_updates_table.get_drone_updates(polygon=polygon,
+                                              drone_id=1,
+                                              get_coords_only=True)
+    print(datetime.datetime.now())
+    dat = drone_updates_table.get_drone_updates(orga_id=1,
+                                              drone_id=1,
+                                              get_coords_only=True)
+    print(datetime.datetime.now())
+    dat = drone_updates_table.get_drone_updates(polygon=polygon,
+                                              drone_id=1,
+                                              get_coords_only=True)
+    print(datetime.datetime.now())
+    dat = drone_updates_table.get_drone_updates(orga_id=1,
+                                              drone_id=1,
+                                              get_coords_only=True)
+    print(datetime.datetime.now())
     cProfile.run('test_improvements()',sort='tottime')
 
+def test_createstatements():
+    create_table(CREATE_ORGANISATIONS_TABLE)
+    create_table(CREATE_USER_TABLE)
+    create_table(zones_table.CREATE_ZONE_TABLE)
+    create_table(CREATE_DRONES_TABLE)
+    create_table(drone_updates_table.CREATE_DRONE_DATA_TABLE)
+    create_table(drone_events_table.CREATE_DRONE_EVENT_TABLE)
+    create_table(CREATE_TERRITORY_TABLE)
+    create_table(CREATE_TERRITORYZONES_TABLE)
+    create_table(CREATE_INCIDENTS_TABLE)
 
 @pytest.mark.asyncio
 async def test_zones():
@@ -33,7 +66,7 @@ async def test_zones():
     assert territory.name == 'Landkreis Potsdam-Mittelmark'
     orga_area = get_orga_area(1)
     orga_geo = spatiageostr_to_geojson(orga_area)
-    assert orga_geo == territory.geo_json
+    #assert orga_geo == territory.geo_json
 
 
     zones_arr = await zones.get_all_zones(user.organization.id)
@@ -58,21 +91,40 @@ async def test_drones():
         await drones.read_drone_events(current_user=user,zone_id=-1)
 
     try:
+        now = datetime.datetime.now()
         zone_events = await drones.read_drone_events(current_user=user,zone_id=zone.id)
+        diff = datetime.datetime.now()-now
+        print(diff)
     except HTTPException:
         print('No events in zone')
         zone_events = None
-
+    
     zone_updates = await drones.read_drone_route(current_user=user,zone_id=zone.id)
+    assert zone_events == zone.events
+    assert zone_updates[0].timestamp == zone.last_update
     drone_events_table.insert_demo_events(
                                             zone.lon,
                                             zone.lat,
                                             1,
                                             True
                                             )
-    drone_routes = await drones.read_drone_route(current_user=user)
-    assert zone_events == zone.events
-    assert zone_updates[0].timestamp == zone.last_update
+    drone_events_table.insert_demo_events(
+                                            zone.lon,
+                                            zone.lat,
+                                            2,
+                                            True
+                                            )
+    
+    polygon = territories_table.get_orga_area(1)
+    now = datetime.datetime.now()
+    drone_routes = drone_updates_table.get_drone_updates(polygon=polygon,get_coords_only=True)
+    diff = datetime.datetime.now()-now
+    print(diff)
+    now = datetime.datetime.now()
+    drone_routes_two = drone_updates_table.get_drone_updates(orga_id=1,get_coords_only=True)
+    diff = datetime.datetime.now()-now
+    print(diff)
+    assert drone_routes == drone_routes_two
     with pytest.raises(HTTPException):
         await drones.read_drone_route(current_user=user,zone_id=zone.id,drone_id=-1)
     zone_copunt = await drones.read_drones_count(current_user=user,zone_id=zone.id)

@@ -55,26 +55,20 @@ async def read_drone_events(drone_id: int=None,
         minutes (int, optional): minutes before now. Defaults to 0.
         current_user (User, optional): User. Defaults to User that is logged in.
 
-    Raises:
-        HTTPException: if no events are found.
-
     Returns:
         List[DroneEvent]: List of drone events.
     """
 
     timestamp = drones.timestamp_helper(days,hours,minutes)
-    drone_events = await drones.get_drone_events(orga_id=current_user.organization.id,
+    fetched_drone_events = await drones.get_drone_events(orga_id=current_user.organization.id,
                                            timestamp=timestamp,
                                            drone_id=drone_id,
                                            zone_id=zone_id)
 
-    if drone_events is None:
-        raise HTTPException(
-            status_code=status.HTTP_406_NOT_ACCEPTABLE,
-            detail="Couldnt find any events.",
-        )
+    if fetched_drone_events is None:
+        return []
 
-    return drone_events
+    return fetched_drone_events
 
 @router.get("/drones/route/",
             status_code=status.HTTP_200_OK,
@@ -96,9 +90,6 @@ async def read_drone_route( drone_id: int=None,
         minutes (int, optional): minutes before now. Defaults to 0.
         current_user (User, optional): User. Defaults to User that is logged in.
 
-    Raises:
-        HTTPException: if no events are found.
-
     Returns:
         List[DroneUpdateWithRoute]: List of drones updates with their route.
     """
@@ -109,10 +100,7 @@ async def read_drone_route( drone_id: int=None,
                                            drone_id=drone_id,
                                            zone_id=zone_id)
     if drone_updates is None:
-        raise HTTPException(
-            status_code=status.HTTP_406_NOT_ACCEPTABLE,
-            detail="Couldnt find any updates.",
-        )
+        return []
 
     return drone_updates
 
@@ -175,6 +163,7 @@ async def drone_update(drone_id:int,
             detail="Invalid drone",
         )
 
+    #timestamp = datetime.fromtimestamp(unixtimestamp)
     success = create_drone_update(
         drone_id,
         timestamp,
@@ -199,8 +188,9 @@ async def drone_event(
     current_drone_token: str,
     file_raw: UploadFile,
     file_predicted:UploadFile,
+    timestamp: datetime,
     csv_file_path: str | None = None,
-    timestamp: datetime | None = None):
+    ):
     """Api call to recieve events form drones
 
     Args:
@@ -221,6 +211,7 @@ async def drone_event(
     event_location = os.getenv("EVENT_PATH")
     if not os.path.exists(event_location):
         os.makedirs(event_location)
+
 
     sub_folder = str(timestamp).replace(" ", "")
     sub_path = os.path.join(event_location, sub_folder)
@@ -245,6 +236,64 @@ async def drone_event(
                             confidence,
                             sub_path,
                             csv_file_path)
+
+    return {"location": sub_path}
+
+@router.post("/drones/send-events/")
+async def drone_events(events: List[DroneEvent], files: UploadFile, token: str):
+    """Api call to recieve multiple events from one drone
+
+    Args:
+        event (DroneEvent): Event from the drone
+        file (UploadFile): Associated image file
+        current_drone (Drone, optional): Drone to use. Defaults to Depends(get_current_drone).
+
+    Returns:
+        dict: response
+    """
+    try:
+        file_raw = files[0]
+        file_predicted = files[1]
+    except IndexError:
+        raise HTTPException(
+            status_code=status.HTTP_406_NOT_ACCEPTABLE,
+            detail="Invalid number of files",
+        )
+
+    for event in events:
+        if not await validate_token(token):
+            raise HTTPException(
+                status_code=status.HTTP_406_NOT_ACCEPTABLE,
+                detail="Invalid drone",
+            )
+
+        event_location = os.getenv("EVENT_PATH")
+        if not os.path.exists(event_location):
+            os.makedirs(event_location)
+
+        sub_folder = str(event.timestamp)
+        sub_path = os.path.join(event_location, sub_folder)
+        if not os.path.exists(sub_path):
+            os.makedirs(sub_path)
+        else:
+            return {"location": sub_path}
+
+        raw_file_location = f"{sub_path}/raw.jpg"
+        with open(raw_file_location, "wb+") as file_object:
+            file_object.write(file_raw.file.read())
+
+        predicted_file_location = f"{sub_path}/predicted.jpg"
+        with open(predicted_file_location, "wb+") as file_object:
+            file_object.write(file_predicted.file.read())
+
+        create_drone_event_entry(event.drone_id,
+                                event.timestamp,
+                                event.lon,
+                                event.lat,
+                                event.event_type,
+                                event.confidence,
+                                sub_path,
+                                event.csv_file_path)
 
     return {"location": sub_path}
 

@@ -18,7 +18,8 @@ name         text NOT NULL ,
 description text,
 PRIMARY KEY (id)
 );
-CREATE UNIQUE INDEX IF NOT EXISTS territory_AK ON territories (name,orga_id);'''
+CREATE UNIQUE INDEX IF NOT EXISTS territory_AK ON territories (name,orga_id);
+CREATE INDEX IF NOT EXISTS territory_AK_2 ON territories (orga_id);'''
 # unique index on name and orga_id, so that no two territories
 # with the same name can be created in the same organization.
 
@@ -43,14 +44,18 @@ territories.description,
 AsGeoJSON(GUnion(area)) as oarea,
 X(ST_Centroid(GUnion(area)))as lon,
 Y(ST_Centroid(GUnion(area)))as lat,
-MAX(drone_data.timestamp),
+newdrone_data.ts,
 COUNT(DISTINCT drone_id),
 COUNT(DISTINCT territory_zones.zone_id)
 from zones
-JOIN territory_zones 
-ON zones.id = territory_zones.zone_id
+JOIN territory_zones ON zones.id = territory_zones.zone_id
 JOIN territories ON territories.id = territory_zones.territory_id
-LEFT JOIN drone_data ON ST_Intersects(drone_data.coordinates, area)
+LEFT OUTER JOIN (
+        SELECT coordinates, MAX(timestamp) as ts, drone_id
+        from drone_data
+        group by drone_data.drone_id
+    ) AS newdrone_data
+ON ST_Intersects(newdrone_data.coordinates, area)
 {}
 ;"""
 
@@ -61,7 +66,6 @@ from zones
 JOIN territory_zones 
 ON zones.id = territory_zones.zone_id
 JOIN territories ON territories.id = territory_zones.territory_id
-LEFT JOIN drone_data ON ST_Intersects(drone_data.coordinates, area)
 WHERE territories.orga_id = ?
 ;"""
 
@@ -166,9 +170,9 @@ def get_obj_from_fetched(fetched_territory: tuple) -> TerritoryWithZones:
         try:
             ai_firerisk_enum = drone_events_table.calculate_firerisk(events)[0]
         except IndexError:
-            ai_firerisk_enum = FireRisk(1)
+            ai_firerisk_enum = FireRisk(0)
     else:
-        ai_firerisk_enum = FireRisk(1)
+        ai_firerisk_enum = FireRisk(0)
 
     zone_count = fetched_territory[9]
 

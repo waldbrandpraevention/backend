@@ -10,3 +10,4 @@ pillow==9.1.0
 numpy==1.22.3
 shapely==2.0.1
 msgspec
+aiohttp

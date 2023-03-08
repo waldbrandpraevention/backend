@@ -73,16 +73,16 @@ class UserWithSensitiveInfo(User):
 
 class FireRisk(Enum):
     """Firerisk class with the following values:
-    1: very low,
-    2: low,
-    3: middle,
-    4: heigh,
-    5: very heigh."""
-    VERY_LOW = 1
-    LOW = 2
-    MIDDLE = 3
-    HEIGH = 4
-    VERY_HEIGH = 5
+    0: very low,
+    1: low,
+    2: middle,
+    3: heigh,
+    4: very heigh."""
+    VERY_LOW = 0
+    LOW = 1
+    MIDDLE = 2
+    HEIGH = 3
+    VERY_HEIGH = 4
 
 class Allert(BaseModel):
     """ Allert class.  """
