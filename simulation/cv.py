@@ -2,7 +2,6 @@
 
 import os
 import time
-from typing import Tuple
 import tensorflow as tf
 import numpy as np
 from PIL import Image
@@ -22,14 +21,11 @@ class Result():
 
 def load_image_into_numpy_array(path):
     """Load an image from file into a numpy array.
-
     Puts image into numpy array to feed into tensorflow graph.
     Note that by convention we put it into a numpy array with shape
     (height, width, channels), where channels=3 for RGB.
-
     Args:
       path: the file path to the image
-
     Returns:
       uint8 numpy array with shape (img_height, img_width, 3)
     """
@@ -57,15 +53,12 @@ print(f'Done! Took {elapsed_time} seconds')
 IMG_PATH = "./assets/raw"
 directory = os.fsencode(IMG_PATH)
 
-def ai_prediction(path: str) -> Tuple[Result, JpegImageFile]:
+def ai_prediction(path: str):
     """Generates an ai prediction using computer vision and object detection
-
     Args:
         path (str): path to the image
-
     Returns:
         Result: result
-
     """
     #for file in os.listdir(directory):
 
@@ -131,8 +124,9 @@ def ai_prediction(path: str) -> Tuple[Result, JpegImageFile]:
         result = Result()
         result.event_type = classes[i]
         result.confidence = int(percantages[i] * 100 + 0.5)
+        result.picture = image
         results.append(result)
-    return results, image
+    return results
 
 
 #ai_prediction("./assets/raw/111171_waldbrand-longEdge512.jpg")
