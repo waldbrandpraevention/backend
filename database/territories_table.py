@@ -18,7 +18,7 @@ name         text NOT NULL ,
 description text,
 PRIMARY KEY (id)
 );
-CREATE UNIQUE INDEX IF NOT EXISTS territory_AK ON territories (name,orga_id)
+CREATE UNIQUE INDEX IF NOT EXISTS territory_AK ON territories (name,orga_id);
 CREATE INDEX IF NOT EXISTS territory_AK_2 ON territories (orga_id);'''
 # unique index on name and orga_id, so that no two territories
 # with the same name can be created in the same organization.

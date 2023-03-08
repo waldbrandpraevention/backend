@@ -8,8 +8,14 @@ from api.routers import zones,users,drones
 from api.routers.territories import read_territories,read_territory
 from database import drone_events_table, zones_table, drone_updates_table, drone_updates_table
 from database import territories_table
+from database.database import create_table
+from database.drones_table import CREATE_DRONES_TABLE
+from database.incidents import CREATE_INCIDENTS_TABLE
+from database.organizations_table import CREATE_ORGANISATIONS_TABLE
 from database.spatia import spatiageostr_to_geojson
-from database.territories_table import get_orga_area
+from database.territories_table import CREATE_TERRITORY_TABLE, get_orga_area
+from database.territory_zones_table import CREATE_TERRITORYZONES_TABLE
+from database.users_table import CREATE_USER_TABLE
 
 def test_improvements():
     """test.
@@ -35,6 +41,16 @@ def test_improvements():
     print(datetime.datetime.now())
     cProfile.run('test_improvements()',sort='tottime')
 
+def test_createstatements():
+    create_table(CREATE_ORGANISATIONS_TABLE)
+    create_table(CREATE_USER_TABLE)
+    create_table(zones_table.CREATE_ZONE_TABLE)
+    create_table(CREATE_DRONES_TABLE)
+    create_table(drone_updates_table.CREATE_DRONE_DATA_TABLE)
+    create_table(drone_events_table.CREATE_DRONE_EVENT_TABLE)
+    create_table(CREATE_TERRITORY_TABLE)
+    create_table(CREATE_TERRITORYZONES_TABLE)
+    create_table(CREATE_INCIDENTS_TABLE)
 
 @pytest.mark.asyncio
 async def test_zones():
