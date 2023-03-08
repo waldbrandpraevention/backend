@@ -224,8 +224,8 @@ async def drone_event(
     if not os.path.exists(event_location):
         os.makedirs(event_location)
 
-    timestamp = datetime.fromtimestamp(unixtimestamp)
-    sub_folder = str(timestamp)
+
+    sub_folder = str(timestamp).replace(" ", "")
     sub_path = os.path.join(event_location, sub_folder)
     if not os.path.exists(sub_path):
         os.makedirs(sub_path)
@@ -396,20 +396,31 @@ async def get_image_raw(event_id: int,
     Returns:
         FileResponse: image
     """
-    try:
-        curr_drone_event = get_event_by_id(event_id)
-        if get_zone_by_id(drone_event.zone_id, current_user.organization.id) is None:
-            raise HTTPException(
-                status_code=status.HTTP_406_NOT_ACCEPTABLE,
-                detail="User is not allowed to access this event. The zone of the event is most likly not part of your organization.",
-            )
-        path = os.path.join(curr_drone_event.picture_path, "raw.jpg")
-        return path
-    except Exception as err:
+    curr_drone_event = get_event_by_id(event_id)
+    print(curr_drone_event)
+    if curr_drone_event is None:
         raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="API call was recieved but something went wrong internally",
-            ) from err
+            status_code=status.HTTP_406_NOT_ACCEPTABLE,
+            detail="Event does not exist in the database",
+        )
+    if await get_zone_by_id(curr_drone_event.zone_id, current_user.organization.id) is None:
+        raise HTTPException(
+            status_code=status.HTTP_406_NOT_ACCEPTABLE,
+            detail="User is not allowed to access this event. The zone of the event is most likly not part of your organization.",
+        )
+    path = os.path.join(curr_drone_event.picture_path, "raw.jpg").strip("/")
+    if os.path.exists(path):
+        return path
+
+    path = path.strip("/")
+    if not os.path.exists(path):
+        return path
+
+    raise HTTPException(
+        status_code=status.HTTP_406_NOT_ACCEPTABLE,
+        detail=f"Event exists but there are no images for it. Path = {path}",
+    )
+
 
 @router.get("/drones/get-event-image-predicted/", response_class=FileResponse)
 async def get_image_predicted(event_id: int,
@@ -423,17 +434,28 @@ async def get_image_predicted(event_id: int,
     Returns:
         FileResponse: image
     """
-    try:
-        curr_drone_event = get_event_by_id(event_id)
-        if get_zone_by_id(drone_event.zone_id, current_user.organization.id) is None:
-            raise HTTPException(
-                status_code=status.HTTP_406_NOT_ACCEPTABLE,
-                detail="User is not allowed to access this event. The zone of the event is most likly not part of your organization.",
-            )
-        path = os.path.join(curr_drone_event.picture_path, "raw.jpg")
-        return path
-    except Exception as err:
+
+    curr_drone_event = get_event_by_id(event_id)
+    print(curr_drone_event)
+    if curr_drone_event is None:
         raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="API call was recieved but something went wrong internally",
-            ) from err
+            status_code=status.HTTP_406_NOT_ACCEPTABLE,
+            detail="Event does not exist in the database",
+        )
+    if await get_zone_by_id(curr_drone_event.zone_id, current_user.organization.id) is None:
+        raise HTTPException(
+            status_code=status.HTTP_406_NOT_ACCEPTABLE,
+            detail="User is not allowed to access this event. The zone of the event is most likly not part of your organization.",
+        )
+    path = os.path.join(curr_drone_event.picture_path, "predicted.jpg")
+    if os.path.exists(path):
+        return path
+
+    path = path.strip("/")
+    if not os.path.exists(path):
+        return path
+
+    raise HTTPException(
+        status_code=status.HTTP_406_NOT_ACCEPTABLE,
+        detail=f"Event exists but there are no images for it. Path = {path}",
+    )

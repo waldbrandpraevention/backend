@@ -102,7 +102,7 @@ def insert_demo_events(long: float, lat: float, droneid = 1, ignore_existing: bo
                 latitude=lat,
                 event_type=event_rand,
                 confidence=confidence,
-                picture_path=f'demo/path/{i}',
+                picture_path='/data/events/1',
                 csv_file_path=f'demo/path/{i}'
             )
             num_inserted += 1

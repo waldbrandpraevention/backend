@@ -140,7 +140,8 @@ def main():
     #create_drones()
     load_zones_from_geojson()
 
-    if bool(os.getenv("RUN_SIMULATION")):
+    run_sim = os.getenv("RUN_SIMULATION")
+    if run_sim == 'True':
         try:
             simulation_thread = Thread(target = start_simulation)
             simulation_thread.start()
