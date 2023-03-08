@@ -10,7 +10,7 @@ from validation import (validate_email,
                         validate_organization,
                         validate_password,
                         validate_permission)
-from .classes import DroneEvent, Permission, User, UserWithSensitiveInfo, Allert
+from .classes import DroneEvent, Permission, User, UserWithSensitiveInfo, Alert
 from .authentication import get_password_hash, oauth2_scheme, verify_password, get_email_from_token
 
 def get_user(email: str) -> UserWithSensitiveInfo | None:
@@ -105,7 +105,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> UserWithSensi
     #     raise email_verification_exception
     return user
 
-async def get_user_allerts(user: User) -> List[Allert]:
+async def get_user_alerts(user: User) -> List[Alert]:
     """
     ONLY FOR TESTING PURPOSES
     fetches all events from the last 24 hours and generates a string for each event.
@@ -114,7 +114,7 @@ async def get_user_allerts(user: User) -> List[Allert]:
         user (User): user of which organization the events should be fetched.
 
     Returns:
-        List[Allert]: list of allerts.
+        List[Alert]: list of alert.
     """
     events = await get_drone_events(user.organization.id,
                            datetime.utcnow() - timedelta(days=1)
@@ -122,12 +122,12 @@ async def get_user_allerts(user: User) -> List[Allert]:
     if events is None:
         return []
     
-    allerts = []
+    alert = []
     for event in events:
         content = await generate_event_string(event)
-        allerts.append(Allert(content=content, date=event.timestamp))
+        alert.append(Alert(content=content, date=event.timestamp))
 
-    return allerts
+    return alert
 
 async def generate_event_string(event:DroneEvent):
     """

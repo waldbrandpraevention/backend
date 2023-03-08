@@ -76,16 +76,16 @@ class FireRisk(Enum):
     0: very low,
     1: low,
     2: middle,
-    3: heigh,
-    4: very heigh."""
+    3: high,
+    4: very high."""
     VERY_LOW = 0
     LOW = 1
     MIDDLE = 2
-    HEIGH = 3
-    VERY_HEIGH = 4
+    HIGH = 3
+    VERY_HIGH = 4
 
-class Allert(BaseModel):
-    """ Allert class.  """
+class Alert(BaseModel):
+    """ Alert class.  """
     content: str | None = None
     date: datetime | None = None
 
