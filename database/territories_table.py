@@ -50,7 +50,7 @@ COUNT(DISTINCT territory_zones.zone_id)
 from zones
 JOIN territory_zones ON zones.id = territory_zones.zone_id
 JOIN territories ON territories.id = territory_zones.territory_id
-LEFT OUTER JOIN ( 
+LEFT OUTER JOIN (
         SELECT coordinates, MAX(timestamp) as ts, drone_id
         from drone_data
         group by drone_data.drone_id
