@@ -24,7 +24,7 @@ from ..dependencies.users import (
     update_user as update_user_func,
     get_current_user,
     authenticate_user,
-    get_user_allerts,
+    get_user_alerts,
     get_user
     )
 
@@ -69,16 +69,16 @@ async def delete_users( user_id:int,
     return {"message": "couldnt create user."}
 
 @router.get("/users/me/alerts/", status_code=status.HTTP_200_OK)
-async def read_users_me_allerts(current_user: User = Depends(get_current_user)):
-    """API call to get the curret users allerts
+async def read_users_me_alerts(current_user: User = Depends(get_current_user)):
+    """API call to get the curret users alert
 
     Args:
         current_user (User, optional): User. Defaults to User that is logged in.
 
     Returns:
-        str[]: List of allerts
+        str[]: List of alert
     """
-    return await get_user_allerts(current_user)
+    return await get_user_alerts(current_user)
 
 @router.get("/users/all/", response_model=List[User])
 async def read_users(current_user: User = Depends(get_current_user)):

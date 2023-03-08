@@ -258,30 +258,26 @@ def calculate_firerisk(events: List[DroneEvent]) -> tuple[FireRisk,FireRisk,Fire
                 firerisk = event.confidence
 
     try:
-        calculated_enum = round(smokerisk/100 * 5)
-        if calculated_enum > 5:
-            calculated_enum = 5
-        elif calculated_enum < 1:
-            calculated_enum = 1
+        calculated_enum = round(smokerisk/100 * 4)
+        if calculated_enum > 4:
+            calculated_enum = 4
         smoke_risk = FireRisk(calculated_enum)
     except TypeError:
         smoke_risk = None
 
     try:
-        calculated_enum = round(firerisk/100 * 5)
-        if calculated_enum > 5:
-            calculated_enum = 5
-        elif calculated_enum < 1:
-            calculated_enum = 1
+        calculated_enum = round(firerisk/100 * 4)
+        if calculated_enum > 4:
+            calculated_enum = 4
         fire_risk = FireRisk(calculated_enum)
     except TypeError:
         fire_risk = None
 
     if smokerisk > 90 or firerisk > 90:
-        return FireRisk.VERY_HEIGH, fire_risk, smoke_risk
+        return FireRisk.VERY_HIGH, fire_risk, smoke_risk
 
     if smokerisk > 80 or firerisk > 70:
-        return FireRisk.HEIGH, fire_risk, smoke_risk
+        return FireRisk.HIGH, fire_risk, smoke_risk
 
     if smokerisk > 60 or firerisk > 30:
         return FireRisk.MIDDLE, fire_risk, smoke_risk
