@@ -15,19 +15,13 @@ async def read_territories(current_user: User = Depends(get_current_user)):
     Args:
         current_user (User, optional): User. Defaults to User that is logged in.
 
-    Raises:
-        HTTPException: _description_
-
     Returns:
-        _type_: _description_
+        List[TerritoryWithZones]: List of territories linked to the current_user's orga.
     """
 
     territores = await get_territories(current_user.organization.id)
     if territores is None or len(territores) == 0:
-        raise HTTPException(
-            status_code=status.HTTP_204_NO_CONTENT,
-            detail="Your Organization has no territories linked to it",
-        )
+        return []
     return territores
 
 @router.get("/territories/", status_code=status.HTTP_200_OK, response_model=TerritoryWithZones)

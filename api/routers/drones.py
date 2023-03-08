@@ -55,9 +55,6 @@ async def read_drone_events(drone_id: int=None,
         minutes (int, optional): minutes before now. Defaults to 0.
         current_user (User, optional): User. Defaults to User that is logged in.
 
-    Raises:
-        HTTPException: if no events are found.
-
     Returns:
         List[DroneEvent]: List of drone events.
     """
@@ -69,10 +66,7 @@ async def read_drone_events(drone_id: int=None,
                                            zone_id=zone_id)
 
     if fetched_drone_events is None:
-        raise HTTPException(
-            status_code=status.HTTP_204_NO_CONTENT,
-            detail="Couldnt find any events.",
-        )
+        return []
 
     return fetched_drone_events
 
@@ -96,9 +90,6 @@ async def read_drone_route( drone_id: int=None,
         minutes (int, optional): minutes before now. Defaults to 0.
         current_user (User, optional): User. Defaults to User that is logged in.
 
-    Raises:
-        HTTPException: if no events are found.
-
     Returns:
         List[DroneUpdateWithRoute]: List of drones updates with their route.
     """
@@ -109,10 +100,7 @@ async def read_drone_route( drone_id: int=None,
                                            drone_id=drone_id,
                                            zone_id=zone_id)
     if drone_updates is None:
-        raise HTTPException(
-            status_code=status.HTTP_204_NO_CONTENT,
-            detail="Couldnt find any updates.",
-        )
+        return []
 
     return drone_updates
 
