@@ -151,7 +151,7 @@ async def read_drones_count(
 
 @router.post("/drones/send-update/", status_code=status.HTTP_200_OK)
 async def drone_update(drone_id:int,
-                        unixtimestamp:float,
+                        timestamp:datetime,
                         lon:float,
                         lat:float,
                         flight_range:float|None,
@@ -175,7 +175,7 @@ async def drone_update(drone_id:int,
             detail="Invalid drone",
         )
 
-    timestamp = datetime.fromtimestamp(unixtimestamp)
+    #timestamp = datetime.fromtimestamp(unixtimestamp)
     success = create_drone_update(
         drone_id,
         timestamp,
@@ -200,7 +200,7 @@ async def drone_event(
     current_drone_token: str,
     file_raw: UploadFile,
     file_predicted:UploadFile,
-    unixtimestamp: float,
+    timestamp: datetime,
     csv_file_path: str | None = None,
     ):
     """Api call to recieve events form drones
