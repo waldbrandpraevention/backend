@@ -25,7 +25,7 @@ async def read_territories(current_user: User = Depends(get_current_user)):
     territores = await get_territories(current_user.organization.id)
     if territores is None or len(territores) == 0:
         raise HTTPException(
-            status_code=status.HTTP_406_NOT_ACCEPTABLE,
+            status_code=status.HTTP_204_NO_CONTENT,
             detail="Your Organization has no territories linked to it",
         )
     return territores

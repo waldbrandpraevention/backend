@@ -30,6 +30,7 @@ FOREIGN KEY ({DRONE_ID}) REFERENCES drones (id)
 );
 
 CREATE INDEX drone_event_FK_1 ON drone_event ({DRONE_ID});
+CREATE INDEX drone_event_FK_2 ON drone_event ({TIMESTAMP});
 SELECT AddGeometryColumn('drone_event', '{COORDINATES}', 4326, 'POINT', 'XY');'''
 
 CREATE_ENTRY = '''
@@ -40,6 +41,8 @@ GET_ENTRY = '''
 SELECT drone_event.id, drone_id,timestamp, X(coordinates), Y(coordinates),event_type,confidence,picture_path,csv_file_path, zones.id
 FROM drone_event
 LEFT JOIN zones ON ST_Intersects(zones.area, coordinates)
+JOIN territory_zones ON zones.id = territory_zones.zone_id
+JOIN territories ON territories.id = territory_zones.territory_id
 {}
 ORDER BY timestamp DESC;'''
 
@@ -156,6 +159,8 @@ def get_event_by_id(event_id: int) -> DroneEvent | None:
     return get_obj_from_fetched(fetched_event)
 
 def get_drone_event(drone_id: int = None,
+                    zone_id: int = None,
+                    org_id: int = None,
                     polygon: str=None,
                     after: datetime.datetime = None,
                     before: datetime.datetime = None
@@ -171,7 +176,7 @@ def get_drone_event(drone_id: int = None,
     Returns:
         List[DroneData]: List with the fetched data.
     """
-    sql_arr, tuple_arr = drone_updates_table.gernerate_drone_sql(polygon, drone_id, after, before)
+    sql_arr, tuple_arr = drone_updates_table.gernerate_drone_sql(polygon,org_id ,zone_id,drone_id, after, before)
 
     sql = db.add_where_clause(GET_ENTRY, sql_arr)
 

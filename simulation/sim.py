@@ -36,7 +36,6 @@ def get_territories_from_user(token):
 
 def create_new_drone(token,territory):
     """creates a new drone
-
     Returns:
         token + drone
     """
