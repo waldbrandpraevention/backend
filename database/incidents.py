@@ -40,7 +40,7 @@ def create_incident(drone_id: int, location: str, alarm_type: str, notes: str, t
 def get_last_incidents(amount: int) -> List[Incident]:
     """returns the last x incidents
     Args:
-        amount (int): number of incidents 
+        amount (int): number of incidents
 
     Returns:
         List[Incident]: list of incidents.

@@ -1,5 +1,5 @@
 """DB functions for orga teritories.
-    Here you can link zones to territories, which are linked to organizations. 
+    Here you can link zones to territories, which are linked to organizations.
 """
 from typing import List
 

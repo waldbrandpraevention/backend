@@ -125,7 +125,12 @@ def get_drone_updates(  polygon:str = None,
         None: if no data was found.
     """
 
-    sql_arr, tuple_arr = gernerate_drone_sql(polygon, orga_id, zone_id,drone_id, after, before)
+    sql_arr, tuple_arr = gernerate_drone_sql(polygon,
+                                             orga_id,
+                                             zone_id,
+                                             drone_id,
+                                             after,
+                                             before)
 
     sql = db.add_where_clause(GET_ENTRY, sql_arr)
 
@@ -328,7 +333,6 @@ def get_routeobj_from_fetched(fetched_dronedataarr) -> List[DroneUpdateWithRoute
 
     drones_arr = []
     route_arr = []
-    #fetched_dronedataarr.sort(key=lambda x: x[1])#TODO sql sort
     drone_update = get_obj_from_fetched(fetched_dronedataarr[0])
     for fetched_dronedata in fetched_dronedataarr:
         if fetched_match_class(DroneUpdate,fetched_dronedata):

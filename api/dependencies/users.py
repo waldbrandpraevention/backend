@@ -121,7 +121,7 @@ async def get_user_alerts(user: User) -> List[Alert]:
     )
     if events is None:
         return []
-    
+
     alert = []
     for event in events:
         content = await generate_event_string(event)
