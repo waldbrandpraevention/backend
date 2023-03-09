@@ -134,12 +134,13 @@ def load_zones_from_geojson():
         if os.getenv("DEMO_DISTRICT") is not None \
                 and os.getenv("ADMIN_ORGANIZATION") is not None:
             fetched_zones = zones_table.get_zone_of_district(os.getenv("DEMO_DISTRICT"))
+            create_territory_link_zones(1,os.getenv("DEMO_DISTRICT_TWO"),fetched_zones)
 
             if os.getenv("DEMO_DISTRICT_TWO") is not None:
-                fetched_zones_two = zones_table.get_zone_of_district(os.getenv("DEMO_DISTRICT_TWO"))
-                fetched_zones.extend(fetched_zones_two)
+                fetched_zones = zones_table.get_zone_of_district(os.getenv("DEMO_DISTRICT_TWO"))
+                create_territory_link_zones(1,os.getenv("DEMO_DISTRICT_TWO"),fetched_zones)
 
-            create_territory_link_zones(1,os.getenv("DEMO_DISTRICT_TWO"),fetched_zones)
+            
 
             if os.getenv("DEMO_DISTRICT_THREE") is not None \
                 and os.getenv("ADMIN_ORGANIZATION_TWO") is not None:
