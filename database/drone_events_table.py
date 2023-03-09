@@ -30,7 +30,7 @@ FOREIGN KEY ({DRONE_ID}) REFERENCES drones (id)
 );
 
 CREATE INDEX drone_event_FK_1 ON drone_event ({DRONE_ID});
-CREATE INDEX drone_event_FK_2 ON drone_event ({TIMESTAMP});
+CREATE INDEX drone_event_AK_1 ON drone_event ({TIMESTAMP});
 SELECT AddGeometryColumn('drone_event', '{COORDINATES}', 4326, 'POINT', 'XY');'''
 
 CREATE_ENTRY = '''

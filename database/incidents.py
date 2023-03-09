@@ -8,20 +8,21 @@ from api.dependencies.classes import Incident
 CREATE_INCIDENTS_TABLE = '''CREATE TABLE IF NOT EXISTS incidents
 (
 id          integer NOT NULL ,
-drone_name  text NOT NULL ,
+drone_id    integer NOT NULL ,
 location    text NOT NULL ,
 alarm_type  text NOT NULL,
 notes       text NOT NULL,
 timestamp   timestamp NOT NULL,
-PRIMARY KEY (id)
+PRIMARY KEY (id),
+FOREIGN KEY (drone_id) REFERENCES drones (id)
 );'''
 
-INSERT_INCIDENT= 'INSERT INTO incidents (drone_name, location, alarm_type, notes) VALUES (?,?,?,?);'
+INSERT_INCIDENT= 'INSERT INTO incidents (drone_id, location, alarm_type, notes) VALUES (?,?,?,?);'
 
 GET_INCIDENT = '''SELECT * FROM incidents
                     ORDER BY timestamp DESC LIMIT {};'''
 
-def create_incident(drone_name: str, location: str, alarm_type: str, notes: str, timestamp: datetime.datetime) -> int | None:
+def create_incident(drone_id: int, location: str, alarm_type: str, notes: str, timestamp: datetime.datetime) -> int | None:
     """create an incident.
 
     Args:
@@ -34,7 +35,7 @@ def create_incident(drone_name: str, location: str, alarm_type: str, notes: str,
     Returns:
         int | None: Id of the inserted entry, None if an error occurs.
     """
-    return db.insert(INSERT_INCIDENT, (drone_name, location, alarm_type, notes, timestamp))
+    return db.insert(INSERT_INCIDENT, (drone_id, location, alarm_type, notes, timestamp))
 
 def get_last_incidents(amount: int) -> List[Incident]:
     """returns the last x incidents
@@ -73,7 +74,7 @@ def get_obj_from_fetched(fetched_incident: tuple) -> Incident:
         try:
             incident_obj = Incident(
                 id = fetched_incident[0],
-                drone_name = fetched_incident[1],
+                drone_id = fetched_incident[1],
                 location = fetched_incident[2],
                 alarm_type = fetched_incident[3],
                 notes = fetched_incident[4],
