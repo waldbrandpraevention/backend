@@ -47,9 +47,9 @@ Y(ST_Centroid(GUnion(area)))as lat,
 newdrone_data.ts,
 COUNT(DISTINCT drone_id),
 COUNT(DISTINCT territory_zones.zone_id)
-from zones
-JOIN territory_zones ON zones.id = territory_zones.zone_id
-JOIN territories ON territories.id = territory_zones.territory_id
+from territories
+JOIN territory_zones ON territory_zones.territory_id = territories.id
+JOIN zones ON territory_zones.zone_id = zones.id
 LEFT OUTER JOIN (
         SELECT coordinates, MAX(timestamp) as ts, drone_id
         from drone_data
@@ -57,7 +57,7 @@ LEFT OUTER JOIN (
     ) AS newdrone_data
 ON ST_Intersects(newdrone_data.coordinates, area)
 {}
-;"""
+group by territories.id;"""
 
 GET_ORGA_AREA = """
 SELECT 
