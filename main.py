@@ -57,8 +57,13 @@ def create_default_user():
                 organame=os.getenv("ADMIN_ORGANIZATION"),
                 orga_abb=os.getenv("ADMIN_ORGANIZATION")
                 )
+            organization_two = organizations_table.create_orga(
+                organame='KIWA Karlsruhe',
+                orga_abb='KIKA'
+                )
         except sqlite3.IntegrityError:
             organization = organizations_table.get_orga(os.getenv("ADMIN_ORGANIZATION"))
+            organization_two = organizations_table.get_orga('KIWA Karlsruhe')
         hashed_pw = get_password_hash(os.getenv("ADMIN_PASSWORD"))
         user = UserWithSensitiveInfo(email=os.getenv("ADMIN_MAIL"),
                                      first_name="Admin",
@@ -68,8 +73,17 @@ def create_default_user():
                                      permission=2,
                                      disabled=0,
                                      email_verified=1)
+        user_two = UserWithSensitiveInfo(email='ka@kiwa.tech',
+                                     first_name="Admin",
+                                     last_name="Admin",
+                                     hashed_password=hashed_pw,
+                                     organization=organization_two,
+                                     permission=2,
+                                     disabled=0,
+                                     email_verified=1)
         try:
             users_table.create_user(user)
+            users_table.create_user(user_two)
         except sqlite3.IntegrityError:
             pass
         print("user done")
@@ -107,8 +121,12 @@ def load_zones_from_geojson():
         if os.getenv("DEMO_DISTRICT") is not None \
                 and os.getenv("ADMIN_ORGANIZATION") is not None:
             fetched_zones = zones_table.get_zone_of_district(os.getenv("DEMO_DISTRICT"))
+            fetched_zones_two = zones_table.get_zone_of_district('Stadtkreis Karlsruhe')
+            fetched_zones_three = zones_table.get_zone_of_district('Landkreis Karlsruhe')
+            fetched_zones_two.extend(fetched_zones_three)
             try:
                 create_territory(orga_id=1,name=os.getenv("DEMO_DISTRICT"))
+                create_territory(orga_id=2,name='Karlsruhe')
             except sqlite3.IntegrityError:
                 print('couldnt create territory')
 
@@ -117,6 +135,12 @@ def load_zones_from_geojson():
                     link_territory_zone(1,zone.id)
                 except sqlite3.IntegrityError:
                     print(f'couldnt link {zone.name} to the territory')
+            for zone in fetched_zones_two:
+                try:
+                    link_territory_zone(2,zone.id)
+                except sqlite3.IntegrityError:
+                    print(f'couldnt link {zone.name} to the territory')
+
 
             print("zones linked")
 
