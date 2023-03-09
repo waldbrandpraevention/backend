@@ -141,7 +141,7 @@ def load_zones_from_geojson():
 
             create_territory_link_zones(1,os.getenv("DEMO_DISTRICT_TWO"),fetched_zones)
 
-            if os.getenv("DEMO_DISTRICT_TWO") is not None \
+            if os.getenv("DEMO_DISTRICT_THREE") is not None \
                 and os.getenv("ADMIN_ORGANIZATION_TWO") is not None:
                 fetched_zones = zones_table.get_zone_of_district(os.getenv("DEMO_DISTRICT_THREE"))
 
@@ -165,7 +165,7 @@ def create_territory_link_zones(orga_id,name,fetched_zones:List[Zone]):
 
     for zone in fetched_zones:
         try:
-            link_territory_zone(1,zone.id)
+            link_territory_zone(orga_id,zone.id)
         except sqlite3.IntegrityError:
             print(f'couldnt link {zone.name} to the territory')
 
