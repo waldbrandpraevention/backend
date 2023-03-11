@@ -7,7 +7,7 @@ from api.dependencies.classes import Incident
 
 CREATE_INCIDENTS_TABLE = '''CREATE TABLE IF NOT EXISTS incidents
 (
-id          integer NOT NULL ,
+id       integer NOT NULL ,
 drone_name  text NOT NULL ,
 location    text NOT NULL ,
 alarm_type  text NOT NULL,
@@ -16,10 +16,12 @@ timestamp   timestamp NOT NULL,
 PRIMARY KEY (id)
 );'''
 
-INSERT_INCIDENT= 'INSERT INTO incidents (drone_name, location, alarm_type, notes) VALUES (?,?,?,?);'
+INSERT_INCIDENT= 'INSERT INTO incidents (drone_name, location, alarm_type, notes, timestamp) VALUES (?,?,?,?,?);'
 
 GET_INCIDENT = '''SELECT * FROM incidents
                     ORDER BY timestamp DESC LIMIT {};'''
+
+GET_ALL_INCIDENT = '''SELECT * FROM incidents;'''
 
 def create_incident(drone_name: str, location: str, alarm_type: str, notes: str, timestamp: datetime.datetime) -> int | None:
     """create an incident.
@@ -60,6 +62,28 @@ def get_last_incidents(amount: int) -> List[Incident]:
 
     return incidents
 
+def get_all_incidents() -> List[Incident]:
+    """returns the last x incidents
+    Args:
+        amount (int): number of incidents 
+
+    Returns:
+        List[Incident]: list of incidents.
+    """
+
+    incidents = []
+    fetched_data = db.fetch_all(GET_ALL_INCIDENT)
+
+    if fetched_data is None:
+        return incidents
+
+    for incident_data in fetched_data:
+        incident_obj = get_obj_from_fetched(incident_data)
+        if incident_obj:
+            incidents.append(incident_obj)
+
+    return incidents
+
 def get_obj_from_fetched(fetched_incident: tuple) -> Incident:
     """get a Incident object from a fetched tuple.
 
@@ -69,7 +93,7 @@ def get_obj_from_fetched(fetched_incident: tuple) -> Incident:
     Returns:
         Incident: the territory object.
     """
-    if fetched_match_class(Incident,fetched_incident,1):
+    if fetched_match_class(Incident,fetched_incident,0):
         try:
             incident_obj = Incident(
                 id = fetched_incident[0],
