@@ -394,12 +394,12 @@ async def get_image_raw(event_id: int,
             status_code=status.HTTP_406_NOT_ACCEPTABLE,
             detail="User is not allowed to access this event. The zone of the event is most likly not part of your organization.",
         )
-    path = os.path.join(curr_drone_event.picture_path, "raw.jpg").strip("/")
+    path = os.path.join(curr_drone_event.picture_path, "raw.jpg")
     if os.path.exists(path):
         return path
 
     path = path.strip("/")
-    if not os.path.exists(path):
+    if os.path.exists(path):
         return path
 
     raise HTTPException(
@@ -438,7 +438,7 @@ async def get_image_predicted(event_id: int,
         return path
 
     path = path.strip("/")
-    if not os.path.exists(path):
+    if os.path.exists(path):
         return path
 
     raise HTTPException(
