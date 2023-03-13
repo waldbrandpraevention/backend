@@ -145,7 +145,7 @@ def main():
         try:
             simulation_thread = Thread(target = simulate)
             simulation_thread.start()
-        except Exception as err:
+        except Exception as err: # pylint: disable=broad-exception-caught
             print(err)
 
 main()

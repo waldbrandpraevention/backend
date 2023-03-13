@@ -21,7 +21,7 @@ from database.mail_verif_table import (check_token,
                                        CREATE_MAIL_VERIFY_TABLE
                                        )
 from database.users_table import create_user,get_user,UsrAttributes, update_user
-import database.drones_table as drones_table
+from database import drones_table
 import database.drone_events_table as drones_event_table
 import database.drone_updates_table as drone_zone_data_table
 from database.organizations_table import OrgAttributes, create_orga, get_orga, update_orga

@@ -75,7 +75,6 @@ async def read_drone_events(drone_id: int=None,
             response_model=List[DroneUpdateWithRoute]
             )
 async def read_drone_route( drone_id: int=None,
-                            zone_id:int =None,
                             days:int =0,
                             hours:int =0,
                             minutes:int =0,
@@ -97,8 +96,7 @@ async def read_drone_route( drone_id: int=None,
     timestamp = drones.timestamp_helper(days,hours,minutes)
     drone_updates = await drones.get_drone_with_route(orga_id=current_user.organization.id,
                                            timestamp=timestamp,
-                                           drone_id=drone_id,
-                                           zone_id=zone_id)
+                                           drone_id=drone_id)
     if drone_updates is None:
         return []
 
@@ -174,8 +172,8 @@ async def drone_update(drone_id:int,
     )
     if success:
         return {"message": "success"}
-    else:
-        return {"message": "error"}
+
+    return {"message": "error"}
 
 
 @router.post("/drones/send-event/")
@@ -254,11 +252,11 @@ async def drone_events(events: List[DroneEvent], files: UploadFile, token: str):
     try:
         file_raw = files[0]
         file_predicted = files[1]
-    except IndexError:
+    except IndexError as err:
         raise HTTPException(
             status_code=status.HTTP_406_NOT_ACCEPTABLE,
             detail="Invalid number of files",
-        )
+        ) from err
 
     for event in events:
         if not await validate_token(token):

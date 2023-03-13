@@ -1,5 +1,8 @@
 [BASE]
 min-public-methods=0
+max-args = 11
+max-locals = 20
+max-branches = 20
 
 [MASTER]
 extension-pkg-whitelist=pydantic,fastapi
@@ -9,3 +12,6 @@ ignored-modules=object_detectien.utils
 
 [FORMAT]
 max-line-length=250
+
+[SIMILARITIES]
+min-similarity-lines=10

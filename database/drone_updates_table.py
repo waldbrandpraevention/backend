@@ -328,7 +328,7 @@ def get_routeobj_from_fetched(fetched_dronedataarr) -> List[DroneUpdateWithRoute
 
     drones_arr = []
     route_arr = []
-    #fetched_dronedataarr.sort(key=lambda x: x[1])#TODO sql sort
+
     drone_update = get_obj_from_fetched(fetched_dronedataarr[0])
     for fetched_dronedata in fetched_dronedataarr:
         if fetched_match_class(DroneUpdate,fetched_dronedata):

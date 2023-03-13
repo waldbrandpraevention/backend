@@ -19,6 +19,8 @@ SIMULATION_UPDATE_FREQUENCY = int(os.getenv("SIMULATION_UPDATE_FREQUENCY"))
 SIMULATION_DRONE_SPEED_MIN = float(os.getenv("SIMULATION_DRONE_SPEED_MIN"))
 SIMULATION_DRONE_SPEED_MAX = float(os.getenv("SIMULATION_DRONE_SPEED_MAX"))
 
+# pylint: disable=broad-exception-caught
+
 def login():
     """login for the simulation"""
     login_data = {"username": admin_mail, "password": admin_password}
@@ -68,6 +70,7 @@ def create_new_drone(token,territory):
     return simulation_drone
 
 def generate_drones():
+    """function for generating drones"""
     token = ''
     territories = None
     drone_amounts = []
@@ -177,7 +180,7 @@ def send_event(drone_entry):
             img_mem = BytesIO()
             result.picture.save(img_mem, 'JPEG', quality=70)
             img_mem.seek(0)
-            files = {'file_raw': open(path, "rb"), 'file_predicted': img_mem}
+            files = {'file_raw': open(path, "rb"), 'file_predicted': img_mem} # pylint: disable=consider-using-with
             print("Sending POST request for event")
             header = {"accept": "application/json"}
             event_response = requests.post(URL + "/drones/send-event/", headers=header, params=event, files=files, timeout=10)
@@ -193,11 +196,12 @@ def is_in_poly(geo_json, lon, lat):
     if geo_json["type"] == "Feature":
         polygon = shape(geo_json['geometry'])
         return polygon.contains(new_point)
-    elif geo_json["type"] == "FeatureCollection":
+    if geo_json["type"] == "FeatureCollection":
         for feature in geo_json['features']:
             polygon = shape(feature['geometry'])
             if polygon.contains(new_point):
                 return True
+        return False
 
     return False
 
