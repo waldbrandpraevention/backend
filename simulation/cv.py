@@ -6,8 +6,8 @@ import tensorflow as tf
 import numpy as np
 from PIL import Image
 from PIL.JpegImagePlugin import JpegImageFile
-from object_detection.utils import label_map_util # pylint disable=E0401
-from object_detection.utils import visualization_utils as viz_utils # pylint disable=E0401
+from object_detection.utils import label_map_util # pylint disable=import-error
+from object_detection.utils import visualization_utils as viz_utils # pylint disable=import-error
 
 THRESHOLD = .30
 
