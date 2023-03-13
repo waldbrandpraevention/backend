@@ -1,7 +1,7 @@
 [BASE]
 min-public-methods=0
 max-args = 11
-max-locals = 15
+max-locals = 20
 max-branches = 20
 
 [MASTER]

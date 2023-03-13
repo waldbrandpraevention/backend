@@ -75,7 +75,6 @@ async def read_drone_events(drone_id: int=None,
             response_model=List[DroneUpdateWithRoute]
             )
 async def read_drone_route( drone_id: int=None,
-                            zone_id:int =None,
                             days:int =0,
                             hours:int =0,
                             minutes:int =0,
@@ -173,7 +172,7 @@ async def drone_update(drone_id:int,
     )
     if success:
         return {"message": "success"}
-    
+
     return {"message": "error"}
 
 

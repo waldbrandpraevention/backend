@@ -68,6 +68,7 @@ def create_new_drone(token,territory):
     return simulation_drone
 
 def generate_drones():
+    """function for generating drones"""
     token = ''
     territories = None
     drone_amounts = []
