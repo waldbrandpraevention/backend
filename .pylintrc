@@ -1,5 +1,6 @@
 [BASE]
 min-public-methods=0
+max-args = 11
 
 [MASTER]
 extension-pkg-whitelist=pydantic,fastapi
