@@ -5,7 +5,7 @@ from fastapi import HTTPException, status
 from api.dependencies.classes import Drone, DroneEvent, DroneUpdate, DroneUpdateWithRoute
 from database import (drones_table,
                       drone_events_table,
-                      drone_updates_table as drone_data_table, territories_table, zones_table)
+                      drone_updates_table as drone_data_table, zones_table)
 from database.territory_zones_table import get_orgazone_by_id
 from .authentication import create_access_token, DRONE_TOKEN_EXPIRE_WEEKS, get_email_from_token
 
@@ -33,8 +33,7 @@ async def generate_drone_token(drone: Drone):
     Returns:
         Token: new token
     """
-    #sub = str(drone.id)+"-"+done.or
-    sub = str(drone.id) #todo unique?
+    sub = str(drone.id) 
     access_token_expires = timedelta(minutes=DRONE_TOKEN_EXPIRE_WEEKS)
     access_token = create_access_token(
         data={"sub": sub}, expires_delta=access_token_expires
@@ -155,7 +154,6 @@ async def set_update_and_zone(drone:Drone,drone_upate:DroneUpdate):
 async def get_drone_with_route( orga_id:int,
                                 timestamp:datetime,
                                 drone_id:int =None,
-                                zone_id:int=None
                                 )-> List[DroneUpdateWithRoute] | None:
     """get all drone updates in a zone or the whole orga area after a timestamp.
 

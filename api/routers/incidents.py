@@ -85,6 +85,12 @@ async def all_incidents(current_user: User = Depends(get_current_user)):
         Incident[]: list of incidents
     """
     try:
+        if not current_user:
+            raise HTTPException(
+                status_code=status.HTTP_406_NOT_ACCEPTABLE,
+                detail="Invalid user",
+            )
+
         return get_all_incidents()
     except Exception as err:
         raise HTTPException(
