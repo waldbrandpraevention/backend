@@ -2,6 +2,7 @@
 min-public-methods=0
 max-args = 11
 max-locals = 15
+max-branches = 20
 
 [MASTER]
 extension-pkg-whitelist=pydantic,fastapi
