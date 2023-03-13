@@ -4,5 +4,8 @@ min-public-methods=0
 [MASTER]
 extension-pkg-whitelist=pydantic,fastapi
 
+[TYPECHECK]
+ignored-modules=object_detectien.utils
+
 [FORMAT]
 max-line-length=250
