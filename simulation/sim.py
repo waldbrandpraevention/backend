@@ -19,6 +19,8 @@ SIMULATION_UPDATE_FREQUENCY = int(os.getenv("SIMULATION_UPDATE_FREQUENCY"))
 SIMULATION_DRONE_SPEED_MIN = float(os.getenv("SIMULATION_DRONE_SPEED_MIN"))
 SIMULATION_DRONE_SPEED_MAX = float(os.getenv("SIMULATION_DRONE_SPEED_MAX"))
 
+# pylint: disable=broad-exception-caught
+
 def login():
     """login for the simulation"""
     login_data = {"username": admin_mail, "password": admin_password}

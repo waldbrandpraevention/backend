@@ -6,10 +6,8 @@ import tensorflow as tf
 import numpy as np
 from PIL import Image
 from PIL.JpegImagePlugin import JpegImageFile
-from object_detection.utils import label_map_util
-from object_detection.utils import visualization_utils as viz_utils
-from api.dependencies.classes import EventType
-from pydantic import BaseModel
+from object_detection.utils import label_map_util # pylint disable=E0401
+from object_detection.utils import visualization_utils as viz_utils # pylint disable=E0401
 
 THRESHOLD = .30
 
