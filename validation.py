@@ -92,6 +92,6 @@ def validate_permission(permission_int: int):
         str array: error list
     """
     err = []
-    if not permission_int in Permission.list(): # pylint disable=no-member
+    if not permission_int in Permission.list(): # pylint: disable=no-member
         err.append("Permission doesnt exist.")
     return err
