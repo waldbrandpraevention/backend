@@ -12,3 +12,6 @@ ignored-modules=object_detectien.utils
 
 [FORMAT]
 max-line-length=250
+
+[SIMILARITIES]
+min-similarity-lines=10

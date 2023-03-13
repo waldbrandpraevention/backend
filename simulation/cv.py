@@ -91,7 +91,7 @@ def ai_prediction(path: str):
 
     image_np_with_detections = image_np.copy()
 
-    classes = [cls for cls in detections['detection_classes']
+    classes = [cls for cls in detections['detection_classes'] # pylint: disable=unnecessary-comprehension
                   [detections['detection_scores'] > THRESHOLD]]
     #classes = [category_index.get(cls)['name'] for cls in classes]
     percantages = detections['detection_scores'][:len(classes)]

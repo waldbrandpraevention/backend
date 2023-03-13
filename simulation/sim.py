@@ -180,7 +180,7 @@ def send_event(drone_entry):
             img_mem = BytesIO()
             result.picture.save(img_mem, 'JPEG', quality=70)
             img_mem.seek(0)
-            files = {'file_raw': open(path, "rb"), 'file_predicted': img_mem}
+            files = {'file_raw': open(path, "rb"), 'file_predicted': img_mem} # pylint: disable=consider-using-with
             print("Sending POST request for event")
             header = {"accept": "application/json"}
             event_response = requests.post(URL + "/drones/send-event/", headers=header, params=event, files=files, timeout=10)
@@ -196,11 +196,12 @@ def is_in_poly(geo_json, lon, lat):
     if geo_json["type"] == "Feature":
         polygon = shape(geo_json['geometry'])
         return polygon.contains(new_point)
-    elif geo_json["type"] == "FeatureCollection":
+    if geo_json["type"] == "FeatureCollection":
         for feature in geo_json['features']:
             polygon = shape(feature['geometry'])
             if polygon.contains(new_point):
                 return True
+        return False
 
     return False
 

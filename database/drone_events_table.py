@@ -259,16 +259,14 @@ def calculate_firerisk(events: List[DroneEvent]) -> tuple[FireRisk,FireRisk,Fire
 
     try:
         calculated_enum = round(smokerisk/100 * 4)
-        if calculated_enum > 4:
-            calculated_enum = 4
+        calculated_enum = min(calculated_enum, 4)
         smoke_risk = FireRisk(calculated_enum)
     except TypeError:
         smoke_risk = None
 
     try:
         calculated_enum = round(firerisk/100 * 4)
-        if calculated_enum > 4:
-            calculated_enum = 4
+        calculated_enum = min(calculated_enum, 4)
         fire_risk = FireRisk(calculated_enum)
     except TypeError:
         fire_risk = None
