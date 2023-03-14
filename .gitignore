@@ -5,3 +5,5 @@
 *old_stuff.py
 .pylintrc
 .env
+env
+.idea
