@@ -1,6 +1,6 @@
 <h1 align="center">Waldbrandprävention Backend</h1>
 <p align="center">   
-    <img width="320" height="160" src="https://bp.adriansoftware.de/media/logo-v1.svg?ref=gh-back"> <!-- Todo make file local -->
+    <img width="320" height="160" src="img/logo-v1.png">
 </p>
 
 <div align="center">
@@ -16,6 +16,9 @@
 ![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi)
 ![SQLite](https://img.shields.io/badge/sqlite-%2307405e.svg?style=for-the-badge&logo=sqlite&logoColor=white)
 
+<p align="center">   
+    <img width="320" height="160" src="img/db.png">
+</p>
 
 </div>
 
