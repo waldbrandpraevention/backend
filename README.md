@@ -82,6 +82,7 @@ Bei Linux/MacOS muss noch in der `demo.env` die `\\` auf `/` geändert werden.
 
 Eventuell vorhandene Datenbank löschen `rm -f testing.db`
 
+[ 8 ]
 ##### Umgebungsvariablen setzen
 Benennung der Datenbankdatei und ihr Pfad.
 ```
