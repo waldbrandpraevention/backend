@@ -1,6 +1,6 @@
 <h1 align="center">Waldbrandprävention Backend</h1>
 <p align="center">   
-    <img width="320" height="160" src="img/logo-v1.png">
+    <img width="320" height="160" src="img/logo-v1.svg">
 </p>
 
 <div align="center">
