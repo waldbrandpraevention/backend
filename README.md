@@ -58,7 +58,7 @@ pip install python-dotenv
  Spatialite installieren
 https://www.gaia-gis.it/fossil/libspatialite/home
 ##### Windows
-???
+Wir empfehlen ihnen hier ein WSL zu nutzen.
 ##### Ubuntu / Debian / WSL
 ```
 sudo apt install libspatialite7 libspatialite-dev libsqlite3-mod-spatialite
@@ -82,7 +82,57 @@ Bei Linux/MacOS muss noch in der `demo.env` die `\\` auf `/` geändert werden.
 
 Eventuell vorhandene Datenbank löschen `rm -f testing.db`
 
-[ 8 ]
+##### Umgebungsvariablen setzen
+Benennung der Datenbankdatei und ihr Pfad.
+```
+DB_PATH = 'data/testing.db'
+DB_BACKUP_PATH = 'data/backuptest.db'
+```
+Erstellen von Demo Accounts.
+Im folgenden gilt:
+Ist eine Varbiable nicht gesetzt, so wird das entsprechende Element nicht erstellt.
+Will man nur einen User und eine Orga erstellen und dieser nur einen District zuordnen, so setzt man die Überflüssigen Variablen nicht.
+```
+ADMIN_MAIL = 'admin@kiwa.tech'
+ADMIN_MAIL_TWO = 'ka@kiwa.tech'
+ADMIN_PASSWORD = 'adminkiwa'
+ADMIN_ORGANIZATION = 'KIWA'
+ADMIN_ORGANIZATION_TWO = 'KIKA'
+```
+Für Demo Drohnenevents und -updates, können die folgenden Variablen gesetzt werden.
+(unabhängig von der Simulation).
+```
+DEMO_LONG = '12.68895149'
+DEMO_LAT = '52.07454738'
+```
+Mithilfe der folgenden Variablen, werden die Zonendaten gesetzt.
+Unter (https://data.opendatasoft.com/explore/dataset/georef-germany-gemeinde%40public/table)
+können geojson Files erstellt werden, die anschließend in die Datenbank eingelesen werden.
+District entspricht "Kreis name" im geojson.
+Sofern gesetzt, werden DEMO_DISTRICT (und DEMO_DISTRICT_TWO) der ADMIN_ORGANIZATION zugeordnet.
+DEMO_DISTRICT_THREE wird ADMIN_ORGANIZATION_TWO zugeordnet, sofern beides gesetzt wurde.
+```
+GEOJSON_PATH = 'data/zone_data.geojson' 
+DEMO_DISTRICT = 'Landkreis Potsdam-Mittelmark'
+DEMO_DISTRICT_TWO = 'Landkreis Teltow-Fläming'
+DEMO_DISTRICT_THREE = 'Landkreis Karlsruhe'
+```
+
+```
+DOMAIN_API = 'http://127.0.0.1:8000'
+EVENT_PATH = 'data/events' 
+DRONE_FEEDBACK_PATH = 'data/feedback'
+```
+Simulationsspezifische Variablen.
+```
+RUN_SIMULATION = 'True'
+SIMULATION_EVENT_CHANCE = '0.1'
+SIMULATION_UPDATE_FREQUENCY = '10'
+SIMULATION_DRONE_SPEED_MIN = '0.0001'
+SIMULATION_DRONE_SPEED_MAX = '0.0002'
+```
+
+[ 9 ]
 ```
 uvicorn main:app --reload --env-file demo.env
 ```
