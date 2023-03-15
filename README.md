@@ -16,12 +16,13 @@
 ![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi)
 ![SQLite](https://img.shields.io/badge/sqlite-%2307405e.svg?style=for-the-badge&logo=sqlite&logoColor=white)
 
-<p align="center">   
-    <img width="320" height="160" src="img/db.png">
+<p align="center">
+  <img src="img/db.png" width="1200" title="hover text">
 </p>
 
 </div>
 
+![Database](img/db.png?raw=true)
 ## Installation
 
  ---
