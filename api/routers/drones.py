@@ -75,11 +75,13 @@ async def read_drone_events(drone_id: int=None,
             response_model=List[DroneUpdateWithRoute]
             )
 async def read_drone_route( drone_id: int=None,
+                            zone_id:int =None,
                             days:int =0,
                             hours:int =0,
                             minutes:int =0,
                             current_user: User = Depends(get_current_user)):
     """API call to get the route of a drone in a specific time frame and/or zone.
+    Returns the last update and the route, the drone took to get to the last update.
 
     Args:
         drone_id (int, optional): id of the drone. Defaults to None.
@@ -95,6 +97,7 @@ async def read_drone_route( drone_id: int=None,
 
     timestamp = drones.timestamp_helper(days,hours,minutes)
     drone_updates = await drones.get_drone_with_route(orga_id=current_user.organization.id,
+                                            zone_id=zone_id,
                                            timestamp=timestamp,
                                            drone_id=drone_id)
     if drone_updates is None:
@@ -152,8 +155,6 @@ async def drone_update(drone_id:int,
     Returns:
         dict: response
     """
-
-    #current_drone = await get_current_drone(current_drone_token)
 
     if not await validate_token(current_drone_token) :
         raise HTTPException(

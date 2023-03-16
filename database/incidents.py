@@ -25,14 +25,12 @@ GET_ALL_INCIDENT = '''SELECT * FROM incidents;'''
 
 def create_incident(drone_name: str, location: str, alarm_type: str, notes: str, timestamp: datetime.datetime) -> int | None:
     """create an incident.
-
     Args:
         drone_name (str): name of the drone
         location (str): location of the incident.
         alarm_type (str): alarm_type of the incident.
         notes (str): notes of the incident
         timestamp (datetime): timestamp of the incident
-
     Returns:
         int | None: Id of the inserted entry, None if an error occurs.
     """
@@ -41,8 +39,7 @@ def create_incident(drone_name: str, location: str, alarm_type: str, notes: str,
 def get_last_incidents(amount: int) -> List[Incident]:
     """returns the last x incidents
     Args:
-        amount (int): number of incidents 
-
+        amount (int): number of incidents
     Returns:
         List[Incident]: list of incidents.
     """
@@ -65,8 +62,7 @@ def get_last_incidents(amount: int) -> List[Incident]:
 def get_all_incidents() -> List[Incident]:
     """returns the last x incidents
     Args:
-        amount (int): number of incidents 
-
+        amount (int): number of incidents
     Returns:
         List[Incident]: list of incidents.
     """
@@ -86,10 +82,8 @@ def get_all_incidents() -> List[Incident]:
 
 def get_obj_from_fetched(fetched_incident: tuple) -> Incident:
     """get a Incident object from a fetched tuple.
-
     Args:
         fetched_incident (tuple): the fetched tuple.
-
     Returns:
         Incident: the territory object.
     """

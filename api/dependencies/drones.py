@@ -154,6 +154,7 @@ async def set_update_and_zone(drone:Drone,drone_upate:DroneUpdate):
 async def get_drone_with_route( orga_id:int,
                                 timestamp:datetime,
                                 drone_id:int =None,
+                                zone_id:int=None,
                                 )-> List[DroneUpdateWithRoute] | None:
     """get all drone updates in a zone or the whole orga area after a timestamp.
 
@@ -172,6 +173,7 @@ async def get_drone_with_route( orga_id:int,
 
     return drone_data_table.get_drone_updates(drone_id=drone_id,
                                               orga_id=orga_id,
+                                              zone_id=zone_id,
                                               after=timestamp,
                                               get_coords_only=True)
 

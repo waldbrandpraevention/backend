@@ -19,7 +19,7 @@ FOREIGN KEY (drone_id) REFERENCES drones (id)
 );
 
 CREATE INDEX drone_data_FK_1 ON drone_data (drone_id);
-CREATE INDEX drone_data_FK_2 ON drone_data (timestamp);
+CREATE INDEX drone_data_AK_1 ON drone_data (timestamp);
 SELECT AddGeometryColumn('drone_data', 'coordinates', 4326, 'POINT', 'XY');'''
 
 CREATE_ENTRY = '''INSERT INTO drone_data
@@ -125,7 +125,12 @@ def get_drone_updates(  polygon:str = None,
         None: if no data was found.
     """
 
-    sql_arr, tuple_arr = gernerate_drone_sql(polygon, orga_id, zone_id,drone_id, after, before)
+    sql_arr, tuple_arr = gernerate_drone_sql(polygon,
+                                             orga_id,
+                                             zone_id,
+                                             drone_id,
+                                             after,
+                                             before)
 
     sql = db.add_where_clause(GET_ENTRY, sql_arr)
 
