@@ -42,6 +42,8 @@ In der Tabelle 'drones' können Drohnen angelegt werden. Dies passiert im Anmeld
 'drone_update' und 'drone_event' enthalten die gesendeteten Drohnendaten. Hierbei ist ein Update ein eine Kombination aus Standort,Timestamp und Daten zur noch möglichen Flugdauer und Reichweite. 'drone_event' entgegen ist ein Ereignis bei dem eine Drohne entweder Feuer oder Rauch detektiert hat.
 
 ## API Docs
+In der Demo können die API Endpunkte eingesehen und getestet werden. Für die meisten Endpunkte benötigt man einen Nutzer, hierfür auf den Authorize Knopf drücken und die folgenden Benutzerdaten eingeben: 
+
 [kiwa.tech/api/docs](https://kiwa.tech/api/docs)
 
 E-Mail: `admin@kiwa.tech` Passwort: `adminkiwa`
