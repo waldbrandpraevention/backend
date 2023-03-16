@@ -255,7 +255,7 @@ def get_zone_of_coordinate(long:float, lat:float) -> Zone | None:
     fetched_zone = db.fetch_one(sql, (long, lat))
     return get_obj_from_fetched(fetched_zone)
 
-def set_update_for_coordinate(long:float, lat:float, timestamp:datetime.datetime) -> Zone | None:
+def set_update_for_coordinate(long:float, lat:float, timestamp:datetime.datetime) -> bool:
     """set the last_update field of the zone, the given lat lon tuple is in.
 
     Args:
@@ -264,7 +264,7 @@ def set_update_for_coordinate(long:float, lat:float, timestamp:datetime.datetime
         timestamp (datetime.datetime): timestamp of the update.
 
     Returns:
-        number of updated rows.
+        bool: Wether the update was successful or not.
     """
 
     sql = add_where_clause(UPDATE_TIMESTAMP,[ZoneWhereClause.MAKEPOINTINTERSECT])
