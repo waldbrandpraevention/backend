@@ -11,7 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from simulation.sim import simulate
 from api.dependencies.authentication import get_password_hash
 from api.dependencies.classes import UserWithSensitiveInfo, Zone
-from api.routers import emails, users, zones, drones, simulation,territories, alarm
+from api.routers import emails, users, zones, drones, simulation,territories, incidents
 from database import (users_table,
                       organizations_table,
                       drones_table,
@@ -184,8 +184,7 @@ def main():
     create_table(CREATE_TERRITORYZONES_TABLE)
     create_table(CREATE_INCIDENTS_TABLE)
     create_default_user()
-    #create_drone_events()
-    #create_drones()
+    create_drone_events()
     load_zones_from_geojson()
 
     run_sim = os.getenv("RUN_SIMULATION")

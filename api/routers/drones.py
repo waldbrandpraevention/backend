@@ -75,6 +75,7 @@ async def read_drone_events(drone_id: int=None,
             response_model=List[DroneUpdateWithRoute]
             )
 async def read_drone_route( drone_id: int=None,
+                            zone_id:int =None,
                             days:int =0,
                             hours:int =0,
                             minutes:int =0,
@@ -96,6 +97,7 @@ async def read_drone_route( drone_id: int=None,
 
     timestamp = drones.timestamp_helper(days,hours,minutes)
     drone_updates = await drones.get_drone_with_route(orga_id=current_user.organization.id,
+                                            zone_id=zone_id,
                                            timestamp=timestamp,
                                            drone_id=drone_id)
     if drone_updates is None:
