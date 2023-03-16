@@ -22,71 +22,25 @@
 
 </div>
 
-## Installation
+## Einleitung
+Im Backend können Drohnen über eingerichtete [API Endpunkte](#api-docs) ihre Updates (Standort und Timestamp) und Events (Detektion von Feuer und/oder Rauch) schicken. Diese Daten werden anschließend in der Datenbank gespeichert. Beim Anfragen der Daten wird jederzeit sichergestellt, dass Nutzer\*innen nur auf Daten innerhalb des Territoriums ihrer Organisation zugreifen können.
 
- ---
+## Datenbank
+Die Datenbank lässt sich in zwei Bereiche teilen:
 
+### Nutzer und Orgadaten
+In der Tabelle 'users' werden Nutzer\*innen angelegt. Hierbei muss die id einer Organisation angegeben werden, denn so wird später sichergestellt, dass Nutzer\*innen nur auf die Daten im Territorium ihrer Orga zugreifen können.
 
-  Um die vollständige Anwendung zu installieren, bitte die detaillierte [Readme im `waldbrandpraevention/frontend` Repo](https://github.com/waldbrandpraevention/frontend#readme) beachten.
+Über die Tabelle 'user_settings' und 'settings' können neue Einstellungen mit default_value definiert werden und für einzelne Nutzer\*innen neu gesetzt werden. Hierbei kann man unterschiedliche Typen von Werten speichern (int,str,json).
 
---- 
+In 'zones' können über eine geojson Datei Zonen eingelesen werden. In diesem Projekt gilt immer: Zone = Gemeinde.
+Über 'territorries' und 'territorry_zones' können diese Zonen dann Territorien zugeordnet werden, welche widerum zu einer Orga gehören. So können größere Gebiete aus vielen Zonen angelegt und einer Orga zugeordnet werden.
 
+### Drohnendaten
+In der Tabelle 'drones' können Drohnen angelegt werden. Dies passiert im Anmeldeprozess einer Drohne über den /drones/signup/ API Endpunkt. 
+'drone_update' und 'drone_event' enthalten die gesendeteten Drohnendaten. Hierbei ist ein Update ein eine Kombination aus Standort,Timestamp und Daten zur noch möglichen Flugdauer und Reichweite. 'drone_event' entgegen ist ein Ereignis bei dem eine Drohne entweder Feuer oder Rauch detektiert hat.
 
-
-## Development
-#### Vorrausetzungen
-- Python 3.10+
-- https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/tf2.md
-
-*Anleitung getestet auf WSL/Ubuntu.*
-
-[ 1 ] 
-```
-git clone https://github.com/waldbrandpraevention/backend.git
-```
-[ 2 ] 
-```
-cd waldbrandpraevention/backend
-```
-[ 3 ] 
-```
-pip install -r requirements.txt
-```
-[ 4 ] 
-```
-pip install python-dotenv
-```
-[ 5 ] 
-
- Spatialite installieren
-https://www.gaia-gis.it/fossil/libspatialite/home
-##### Windows
-Wir empfehlen ihnen hier ein WSL zu nutzen.
-##### Ubuntu / Debian / WSL
-```
-sudo apt install libspatialite7 libspatialite-dev libsqlite3-mod-spatialite
-```
-##### MacOS (nicht getestet)
-```
-brew install sqlite3 libspatialite
-```
-##### Alpine
-```
-apk add libspatialite=5.0.1-r5
-```
-
-[ 6 ]
-TF2 Object detection installieren
-https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/tf2.md
-
-[ 7 ] 
-
-Bei Linux/MacOS muss noch in der `demo.env` die `\\` auf `/` geändert werden.
-
-Eventuell vorhandene Datenbank löschen `rm -f testing.db`
-
-[ 8 ]
-##### Umgebungsvariablen setzen
+## Umgebungsvariablen setzen
 Benennung der Datenbankdatei und ihr Pfad.
 ```
 DB_PATH = 'data/testing.db'
@@ -136,7 +90,75 @@ SIMULATION_DRONE_SPEED_MIN = '0.0001'
 SIMULATION_DRONE_SPEED_MAX = '0.0002'
 ```
 
-[ 9 ]
+## API Docs
+[kiwa.tech/api/docs](https://kiwa.tech/api/docs)
+
+E-Mail: `admin@kiwa.tech` Passwort: `adminkiwa`
+
+## Installation
+
+ ---
+
+
+  Um die vollständige Anwendung zu installieren, bitte die detaillierte [Readme im `waldbrandpraevention/frontend` Repo](https://github.com/waldbrandpraevention/frontend#readme) beachten.
+
+--- 
+
+
+
+## Development
+#### Vorrausetzungen
+- Python 3.10+
+- https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/tf2.md
+
+*Anleitung getestet auf WSL/Ubuntu.*
+
+[ 1 ] 
+```
+git clone https://github.com/waldbrandpraevention/backend.git
+```
+[ 2 ] 
+```
+cd waldbrandpraevention/backend
+```
+[ 3 ] 
+```
+pip install -r requirements.txt
+```
+[ 4 ] 
+```
+pip install python-dotenv
+```
+[ 5 ] 
+
+ Spatialite installieren
+https://www.gaia-gis.it/fossil/libspatialite/home
+#### Windows
+Wir empfehlen ihnen hier ein WSL zu nutzen.
+#### Ubuntu / Debian / WSL
+```
+sudo apt install libspatialite7 libspatialite-dev libsqlite3-mod-spatialite
+```
+#### MacOS (nicht getestet)
+```
+brew install sqlite3 libspatialite
+```
+#### Alpine
+```
+apk add libspatialite=5.0.1-r5
+```
+
+[ 6 ]
+TF2 Object detection installieren
+https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/tf2.md
+
+[ 7 ] 
+
+Bei Linux/MacOS muss noch in der `demo.env` die `\\` auf `/` geändert werden.
+
+Eventuell vorhandene Datenbank löschen `rm -f testing.db`
+
+[ 8 ]
 ```
 uvicorn main:app --reload --env-file demo.env
 ```
@@ -146,3 +168,4 @@ API Documentation auf http://localhost:8000/docs
 #### Tools
 
 Spatialite GUI Editor https://www.gaia-gis.it/fossil/spatialite_gui/index
+QGIS GUI https://www.qgis.org/de/site/about/index.html
