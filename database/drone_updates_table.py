@@ -1,9 +1,10 @@
 """DB functions for drone updates"""
 import datetime
 from typing import List
+import pytz
 from shapely.geometry import Point, LineString, mapping
 from api.dependencies.classes import DroneUpdate, DroneUpdateWithRoute
-from database.database import fetched_match_class
+from database.database import TIMEZONE, fetched_match_class
 import database.database as db
 
 
@@ -306,10 +307,17 @@ def get_obj_from_fetched(fetched_dronedata) -> DroneUpdate| None:
             print(exception)
             longitude, latitude= None, None
 
+        try:
+            timestamp:datetime.datetime = fetched_dronedata[2]
+            if timestamp is not None:
+                timestamp = timestamp.astimezone(pytz.timezone(TIMEZONE))
+        except ValueError:
+            timestamp = fetched_dronedata[2]
+
         drone_data_obj = DroneUpdate(
             id = fetched_dronedata[0],
             drone_id = fetched_dronedata[1],
-            timestamp = fetched_dronedata[2],
+            timestamp = timestamp,
             lon= longitude,
             lat = latitude,
             flight_range = fetched_dronedata[3],

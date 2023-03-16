@@ -2,17 +2,20 @@
 import datetime
 import os
 import cProfile
+import random
 from smtplib import SMTPException
 from fastapi import HTTPException
 import msgspec
 import pytest
+import pytz
 from shapely import Polygon, from_geojson, difference
 from api.routers import zones,users,drones
 from api.routers.incidents import alarm_team, all_incidents
 from api.routers.territories import read_territories,read_territory
 from database import drone_events_table, zones_table, drone_updates_table
 from database import territories_table
-from database.database import create_table
+from database import drones_table
+from database.database import TIMEZONE, create_table
 from database.drones_table import CREATE_DRONES_TABLE
 from database.incidents import CREATE_INCIDENTS_TABLE
 from database.organizations_table import CREATE_ORGANISATIONS_TABLE
@@ -109,32 +112,90 @@ async def test_drones():
     """drone api tests
     """
     user = users.get_user(os.getenv("ADMIN_MAIL"))
-    drone = await drones.read_drone(drone_id=1,current_user=user)
-    zone = zones_table.get_zone(drone.zone_id)
+    name = f'trinity{random.randint(0, 1000)}'
+    drone = drones_table.create_drone(
+                name=name,
+                drone_type="Unmanned Aerial Vehicle",
+                cc_range=7.5,
+                flight_range=100.0,
+                flight_time=90.0
+            )
+    lat = float(os.getenv("DEMO_LAT"))
+    lon = float(os.getenv("DEMO_LONG"))
+    timestamp = datetime.datetime.utcnow()
+    drone_updates_table.create_drone_update(
+            drone_id=drone.id,
+            timestamp=timestamp,
+            longitude=lon,
+            latitude=lat,
+            flight_range=50,
+            flight_time=50
+        )
+    zones_table.set_update_for_coordinate(lon, lat, timestamp)
+    read_drone = await drones.read_drone(drone_id=drone.id,current_user=user)
+    assert drone.name == read_drone.name and drone.flight_range == read_drone.flight_range
+
+    zone = zones_table.get_zone(read_drone.zone_id)
     zone_copunt = await drones.read_drones_count(current_user=user,zone_id=zone.id)
     assert [] == await drones.read_drone_events(current_user=user,zone_id=-1)
 
     try:
-        now = datetime.datetime.now()
         zone_events = await drones.read_drone_events(current_user=user,zone_id=zone.id)
-        diff = datetime.datetime.now()-now
-        print(diff)
     except HTTPException:
         print('No events in zone')
         zone_events = None
 
-    zone_updates = await drones.read_drone_route(current_user=user)
+    zone_updates = await drones.read_drone_route(current_user=user,drone_id=drone.id)
     assert zone_events == zone.events
     assert zone_updates[0].timestamp == zone.last_update
-    timestamp = datetime.datetime.now()
+
+    polygon = territories_table.get_orga_area(1)
+    drone_routes = drone_updates_table.get_drone_updates(polygon=polygon,get_coords_only=True)
+    drone_routes_two = drone_updates_table.get_drone_updates(orga_id=1,get_coords_only=True)
+    assert drone_routes == drone_routes_two
+    assert [] == await drones.read_drone_route(current_user=user,drone_id=-1)
+
+    assert zone_copunt == zone.drone_count
+    newtimestamp = timestamp + datetime.timedelta(seconds=5)
     drone_updates_table.create_drone_update(
-            drone_id=1,
-            timestamp=timestamp,
-            longitude=zone.lon,
-            latitude=zone.lat,
+            drone_id=drone.id,
+            timestamp=newtimestamp,
+            longitude=8.66697,
+            latitude=49.54887,
             flight_range=50,
             flight_time=50
         )
+
+    zones_table.set_update_for_coordinate(8.66697, 49.54887, newtimestamp)
+
+    zone_copunt = await drones.read_drones_count(current_user=user,zone_id=zone.id)
+    assert zone_copunt == zone.drone_count-1 or zone.drone_count == 1
+    await drones.read_drone_events(current_user=user,drone_id=1)
+    await drones.read_drone_events(current_user=user)
+
+    drone_dict = await drones.drone_signup(
+        'name',
+        'type',
+        100,
+        100,
+        100,
+        user
+    )
+    drone = drone_dict['drone']
+    await drones.drone_update(
+            drone_id=2,
+            timestamp=newtimestamp,
+            lon=8.66697,
+            lat=48.54887,
+            flight_range=50,
+            flight_time=50,
+            current_drone_token=drone_dict['token']
+            )
+    second_zone = zones_table.get_zone_of_coordinate(8.66697,48.54887)
+    tz_timestamp = newtimestamp.astimezone(pytz.timezone(TIMEZONE))
+    assert second_zone.last_update == tz_timestamp
+
+    newtimestamp = newtimestamp + datetime.timedelta(seconds=5)
     drone_updates_table.create_drone_update(
             drone_id=2,
             timestamp=timestamp,
@@ -143,64 +204,6 @@ async def test_drones():
             flight_range=50,
             flight_time=50
         )
-    zones_table.set_update_for_coordinate(zone.lon, zone.lat, timestamp)
-    polygon = territories_table.get_orga_area(1)
-    drone_routes = drone_updates_table.get_drone_updates(polygon=polygon,get_coords_only=True)
-    drone_routes_two = drone_updates_table.get_drone_updates(orga_id=1,get_coords_only=True)
-    assert drone_routes == drone_routes_two
-    assert [] == await drones.read_drone_route(current_user=user,drone_id=-1)
-
-    assert zone_copunt == zone.drone_count
-    newtimestamp = datetime.datetime.now()
-    drone_updates_table.create_drone_update(
-            drone_id=1,
-            timestamp=newtimestamp,
-            longitude=8.66697,
-            latitude=49.54887,
-            flight_range=50,
-            flight_time=50
-        )
-
-    try:
-        zones_table.set_update_for_coordinate(8.66697, 49.54887, newtimestamp)
-
-        zone_copunt = await drones.read_drones_count(current_user=user,zone_id=zone.id)
-        assert zone_copunt == zone.drone_count-1 or zone.drone_count == 1
-        await drones.read_drone_events(current_user=user,drone_id=1)
-        await drones.read_drone_events(current_user=user)
-
-        drone_dict = await drones.drone_signup(
-            'name',
-            'type',
-            100,
-            100,
-            100,
-            user
-        )
-        drone = drone_dict['drone']
-        await drones.drone_update(
-                drone_id=2,
-                timestamp=newtimestamp,
-                lon=8.66697,
-                lat=48.54887,
-                flight_range=50,
-                flight_time=50,
-                current_drone_token=drone_dict['token']
-                )
-        second_zone = zones_table.get_zone_of_coordinate(8.66697,48.54887)
-        assert second_zone.last_update == newtimestamp
-
-    finally:
-        timestamp = newtimestamp + datetime.timedelta(seconds=5)
-        drone_updates_table.create_drone_update(
-            drone_id=1,
-            timestamp=timestamp,
-            longitude=zone.lon,
-            latitude=zone.lat,
-            flight_range=50,
-            flight_time=50
-        )
-        zones_table.set_update_for_coordinate(zone.lon, zone.lat, timestamp)
 
 
 @pytest.mark.asyncio
