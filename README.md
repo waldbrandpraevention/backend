@@ -40,7 +40,14 @@ In 'zones' können über eine geojson Datei Zonen eingelesen werden. In diesem P
 In der Tabelle 'drones' können Drohnen angelegt werden. Dies passiert im Anmeldeprozess einer Drohne über den /drones/signup/ API Endpunkt. 
 'drone_update' und 'drone_event' enthalten die gesendeteten Drohnendaten. Hierbei ist ein Update ein eine Kombination aus Standort,Timestamp und Daten zur noch möglichen Flugdauer und Reichweite. 'drone_event' entgegen ist ein Ereignis bei dem eine Drohne entweder Feuer oder Rauch detektiert hat.
 
-## Umgebungsvariablen setzen
+## API Docs
+[kiwa.tech/api/docs](https://kiwa.tech/api/docs)
+
+E-Mail: `admin@kiwa.tech` Passwort: `adminkiwa`
+
+## main.py und ihre Umgebungsvariablen
+In der main.py werden die nötigen Tabellen erstellt, Demodaten eingelesen und die Simulation gestartet. Das am Ende die gewünschten Daten in die Tabellen geschrieben werden, müssen die folgenden Umgebungsvariablen entsprechend gesetzt werden (für backend only in demo.env, ansonsten im [docker-compose.yml](https://github.com/waldbrandpraevention/frontend/blob/main/docker-compose.yml) des Frontends).
+
 Benennung der Datenbankdatei und ihr Pfad.
 ```
 DB_PATH = 'data/testing.db'
@@ -90,11 +97,6 @@ SIMULATION_DRONE_SPEED_MIN = '0.0001'
 SIMULATION_DRONE_SPEED_MAX = '0.0002'
 ```
 
-## API Docs
-[kiwa.tech/api/docs](https://kiwa.tech/api/docs)
-
-E-Mail: `admin@kiwa.tech` Passwort: `adminkiwa`
-
 ## Installation
 
  ---
@@ -134,7 +136,7 @@ pip install python-dotenv
  Spatialite installieren
 https://www.gaia-gis.it/fossil/libspatialite/home
 #### Windows
-Wir empfehlen ihnen hier ein WSL zu nutzen.
+Auf Windows ein WSL nutzen.
 #### Ubuntu / Debian / WSL
 ```
 sudo apt install libspatialite7 libspatialite-dev libsqlite3-mod-spatialite
@@ -168,4 +170,5 @@ API Documentation auf http://localhost:8000/docs
 #### Tools
 
 Spatialite GUI Editor https://www.gaia-gis.it/fossil/spatialite_gui/index
+
 QGIS GUI https://www.qgis.org/de/site/about/index.html
