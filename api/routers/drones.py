@@ -173,7 +173,7 @@ async def drone_update(drone_id:int,
         flight_time
     )
     if success:
-        updated = set_update_for_coordinate(lon, lat, timestamp)
+        set_update_for_coordinate(lon, lat, timestamp)
         return {"message": "success"}
 
     return {"message": "error"}
