@@ -3,13 +3,15 @@ import os
 import sqlite3
 import random
 from threading import Thread
+from typing import List
 from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 
+
 from simulation.sim import simulate
 from api.dependencies.authentication import get_password_hash
-from api.dependencies.classes import UserWithSensitiveInfo
-from api.routers import emails, users, zones, drones, simulation,territories, incidents
+from api.dependencies.classes import UserWithSensitiveInfo, Zone
+from api.routers import emails, users, zones, drones, simulation,territories, alarm
 from database import (users_table,
                       organizations_table,
                       drones_table,
@@ -57,10 +59,36 @@ def create_default_user():
                 organame=os.getenv("ADMIN_ORGANIZATION"),
                 orga_abb=os.getenv("ADMIN_ORGANIZATION")
                 )
+            if os.getenv("ADMIN_ORGANIZATION_TWO") is not None:
+                organization_two = organizations_table.create_orga(
+                    organame=os.getenv("ADMIN_ORGANIZATION_TWO"),
+                    orga_abb=os.getenv("ADMIN_ORGANIZATION_TWO")
+                    )
         except sqlite3.IntegrityError:
             organization = organizations_table.get_orga(os.getenv("ADMIN_ORGANIZATION"))
-        hashed_pw = get_password_hash(os.getenv("ADMIN_PASSWORD"))
-        user = UserWithSensitiveInfo(email=os.getenv("ADMIN_MAIL"),
+
+        create_user_helper(os.getenv("ADMIN_MAIL"),os.getenv("ADMIN_PASSWORD"),organization)
+        if os.getenv("ADMIN_ORGANIZATION_TWO") is not None \
+                and os.getenv("ADMIN_MAIL_TWO") is not None:
+            organization_two = organizations_table.get_orga(os.getenv("ADMIN_ORGANIZATION_TWO"))
+            create_user_helper(os.getenv("ADMIN_MAIL_TWO"),os.getenv("ADMIN_PASSWORD"),organization_two)
+
+        print("user done")
+
+def create_user_helper(mail,password,organization):
+    """Helper function to create a user with the given parameters.
+
+    Args:
+        mail (str): email of the user
+        pw (str): password of the user (not hashed)
+        organization (str): organization of the user
+    """
+    if organization is None:
+        print("organization not found")
+        return
+
+    hashed_pw = get_password_hash(password)
+    user = UserWithSensitiveInfo(email=mail,
                                      first_name="Admin",
                                      last_name="Admin",
                                      hashed_password=hashed_pw,
@@ -68,11 +96,10 @@ def create_default_user():
                                      permission=2,
                                      disabled=0,
                                      email_verified=1)
-        try:
-            users_table.create_user(user)
-        except sqlite3.IntegrityError:
-            pass
-        print("user done")
+    try:
+        users_table.create_user(user)
+    except sqlite3.IntegrityError:
+        print(f'could not create user ({mail})')
 
 def create_drone_events():
     """ Creates drone events for demo purposes.
@@ -107,18 +134,39 @@ def load_zones_from_geojson():
         if os.getenv("DEMO_DISTRICT") is not None \
                 and os.getenv("ADMIN_ORGANIZATION") is not None:
             fetched_zones = zones_table.get_zone_of_district(os.getenv("DEMO_DISTRICT"))
-            try:
-                create_territory(orga_id=1,name=os.getenv("DEMO_DISTRICT"))
-            except sqlite3.IntegrityError:
-                print('couldnt create territory')
+            create_territory_link_zones(1,os.getenv("DEMO_DISTRICT"),fetched_zones)
 
-            for zone in fetched_zones:
-                try:
-                    link_territory_zone(1,zone.id)
-                except sqlite3.IntegrityError:
-                    print(f'couldnt link {zone.name} to the territory')
+            if os.getenv("DEMO_DISTRICT_TWO") is not None:
+                fetched_zones = zones_table.get_zone_of_district(os.getenv("DEMO_DISTRICT_TWO"))
+                create_territory_link_zones(1,os.getenv("DEMO_DISTRICT_TWO"),fetched_zones)
+
+            if os.getenv("DEMO_DISTRICT_THREE") is not None \
+                and os.getenv("ADMIN_ORGANIZATION_TWO") is not None:
+                fetched_zones = zones_table.get_zone_of_district(os.getenv("DEMO_DISTRICT_THREE"))
+
+                create_territory_link_zones(2,os.getenv("DEMO_DISTRICT_THREE"),fetched_zones)
+
 
             print("zones linked")
+
+def create_territory_link_zones(orga_id,name,fetched_zones:List[Zone]):
+    """ create a territory for an organization.
+        Args:
+            orga_id (int): id of the organization
+            name (str): name of the territory
+            fetched_zones (list): list of zones to link to the territory
+    """
+    try:
+        territorry_id = create_territory(orga_id=orga_id,name=name)
+    except sqlite3.IntegrityError:
+        print('couldnt create territory')
+        return
+
+    for zone in fetched_zones:
+        try:
+            link_territory_zone(territorry_id,zone.id)
+        except sqlite3.IntegrityError:
+            print(f'couldnt link {zone.name} to the territory')
 
 def main():
     """ Initialise the database and create the tables.

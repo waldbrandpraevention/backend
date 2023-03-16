@@ -1,5 +1,8 @@
-"""This module contains functions to create and fetch zones, stored in the db.
-we used https://data.opendatasoft.com/explore/dataset/georef-germany-gemeinde%40public/table for the zone_data geoJSON"""
+"""
+This module contains functions to create and fetch zones, stored in the db.
+we used https://data.opendatasoft.com/explore/dataset/georef-germany-gemeinde%40public/table for the zone_data geoJSON.
+zone = community in this project.
+"""
 import datetime
 from enum import Enum
 import json

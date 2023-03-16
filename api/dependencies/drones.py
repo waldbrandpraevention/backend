@@ -172,6 +172,7 @@ async def get_drone_with_route( orga_id:int,
 
     return drone_data_table.get_drone_updates(drone_id=drone_id,
                                               orga_id=orga_id,
+                                              zone_id=zone_id,
                                               after=timestamp,
                                               get_coords_only=True)
 
