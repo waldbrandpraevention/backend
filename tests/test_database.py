@@ -1,6 +1,7 @@
 """database tests"""
 # setting path
 import json
+from sqlite3 import IntegrityError
 from api.dependencies.authentication import get_password_hash
 from api.dependencies.classes import(Organization,
                                      UserWithSensitiveInfo,
@@ -75,13 +76,14 @@ def test_usersettings():
     create_table(user_settings_table.CREATE_USERSETTINGS_TABLE)
     #create settings
     settings_table.create_setting('Test',
-                                  'This is a testsetting',
-                                  'test',
-                                  SettingsType.STRING)
+                                'This is a testsetting',
+                                'test',
+                                SettingsType.STRING)
     settings_table.create_setting('Lightmode',
-                                  'Lightmode activated or not',
-                                  json.dumps({'test':1}),
-                                  SettingsType.JSON)
+                                'Lightmode activated or not',
+                                json.dumps({'test':1}),
+                                SettingsType.JSON)
+
     #get list of all settings
     settinglist = settings_table.get_settings()
     assert len(settinglist)==2

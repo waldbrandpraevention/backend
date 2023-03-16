@@ -7,6 +7,7 @@ from fastapi.responses import FileResponse
 from database.drones_table import create_drone
 from database.drone_updates_table import create_drone_update
 from database.drone_events_table import create_drone_event_entry, get_event_by_id
+from database.zones_table import set_update_for_coordinate
 from .users import get_current_user, is_admin
 from ..dependencies import drones
 from ..dependencies.drones import generate_drone_token, validate_token
@@ -172,6 +173,7 @@ async def drone_update(drone_id:int,
         flight_time
     )
     if success:
+        updated = set_update_for_coordinate(lon, lat, timestamp)
         return {"message": "success"}
 
     return {"message": "error"}

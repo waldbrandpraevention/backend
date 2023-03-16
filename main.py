@@ -1,4 +1,5 @@
 """ Main file for the API. """
+import datetime
 import os
 import sqlite3
 import random
@@ -16,13 +17,13 @@ from database import (users_table,
                       organizations_table,
                       drones_table,
                       drone_events_table,
+                      drone_updates_table,
                       zones_table)
 
 from database.database import create_table, initialise_spatialite
 from database.drone_events_table import CREATE_DRONE_EVENT_TABLE
 from database.territory_zones_table import CREATE_TERRITORYZONES_TABLE, link_territory_zone
 from database.territories_table import CREATE_TERRITORY_TABLE, create_territory
-from database.drone_updates_table import CREATE_DRONE_DATA_TABLE
 from database.drones_table import CREATE_DRONES_TABLE
 from database.organizations_table import CREATE_ORGANISATIONS_TABLE
 from database.users_table import CREATE_USER_TABLE
@@ -115,10 +116,10 @@ def create_drone_events():
                 flight_range=100.0,
                 flight_time=90.0
             )
-        drone_events_table.insert_demo_events(
-                                            float(os.getenv("DEMO_LONG")),
-                                            float(os.getenv("DEMO_LAT"))
-                                            )
+        insert_demo_events(
+                            float(os.getenv("DEMO_LONG")),
+                            float(os.getenv("DEMO_LAT"))
+                            )
     print("drone_events done")
 
 def load_zones_from_geojson():
@@ -168,6 +169,58 @@ def create_territory_link_zones(orga_id,name,fetched_zones:List[Zone]):
         except sqlite3.IntegrityError:
             print(f'couldnt link {zone.name} to the territory')
 
+def insert_demo_events(long: float, lat: float, droneid = 1, ignore_existing: bool = False):
+    """insert 5 demo drone events.
+
+    Args:
+        long (float): long of the coordinate.
+        lat (float): lat of the coordinate.
+    """
+    if not ignore_existing:
+        update = drone_updates_table.get_latest_update(droneid)
+        if update is not None:
+            print('already created drone events.')
+            return
+    timestamp = datetime.datetime.utcnow()
+    i = 0
+    num_inserted = 0
+    flight_range = 100
+    flight_time =0
+    while num_inserted < 4:
+        event_rand = random.randint(0, 2)
+        long_rand = random.randint(0, 100)/100000
+        lat_rand = random.randint(0, 100)/100000
+        long= long+long_rand
+        lat = lat+lat_rand
+        flight_range-=2
+        flight_time+=10
+        drone_updates_table.create_drone_update(
+            drone_id=droneid,
+            timestamp=timestamp,
+            longitude=long,
+            latitude=lat,
+            flight_range=flight_range,
+            flight_time=flight_time
+        )
+        zones_table.set_update_for_coordinate(long, lat, timestamp)
+        if event_rand > 0:
+            confidence = random.randint(20, 90)
+
+            drone_events_table.create_drone_event_entry(
+                drone_id=droneid,
+                timestamp=timestamp,
+                longitude=long,
+                latitude=lat,
+                event_type=event_rand,
+                confidence=confidence,
+                picture_path='/data/events/1',
+                csv_file_path=f'demo/path/{i}'
+            )
+            num_inserted += 1
+        timestamp += datetime.timedelta(seconds=10)
+        i += 1
+    return timestamp
+
 def main():
     """ Initialise the database and create the tables.
         Create a default user if the environment variables are set.
@@ -178,15 +231,14 @@ def main():
     create_table(CREATE_USER_TABLE)
     create_table(CREATE_ZONE_TABLE)
     create_table(CREATE_DRONES_TABLE)
-    create_table(CREATE_DRONE_DATA_TABLE)
+    create_table(drone_updates_table.CREATE_DRONE_DATA_TABLE)
     create_table(CREATE_DRONE_EVENT_TABLE)
     create_table(CREATE_TERRITORY_TABLE)
     create_table(CREATE_TERRITORYZONES_TABLE)
     create_table(CREATE_INCIDENTS_TABLE)
     create_default_user()
-    create_drone_events()
     load_zones_from_geojson()
-
+    create_drone_events()
     run_sim = os.getenv("RUN_SIMULATION")
     if run_sim == 'True':
         try:
