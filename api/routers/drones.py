@@ -80,6 +80,7 @@ async def read_drone_route( drone_id: int=None,
                             minutes:int =0,
                             current_user: User = Depends(get_current_user)):
     """API call to get the route of a drone in a specific time frame and/or zone.
+    Returns the last update and the route, the drone took to get to the last update.
 
     Args:
         drone_id (int, optional): id of the drone. Defaults to None.
