@@ -2,13 +2,13 @@
 
 from datetime import datetime
 from fastapi import status, APIRouter, Depends, HTTPException
-from database.incidents import create_incident, get_last_incidents
+from database.incidents import create_incident, get_last_incidents, get_all_incidents
 from ..dependencies.users import get_current_user
 from ..dependencies.classes import User
 
 router = APIRouter()
 
-@router.post("/alarm/send/", status_code=status.HTTP_200_OK)
+@router.post("/incidents/send/", status_code=status.HTTP_200_OK)
 async def alarm_team(drone_name: str,
                     location: str,
                     alarm_type: str,
@@ -26,28 +26,22 @@ async def alarm_team(drone_name: str,
     Returns:
         dict: response
     """
-    try:
-        if not current_user:
-            raise HTTPException(
-                status_code=status.HTTP_406_NOT_ACCEPTABLE,
-                detail="Invalid user",
-            )
-
-        incident = create_incident(drone_name, location, alarm_type, notes, datetime.now())
-        if incident is None:
-            raise HTTPException(
-                status_code=status.HTTP_406_NOT_ACCEPTABLE,
-                detail="Error while tring to process the incident",
-            )
-        return {"message:": "success"}
-    except Exception as err:
+    if not current_user:
         raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="API call was recieved but something went wrong internally",
-            ) from err
+            status_code=status.HTTP_406_NOT_ACCEPTABLE,
+            detail="Invalid user",
+        )
+
+    incident = create_incident(drone_name, location, alarm_type, notes, datetime.now())
+    if incident is None:
+        raise HTTPException(
+            status_code=status.HTTP_406_NOT_ACCEPTABLE,
+            detail="Error while tring to process the incident",
+        )
+    return {"message:": "success"}
 
 
-@router.get("/alarm/get/", status_code=status.HTTP_200_OK)
+@router.get("/incidents/get/", status_code=status.HTTP_200_OK)
 async def get_incidents(amount: int, current_user: User = Depends(get_current_user)):
     """API call to get the last x incidents
 
@@ -73,6 +67,31 @@ async def get_incidents(amount: int, current_user: User = Depends(get_current_us
 
         alarms = get_last_incidents(amount)
         return alarms
+    except Exception as err:
+        raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="API call was recieved but something went wrong internally",
+            ) from err
+
+@router.get("/incidents/get-all/", status_code=status.HTTP_200_OK)
+async def all_incidents(current_user: User = Depends(get_current_user)):
+    """API call to get all incidents
+
+    Args:
+        amount (int): amount to get
+        current_user (User, optional): current user. Defaults to Depends(get_current_user).
+
+    Returns:
+        Incident[]: list of incidents
+    """
+    try:
+        if not current_user:
+            raise HTTPException(
+                status_code=status.HTTP_406_NOT_ACCEPTABLE,
+                detail="Invalid user",
+            )
+
+        return get_all_incidents()
     except Exception as err:
         raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,

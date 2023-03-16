@@ -34,6 +34,6 @@ async def get_sim_drones():
                 lon = zones[rand].lan
             )
             sim_drones.append(d_sim)
-    except Exception as err:
+    except Exception as err: # pylint: disable=broad-exception-caught
         print(err)
     return sim_drones

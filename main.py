@@ -37,7 +37,7 @@ app.include_router(zones.router)
 app.include_router(drones.router)
 app.include_router(simulation.router)
 app.include_router(territories.router)
-app.include_router(alarm.router)
+app.include_router(incidents.router)
 
 # CORS https://fastapi.tiangolo.com/tutorial/cors/
 app.add_middleware(
@@ -193,7 +193,7 @@ def main():
         try:
             simulation_thread = Thread(target = simulate)
             simulation_thread.start()
-        except Exception as err:
+        except Exception as err: # pylint: disable=broad-exception-caught
             print(err)
 
 main()

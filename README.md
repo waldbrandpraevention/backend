@@ -8,7 +8,7 @@
 [![pylint](https://img.shields.io/github/actions/workflow/status/waldbrandpraevention/backend/pylint.yml?branch=main&style=for-the-badge&label=ci)](https://github.com/waldbrandpraevention/backend/actions/workflows/Pylint.yml)
 ![](https://img.shields.io/github/actions/workflow/status/waldbrandpraevention/backend/docker-image.yml?branch=main&style=for-the-badge&label=docker)
 ![](https://img.shields.io/github/commit-activity/m/waldbrandpraevention/backend?style=for-the-badge&label=commits)
-![](https://img.shields.io/docker/image-size/waldbrandpraevention/backend?style=for-the-badge&label=image&color=orange)
+![](https://img.shields.io/docker/image-size/waldbrand/backend?style=for-the-badge&label=image&color=orange)
 [![](https://img.shields.io/codefactor/grade/github/waldbrandpraevention/backend?style=for-the-badge)](https://www.codefactor.io/repository/github/waldbrandpraevention/backend/issues/main)
 
 

@@ -6,7 +6,7 @@ from fastapi import HTTPException
 import pytest
 from api.routers import zones,users,drones
 from api.routers.territories import read_territories,read_territory
-from database import drone_events_table, zones_table, drone_updates_table, drone_updates_table
+from database import drone_events_table, zones_table, drone_updates_table
 from database import territories_table
 from database.database import create_table
 from database.drones_table import CREATE_DRONES_TABLE
@@ -23,25 +23,26 @@ def test_improvements():
     polygon = territories_table.get_orga_area(1)
 
     print(datetime.datetime.now())
-    dat = drone_updates_table.get_drone_updates(polygon=polygon,
+    drone_updates_table.get_drone_updates(polygon=polygon,
                                               drone_id=1,
                                               get_coords_only=True)
     print(datetime.datetime.now())
-    dat = drone_updates_table.get_drone_updates(orga_id=1,
+    drone_updates_table.get_drone_updates(orga_id=1,
                                               drone_id=1,
                                               get_coords_only=True)
     print(datetime.datetime.now())
-    dat = drone_updates_table.get_drone_updates(polygon=polygon,
+    drone_updates_table.get_drone_updates(polygon=polygon,
                                               drone_id=1,
                                               get_coords_only=True)
     print(datetime.datetime.now())
-    dat = drone_updates_table.get_drone_updates(orga_id=1,
+    drone_updates_table.get_drone_updates(orga_id=1,
                                               drone_id=1,
                                               get_coords_only=True)
     print(datetime.datetime.now())
     cProfile.run('test_improvements()',sort='tottime')
 
 def test_createstatements():
+    """function to creates tables"""
     create_table(CREATE_ORGANISATIONS_TABLE)
     create_table(CREATE_USER_TABLE)
     create_table(zones_table.CREATE_ZONE_TABLE)
@@ -65,7 +66,7 @@ async def test_zones():
     territory = await read_territory(1,user)
     assert territory.name == 'Landkreis Potsdam-Mittelmark'
     orga_area = get_orga_area(1)
-    orga_geo = spatiageostr_to_geojson(orga_area)
+    spatiageostr_to_geojson(orga_area)
     #assert orga_geo == territory.geo_json
 
 
@@ -98,8 +99,8 @@ async def test_drones():
     except HTTPException:
         print('No events in zone')
         zone_events = None
-    
-    zone_updates = await drones.read_drone_route(current_user=user,zone_id=zone.id)
+
+    zone_updates = await drones.read_drone_route(current_user=user)
     assert zone_events == zone.events
     assert zone_updates[0].timestamp == zone.last_update
     drone_events_table.insert_demo_events(
@@ -114,7 +115,7 @@ async def test_drones():
                                             2,
                                             True
                                             )
-    
+
     polygon = territories_table.get_orga_area(1)
     now = datetime.datetime.now()
     drone_routes = drone_updates_table.get_drone_updates(polygon=polygon,get_coords_only=True)
@@ -126,7 +127,7 @@ async def test_drones():
     print(diff)
     assert drone_routes == drone_routes_two
     with pytest.raises(HTTPException):
-        await drones.read_drone_route(current_user=user,zone_id=zone.id,drone_id=-1)
+        await drones.read_drone_route(current_user=user,drone_id=-1)
     zone_copunt = await drones.read_drones_count(current_user=user,zone_id=zone.id)
     assert zone_copunt == zone.drone_count
     drone_events_table.insert_demo_events(
@@ -137,8 +138,8 @@ async def test_drones():
                                             )
     zone_copunt = await drones.read_drones_count(current_user=user,zone_id=zone.id)
     assert zone_copunt == zone.drone_count-1
-    d1events = await drones.read_drone_events(current_user=user,drone_id=1)
-    allevents = await drones.read_drone_events(current_user=user)
+    await drones.read_drone_events(current_user=user,drone_id=1)
+    await drones.read_drone_events(current_user=user)
 
     #assert len(d1events) < len(allevents)
     drone_events_table.insert_demo_events(

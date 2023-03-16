@@ -6,10 +6,8 @@ import tensorflow as tf
 import numpy as np
 from PIL import Image
 from PIL.JpegImagePlugin import JpegImageFile
-from object_detection.utils import label_map_util
-from object_detection.utils import visualization_utils as viz_utils
-from api.dependencies.classes import EventType
-from pydantic import BaseModel
+from object_detection.utils import label_map_util # pylint: disable=import-error
+from object_detection.utils import visualization_utils as viz_utils # pylint: disable=import-error
 
 THRESHOLD = .30
 
@@ -93,7 +91,7 @@ def ai_prediction(path: str):
 
     image_np_with_detections = image_np.copy()
 
-    classes = [cls for cls in detections['detection_classes']
+    classes = [cls for cls in detections['detection_classes'] # pylint: disable=unnecessary-comprehension
                   [detections['detection_scores'] > THRESHOLD]]
     #classes = [category_index.get(cls)['name'] for cls in classes]
     percantages = detections['detection_scores'][:len(classes)]
@@ -127,6 +125,3 @@ def ai_prediction(path: str):
         result.picture = image
         results.append(result)
     return results
-
-
-#ai_prediction("./assets/raw/111171_waldbrand-longEdge512.jpg")

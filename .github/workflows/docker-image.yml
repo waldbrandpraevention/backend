@@ -33,4 +33,4 @@ jobs:
         with:
           context: .
           push: true
-          tags: waldbrandpraevention/backend:latest,waldbrandpraevention/backend:${{ github.sha }}
+          tags: waldbrand/backend:latest,waldbrand/backend:${{ github.sha }}
