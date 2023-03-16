@@ -156,8 +156,6 @@ async def drone_update(drone_id:int,
         dict: response
     """
 
-    #current_drone = await get_current_drone(current_drone_token)
-
     if not await validate_token(current_drone_token) :
         raise HTTPException(
             status_code=status.HTTP_406_NOT_ACCEPTABLE,

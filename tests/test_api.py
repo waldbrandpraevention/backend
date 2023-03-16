@@ -79,7 +79,7 @@ async def test_zones():
     demo_distr = os.getenv("DEMO_DISTRICT")
     demo_distr_two = os.getenv("DEMO_DISTRICT_TWO")
     for fetched in zones_arr:
-        assert fetched.district == demo_distr or fetched.district == demo_distr_two, 'Wrong Zone linked.'
+        assert fetched.district in (demo_distr, demo_distr_two), 'Wrong Zone linked.'
 
     index = len(zones_arr)-1
     zone = await zones.read_zone(zones_arr[index].id,user)
