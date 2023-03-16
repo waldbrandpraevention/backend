@@ -1,8 +1,10 @@
 """funcs to read and write on the drone_event table in database."""
 import datetime
 from typing import List
+
+import pytz
 from api.dependencies.classes import DroneEvent, EventType, FireRisk
-from database.database import fetched_match_class
+from database.database import TIMEZONE, fetched_match_class
 import database.database as db
 from database import drone_updates_table
 
@@ -165,10 +167,17 @@ def get_obj_from_fetched(fetched_dronedata) -> DroneEvent | None:
         except ValueError:
             eventtype = None
 
+        try:
+            timestamp:datetime.datetime = fetched_dronedata[2]
+            if timestamp is not None:
+                timestamp = timestamp.astimezone(pytz.timezone(TIMEZONE))
+        except ValueError:
+            timestamp = fetched_dronedata[2]
+
         drone_data_obj = DroneEvent(
             id=fetched_dronedata[0],
             drone_id=fetched_dronedata[1],
-            timestamp=fetched_dronedata[2],
+            timestamp=timestamp,
             lon =longitude,
             lat =latitude,
             event_type=eventtype,

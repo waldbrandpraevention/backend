@@ -58,7 +58,11 @@ def test_verifytable():
 def test_orga():
     """tests for orga table.
     """
-    create_orga(testorga.name,testorga.abbreviation)
+    try:
+        create_orga(testorga.name,testorga.abbreviation)
+    except IntegrityError:
+        print('Orga already exists')
+
     orga = get_orga('testorga')
     update_orga(orga,OrgAttributes.ABBREVIATION,'TEO')
     new_name = 'BPORG'

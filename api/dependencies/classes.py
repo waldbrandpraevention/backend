@@ -96,8 +96,8 @@ class Drone(BaseModel):
         flight_range: maximum flight range of the aerial vehicle in [km],
         cc_range: maximum command and control range of the aerial vehicle in [km],
         flight_time: maximum flight time of the aerial vehicle in [minutes],
-        last_update: timestamp of last communication with drone.
-        ?zone: zone the drone is currently in."""
+        last_update: last update of the drone,
+        zone: zone the drone is currently in."""
     id: int | None = None
     name: str | None = None
     type: str | None = None

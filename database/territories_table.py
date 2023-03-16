@@ -3,7 +3,10 @@
     It is used to group zones together and to assign them to a specific organization.
 
 """
+import datetime
 from typing import List
+
+import pytz
 from database import drone_events_table, zones_table
 import database.database as db
 from database.spatia import spatiageostr_to_geojson
@@ -163,7 +166,12 @@ def get_obj_from_fetched(fetched_territory: tuple) -> TerritoryWithZones:
     events = drone_events_table.get_drone_event(
                                     polygon=fetched_territory[4])
 
-    la_timestam = fetched_territory[7]
+    try:
+        la_timestam:datetime.datetime = fetched_territory[7]
+        if la_timestam is not None:
+            la_timestam = la_timestam.astimezone(pytz.timezone(db.TIMEZONE))
+    except ValueError:
+        la_timestam = fetched_territory[7]
 
 
     if events:
