@@ -13,8 +13,7 @@ location    text NOT NULL ,
 alarm_type  text NOT NULL,
 notes       text NOT NULL,
 timestamp   timestamp NOT NULL,
-PRIMARY KEY (id),
-FOREIGN KEY (drone_id) REFERENCES drones (id)
+PRIMARY KEY (id)
 );'''
 
 INSERT_INCIDENT= 'INSERT INTO incidents (drone_name, location, alarm_type, notes, timestamp) VALUES (?,?,?,?,?);'
@@ -22,30 +21,25 @@ INSERT_INCIDENT= 'INSERT INTO incidents (drone_name, location, alarm_type, notes
 GET_INCIDENT = '''SELECT * FROM incidents
                     ORDER BY timestamp DESC LIMIT {};'''
 
-
 GET_ALL_INCIDENT = '''SELECT * FROM incidents;'''
 
 def create_incident(drone_name: str, location: str, alarm_type: str, notes: str, timestamp: datetime.datetime) -> int | None:
-
     """create an incident.
-
     Args:
         drone_name (str): name of the drone
         location (str): location of the incident.
         alarm_type (str): alarm_type of the incident.
         notes (str): notes of the incident
         timestamp (datetime): timestamp of the incident
-
     Returns:
         int | None: Id of the inserted entry, None if an error occurs.
     """
-    return db.insert(INSERT_INCIDENT, (drone_id, location, alarm_type, notes, timestamp))
+    return db.insert(INSERT_INCIDENT, (drone_name, location, alarm_type, notes, timestamp))
 
 def get_last_incidents(amount: int) -> List[Incident]:
     """returns the last x incidents
     Args:
         amount (int): number of incidents
-
     Returns:
         List[Incident]: list of incidents.
     """
@@ -68,8 +62,7 @@ def get_last_incidents(amount: int) -> List[Incident]:
 def get_all_incidents() -> List[Incident]:
     """returns the last x incidents
     Args:
-        amount (int): number of incidents 
-
+        amount (int): number of incidents
     Returns:
         List[Incident]: list of incidents.
     """
@@ -89,10 +82,8 @@ def get_all_incidents() -> List[Incident]:
 
 def get_obj_from_fetched(fetched_incident: tuple) -> Incident:
     """get a Incident object from a fetched tuple.
-
     Args:
         fetched_incident (tuple): the fetched tuple.
-
     Returns:
         Incident: the territory object.
     """
@@ -100,7 +91,7 @@ def get_obj_from_fetched(fetched_incident: tuple) -> Incident:
         try:
             incident_obj = Incident(
                 id = fetched_incident[0],
-                drone_id = fetched_incident[1],
+                drone_name = fetched_incident[1],
                 location = fetched_incident[2],
                 alarm_type = fetched_incident[3],
                 notes = fetched_incident[4],
