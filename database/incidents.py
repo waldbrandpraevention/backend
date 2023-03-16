@@ -1,7 +1,9 @@
 """This module contains the incidents table and its related functions."""
 from typing import List
 import datetime
-from database.database import fetched_match_class
+
+import pytz
+from database.database import TIMEZONE, fetched_match_class
 import database.database as db
 from api.dependencies.classes import Incident
 
@@ -89,13 +91,20 @@ def get_obj_from_fetched(fetched_incident: tuple) -> Incident:
     """
     if fetched_match_class(Incident,fetched_incident,0):
         try:
+            timestamp:datetime.datetime = fetched_incident[5]
+            if timestamp is not None:
+                timestamp = timestamp.astimezone(pytz.timezone(TIMEZONE))
+        except ValueError:
+            timestamp = fetched_incident[5]
+
+        try:
             incident_obj = Incident(
                 id = fetched_incident[0],
                 drone_name = fetched_incident[1],
                 location = fetched_incident[2],
                 alarm_type = fetched_incident[3],
                 notes = fetched_incident[4],
-                timestamp = fetched_incident[5],
+                timestamp = timestamp,
             )
             return incident_obj
         except ValueError as exception:

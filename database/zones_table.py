@@ -7,8 +7,10 @@ import datetime
 from enum import Enum
 import json
 from typing import List
+
+import pytz
 from api.dependencies.classes import FireRisk, Zone
-from database.database import add_where_clause, create_where_clause_statement, fetched_match_class
+from database.database import TIMEZONE, add_where_clause, create_where_clause_statement, fetched_match_class
 from database.spatia import coordinates_to_multipolygonstr, spatiageostr_to_geojson
 from database import drone_events_table, drone_updates_table
 import database.database as db
@@ -378,9 +380,11 @@ def get_obj_from_fetched(
             print('no events found')
 
         try:
+            la_timestam:datetime.datetime = fetched_zone[8]
+            if la_timestam is not None:
+                la_timestam = la_timestam.astimezone(pytz.timezone(TIMEZONE))
+        except ValueError:
             la_timestam = fetched_zone[8]
-        except IndexError:
-            la_timestam = None
 
         if events:
             ai_firerisk_enum, firerisk, smokerisk = drone_events_table.calculate_firerisk(events)
