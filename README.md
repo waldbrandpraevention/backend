@@ -15,6 +15,7 @@
 ![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
 ![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi)
 ![SQLite](https://img.shields.io/badge/sqlite-%2307405e.svg?style=for-the-badge&logo=sqlite&logoColor=white)
+![SQLite](https://img.shields.io/badge/-Spatialite-B22222?style=for-the-badge&logoColor=white)
 
 <p align="center">
   <img src="img/db.png" width="1200" title="hover text">
@@ -26,7 +27,7 @@
 Im Backend können Drohnen über eingerichtete [API Endpunkte](#api-docs) ihre Updates (Standort und Timestamp) und Events (Detektion von Feuer und/oder Rauch) schicken. Diese Daten werden anschließend in der Datenbank gespeichert. Beim Anfragen der Daten wird jederzeit sichergestellt, dass Nutzer\*innen nur auf Daten innerhalb des Territoriums ihrer Organisation zugreifen können.
 
 ## Datenbank
-Die Datenbank lässt sich in zwei Bereiche teilen:
+Speziell sind hierbei die Attribute vom Typ "spatia geometry". Diese spezifizieren Geodaten, wie bespielsweiße ein lat/lon Punkt oder auch Polygone (z.B. die Grenze einer Gemeinde). So können wir Zonenpolygone generieren, kombinieren und auf einer Karte darstellen.
 
 ### Nutzer und Orgadaten
 In der Tabelle 'users' werden Nutzer\*innen angelegt. Hierbei muss die id einer Organisation angegeben werden, denn so wird später sichergestellt, dass Nutzer\*innen nur auf die Daten im Territorium ihrer Orga zugreifen können.
@@ -88,7 +89,7 @@ DOMAIN_API = 'http://127.0.0.1:8000'
 EVENT_PATH = 'data/events' 
 DRONE_FEEDBACK_PATH = 'data/feedback'
 ```
-Simulationsspezifische Variablen.
+Simulationsspezifische Variablen. UPDATE_FREQUENCY bestimmt nach wieviel Sekunden das nächste Update geschickt werden soll.
 ```
 RUN_SIMULATION = 'True'
 SIMULATION_EVENT_CHANCE = '0.1'
