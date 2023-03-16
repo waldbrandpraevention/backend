@@ -9,7 +9,7 @@ from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 
 
-#from simulation.sim import simulate
+from simulation.sim import simulate
 from api.dependencies.authentication import get_password_hash
 from api.dependencies.classes import UserWithSensitiveInfo, Zone
 from api.routers import emails, users, zones, drones, simulation,territories, incidents
@@ -240,12 +240,12 @@ def main():
     load_zones_from_geojson()
     create_drone_events()
     run_sim = os.getenv("RUN_SIMULATION")
-    # if run_sim == 'True':
-    #     try:
-    #         simulation_thread = Thread(target = simulate)
-    #         simulation_thread.start()
-    #     except Exception as err: # pylint: disable=broad-exception-caught
-    #         print(err)
+    if run_sim == 'True':
+        try:
+            simulation_thread = Thread(target = simulate)
+            simulation_thread.start()
+        except Exception as err: # pylint: disable=broad-exception-caught
+            print(err)
 
 main()
 
