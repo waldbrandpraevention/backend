@@ -22,7 +22,6 @@
 
 </div>
 
-![Database](img/db.png?raw=true)
 ## Installation
 
  ---
