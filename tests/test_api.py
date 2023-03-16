@@ -8,6 +8,7 @@ import msgspec
 import pytest
 from shapely import Polygon, from_geojson, difference
 from api.routers import zones,users,drones
+from api.routers.incidents import alarm_team, all_incidents
 from api.routers.territories import read_territories,read_territory
 from database import drone_events_table, zones_table, drone_updates_table
 from database import territories_table
@@ -54,6 +55,22 @@ def test_createstatements():
     create_table(CREATE_TERRITORY_TABLE)
     create_table(CREATE_TERRITORYZONES_TABLE)
     create_table(CREATE_INCIDENTS_TABLE)
+
+
+@pytest.mark.asyncio
+async def test_incidents():
+    """incident api tests.
+    """
+    user = users.get_user(os.getenv("ADMIN_MAIL"))
+    await alarm_team('test_name',
+               'test_loc',
+               'test_type',
+                'test_notes',
+                user)
+
+    alarms = await all_incidents(user)
+    assert alarms[len(alarms)-1].notes == 'test_notes'
+    assert alarms[len(alarms)-1].location == 'test_loc'
 
 @pytest.mark.asyncio
 async def test_zones():
