@@ -47,7 +47,7 @@ territories.description,
 AsGeoJSON(GUnion(area)) as oarea,
 X(ST_Centroid(GUnion(area)))as lon,
 Y(ST_Centroid(GUnion(area)))as lat,
-newdrone_data.ts,
+MAX(newdrone_data.ts),
 COUNT(DISTINCT drone_id),
 COUNT(DISTINCT territory_zones.zone_id)
 from territories
@@ -166,12 +166,19 @@ def get_obj_from_fetched(fetched_territory: tuple) -> TerritoryWithZones:
     events = drone_events_table.get_drone_event(
                                     polygon=fetched_territory[4])
 
+    la_timestam = fetched_territory[7]
+
     try:
-        la_timestam:datetime.datetime = fetched_territory[7]
-        if la_timestam is not None:
+        timestamp = fetched_territory[7]
+        if timestamp is not None:
+            if isinstance(timestamp, str):
+                timestamp = timestamp.split('.')[0]
+                la_timestam = datetime.datetime.strptime(timestamp, '%Y-%m-%d %H:%M:%S')
+            else:
+                la_timestam = timestamp
             la_timestam = la_timestam.astimezone(pytz.timezone(db.TIMEZONE))
     except ValueError:
-        la_timestam = fetched_territory[7]
+        pass
 
 
     if events:

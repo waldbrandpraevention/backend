@@ -120,4 +120,3 @@ def test_usersettings():
     usrsetting = user_settings_table.get_usersetting(2,user.id)
     assert usrsetting.value == test_json, 'Couldnt set value.'
 
-    
