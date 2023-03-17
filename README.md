@@ -27,7 +27,7 @@
 Im Backend können Drohnen über eingerichtete [API Endpunkte](#api-docs) ihre Updates (Standort und Timestamp) und Events (Detektion von Feuer und/oder Rauch) schicken. Diese Daten werden anschließend in der Datenbank gespeichert. Beim Anfragen der Daten wird jederzeit sichergestellt, dass Nutzer\*innen nur auf Daten innerhalb des Territoriums ihrer Organisation zugreifen können.
 
 ## Datenbank
-Speziell sind hierbei die Attribute vom Typ [spatia geometry (Geometry)](http://www.gaia-gis.it/gaia-sins/spatialite-cookbook/html/wkt-wkb.html). Diese spezifizieren Geodaten, wie bespielsweiße ein lat/lon Punkt oder auch Polygone (z.B. die Grenze einer Gemeinde). So können wir Zonenpolygone generieren, kombinieren und auf einer Karte darstellen.
+Speziell sind hierbei die Attribute vom Typ [spatia geometry (Geometry)](http://www.gaia-gis.it/gaia-sins/spatialite-cookbook/html/wkt-wkb.html). Diese spezifizieren Geodaten, wie bespielsweiße einen lat/lon Punkt oder auch Polygone (z.B. die Grenze einer Gemeinde). So können Zonenpolygone generiert, kombiniert und auf einer Karte dargestellt werden.
 
 ### Nutzer und Orgadaten
 In der Tabelle 'users' werden Nutzer\*innen angelegt. Hierbei muss die id einer Organisation angegeben werden, denn so wird später sichergestellt, dass Nutzer\*innen nur auf die Daten im Territorium ihrer Orga zugreifen können.
