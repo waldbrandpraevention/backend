@@ -27,19 +27,19 @@
 Im Backend können Drohnen über eingerichtete [API Endpunkte](#api-docs) ihre Updates (Standort und Timestamp) und Events (Detektion von Feuer und/oder Rauch) schicken. Diese Daten werden anschließend in der Datenbank gespeichert. Beim Anfragen der Daten wird jederzeit sichergestellt, dass Nutzer\*innen nur auf Daten innerhalb des Territoriums ihrer Organisation zugreifen können.
 
 ## Datenbank
-Speziell sind hierbei die Attribute vom Typ [spatia geometry (Geometry)](http://www.gaia-gis.it/gaia-sins/spatialite-cookbook/html/wkt-wkb.html). Diese spezifizieren Geodaten, wie bespielsweiße ein lat/lon Punkt oder auch Polygone (z.B. die Grenze einer Gemeinde). So können wir Zonenpolygone generieren, kombinieren und auf einer Karte darstellen.
+Für SQLite ungewöhnlich sind die Attribute vom Typ [spatia geometry (Geometry)](http://www.gaia-gis.it/gaia-sins/spatialite-cookbook/html/wkt-wkb.html), die das speichern von Geodaten, wie beispielsweise eine lat/lon Koordinate oder auch Polygone (z.B. die Grenze einer Gemeinde), ermöglichen. So können Zonenpolygone generiert, kombiniert und auf einer Karte dargestellt werden.
 
 ### Nutzer und Orgadaten
-In der Tabelle 'users' werden Nutzer\*innen angelegt. Hierbei muss die id einer Organisation angegeben werden, denn so wird später sichergestellt, dass Nutzer\*innen nur auf die Daten im Territorium ihrer Orga zugreifen können.
+In der Tabelle ’users’ können Nutzer angelegt werden. Dabei muss die id einer Organisation angegeben werden, denn so wird später sichergestellt, dass Nutzer nur auf die Daten im Territorium ihrer Organisation zugreifen können.
 
-Über die Tabelle 'user_settings' und 'settings' können neue Einstellungen mit default_value definiert werden und für einzelne Nutzer\*innen neu gesetzt werden. Hierbei kann man unterschiedliche Typen von Werten speichern (int,str,json).
+Über die Tabelle ’user_settings’ und ’settings’ können neue Einstellungen mit default_value definiert und für Nutzer gesetzt werden. Für jede Einstellung wird der Typ ihres Wertes festgelegt, mögliche Typen sind Integer, String oder JSON.
 
-In 'zones' können über eine geojson Datei Zonen eingelesen werden. In diesem Projekt gilt immer: Zone = Gemeinde.
-Über 'territorries' und 'territorry_zones' können diese Zonen dann Territorien zugeordnet werden, welche widerum zu einer Orga gehören. So können größere Gebiete aus vielen Zonen angelegt und einer Orga zugeordnet werden.
+In ’zones’ werden die einzelnen Zonen definiert, welche den Territorien von Organisationen zugeordnet werden können. Wir haben uns dafür entschieden, die bestehenden Gemeindegrenzen als Zonen zu definieren und können sie aus einer geojson-Datei in die Datenbank einlesen. Diese Definition ist intuitiv und hilft der Feuerwehr bei der internen Kommunikation über potentielle Brandstellen und deren Standort.
+
+Über ’territories’ und ’territory_zones’ können diese Zonen, Territorien zugeordnet werden, welche widerum fest zu einer Organisation gehören. So können größere Gebiete aus vielen Zonen angelegt und einer Organisation zugeordnet werden.
 
 ### Drohnendaten
-In der Tabelle 'drones' können Drohnen angelegt werden. Dies passiert im Anmeldeprozess einer Drohne über den /drones/signup/ API Endpunkt. 
-'drone_update' und 'drone_event' enthalten die gesendeteten Drohnendaten. Hierbei ist ein Update ein eine Kombination aus Standort,Timestamp und Daten zur noch möglichen Flugdauer und Reichweite. 'drone_event' entgegen ist ein Ereignis bei dem eine Drohne entweder Feuer oder Rauch detektiert hat.
+In der Tabelle ’drones’ können Drohnen angelegt werden. Dies passiert beispielsweise im Anmeldeprozess einer Drohne über den /drones/signup/ API Endpunkt. Hinzu kommen ’drone_data’ für Updates und ’drone_event’ für Events. Ein Update ist eine Kombination aus Standort, Timestamp und Daten zur verbleibenden Reichweite, während ein Event Daten zu einer potenziellen Brandstelle enthält.
 
 ## API Docs
 In der Demo können die API Endpunkte eingesehen und getestet werden. Für die meisten Endpunkte benötigt man einen Nutzer, hierfür auf den Authorize Knopf drücken und die folgenden Benutzerdaten eingeben: 
@@ -68,7 +68,7 @@ ADMIN_ORGANIZATION = 'KIWA'
 ADMIN_ORGANIZATION_TWO = 'KIKA'
 ```
 Für Demo Drohnenevents und -updates, können die folgenden Variablen gesetzt werden.
-(unabhängig von der Simulation).
+(unabhängig von der Simulation, müssen nicht gesetzt werden).
 ```
 DEMO_LONG = '12.68895149'
 DEMO_LAT = '52.07454738'
