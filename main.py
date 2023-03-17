@@ -181,6 +181,7 @@ def insert_demo_events(long: float, lat: float, droneid = 1, ignore_existing: bo
         if update is not None:
             print('already created drone events.')
             return
+
     timestamp = datetime.datetime.utcnow()
     i = 0
     num_inserted = 0
@@ -219,7 +220,6 @@ def insert_demo_events(long: float, lat: float, droneid = 1, ignore_existing: bo
             num_inserted += 1
         timestamp += datetime.timedelta(seconds=10)
         i += 1
-    return timestamp
 
 def main():
     """ Initialise the database and create the tables.
