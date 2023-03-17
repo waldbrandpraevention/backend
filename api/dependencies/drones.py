@@ -34,7 +34,7 @@ async def generate_drone_token(drone: Drone):
         Token: new token
     """
     sub = str(drone.id)
-    access_token_expires = timedelta(minutes=DRONE_TOKEN_EXPIRE_WEEKS)
+    access_token_expires = timedelta(weeks=DRONE_TOKEN_EXPIRE_WEEKS)
     access_token = create_access_token(
         data={"sub": sub}, expires_delta=access_token_expires
     )
