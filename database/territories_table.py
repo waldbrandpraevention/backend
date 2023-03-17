@@ -3,7 +3,10 @@
     It is used to group zones together and to assign them to a specific organization.
 
 """
+import datetime
 from typing import List
+
+import pytz
 from database import drone_events_table, zones_table
 import database.database as db
 from database.spatia import spatiageostr_to_geojson
@@ -44,7 +47,7 @@ territories.description,
 AsGeoJSON(GUnion(area)) as oarea,
 X(ST_Centroid(GUnion(area)))as lon,
 Y(ST_Centroid(GUnion(area)))as lat,
-newdrone_data.ts,
+MAX(newdrone_data.ts),
 COUNT(DISTINCT drone_id),
 COUNT(DISTINCT territory_zones.zone_id)
 from territories
@@ -165,6 +168,17 @@ def get_obj_from_fetched(fetched_territory: tuple) -> TerritoryWithZones:
 
     la_timestam = fetched_territory[7]
 
+    try:
+        timestamp = fetched_territory[7]
+        if timestamp is not None:
+            if isinstance(timestamp, str):
+                timestamp = timestamp.split('.')[0]
+                la_timestam = datetime.datetime.strptime(timestamp, '%Y-%m-%d %H:%M:%S')
+            else:
+                la_timestam = timestamp
+            la_timestam = la_timestam.astimezone(pytz.timezone(db.TIMEZONE))
+    except ValueError:
+        pass
 
     if events:
         try:
@@ -190,8 +204,8 @@ def get_obj_from_fetched(fetched_territory: tuple) -> TerritoryWithZones:
                               dwd_fire_risk=None,
                               ai_fire_risk=ai_firerisk_enum,
                               drone_count=fetched_territory[8],
-                              zone_count=zone_count,
                               last_update=la_timestam,
+                              zone_count=zone_count,
                               geo_json=geo_json,
                               lon=lon,
                               lat=lat)

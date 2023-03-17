@@ -7,8 +7,10 @@ import datetime
 from enum import Enum
 import json
 from typing import List
+
+import pytz
 from api.dependencies.classes import FireRisk, Zone
-from database.database import add_where_clause, create_where_clause_statement, fetched_match_class
+from database.database import TIMEZONE, add_where_clause, create_where_clause_statement, fetched_match_class
 from database.spatia import coordinates_to_multipolygonstr, spatiageostr_to_geojson
 from database import drone_events_table, drone_updates_table
 import database.database as db
@@ -19,6 +21,7 @@ id       integer NOT NULL ,
 name    text NOT NULL ,
 federal_state    text NOT NULL ,
 district    text NOT NULL ,
+last_update timestamp,
 PRIMARY KEY (id)
 );
 CREATE INDEX IF NOT EXISTS zones_AK ON zones (name);
@@ -33,17 +36,21 @@ class ZoneWhereClause(str, Enum):
     GEOJSONINTERSECT = 'ST_Intersects(zones.area, GeomFromGeoJSON(?))'
     ZONE_ID = 'zones.id'
 
-CREATE_ENTRY = '''INSERT INTO zones (name,federal_state,district,area,geo_point)
-                VALUES (?,?,?,GeomFromGeoJSON(?),MakePoint(?, ?, 4326));'''
+CREATE_ENTRY = '''INSERT INTO zones (name,federal_state,district,area,geo_point,last_update)
+                VALUES (?,?,?,GeomFromGeoJSON(?),MakePoint(?, ?, 4326),0);'''
+
+UPDATE_ZONE = 'UPDATE zones SET {} = ? WHERE {};'
+
+UPDATE_TIMESTAMP = 'UPDATE zones SET last_update = ? {};'
 
 CREATE_ENTRY_TEXTGEO = '''INSERT OR IGNORE
-                        INTO zones (id, name,federal_state,district,area,geo_point) 
-                        VALUES (?,?,?,?,GeomFromText(?,4326),MakePoint(?, ?, 4326));'''
+                        INTO zones (id, name,federal_state,district,area,geo_point,last_update) 
+                        VALUES (?,?,?,?,GeomFromText(?,4326),MakePoint(?, ?, 4326),?);'''
 
 GET_ZONE = """SELECT zones.id,zones.name,federal_state,district,AsGeoJSON(area),
                 X(geo_point),Y(geo_point),
                 Count(DISTINCT newdrone_data.drone_id),
-                newdrone_data.ts,
+                zones.last_update,
                 Count(DISTINCT drone_event.id)
                 FROM zones
                 LEFT OUTER JOIN drone_event ON ST_Intersects(drone_event.coordinates, area)
@@ -64,7 +71,7 @@ GET_ZONEPOLYGON = """   SELECT AsGeoJSON(area)
 GET_ZONEJOINORGA ='''SELECT zones.id,zones.name,federal_state,district,AsGeoJSON(area),
                         X(geo_point),Y(geo_point),
                         Count(DISTINCT newdrone_data.drone_id),
-                    newdrone_data.ts,
+                    zones.last_update,
                     Count(DISTINCT drone_event.id)
                     FROM zones
                     JOIN territory_zones 
@@ -85,7 +92,7 @@ GET_ZONEJOINORGA ='''SELECT zones.id,zones.name,federal_state,district,AsGeoJSON
 
 GET_ZONES_BY_DISTRICT = '''SELECT zones.id,zones.name,federal_state,district,AsGeoJSON(area),
                             X(geo_point),Y(geo_point),Count(DISTINCT newdrone_data.drone_id),
-                            newdrone_data.ts,
+                            zones.last_update,
                             Count(DISTINCT drone_event.id)
                             FROM zones
                             LEFT OUTER JOIN drone_event ON ST_Intersects(drone_event.coordinates, area)
@@ -102,7 +109,7 @@ GET_ORGAZONES = '''  SELECT zones.id,zones.name,federal_state,district,AsGeoJSON
                     X(geo_point),
                     Y(geo_point),
                     Count(DISTINCT newdrone_data.drone_id),
-                    newdrone_data.ts,
+                    zones.last_update,
                     Count(DISTINCT drone_event.id)
                     FROM zones
                     JOIN territory_zones 
@@ -156,7 +163,8 @@ def add_from_geojson(path_to_geojson) -> int:
                           local_community['properties']['krs_name'][0],
                           text,
                           local_community['properties']['geo_point_2d']['lon'],
-                          local_community['properties']['geo_point_2d']['lat'])
+                          local_community['properties']['geo_point_2d']['lat'],
+                          None)
             to_db.append(insertuple)
 
     rowcount = db.insertmany(CREATE_ENTRY_TEXTGEO, to_db)
@@ -195,7 +203,8 @@ def create_zone(gem_code, name, federal_state, district, gemometry: dict, geo_po
             district,
             polygon_wkt,
             geo_point[0],
-            geo_point[1]
+            geo_point[1],
+            None
             )
         )
     if inserted_id:
@@ -247,6 +256,21 @@ def get_zone_of_coordinate(long:float, lat:float) -> Zone | None:
     sql = add_where_clause(GET_ZONE,[ZoneWhereClause.MAKEPOINTINTERSECT])
     fetched_zone = db.fetch_one(sql, (long, lat))
     return get_obj_from_fetched(fetched_zone)
+
+def set_update_for_coordinate(long:float, lat:float, timestamp:datetime.datetime) -> bool:
+    """set the last_update field of the zone, the given lat lon tuple is in.
+
+    Args:
+        long (float): longitude of the point.
+        lat (float): latitude of the point.
+        timestamp (datetime.datetime): timestamp of the update.
+
+    Returns:
+        bool: Wether the update was successful or not.
+    """
+
+    sql = add_where_clause(UPDATE_TIMESTAMP,[ZoneWhereClause.MAKEPOINTINTERSECT])
+    return db.update(sql,(timestamp, long, lat))
 
 def get_zones_in_area(area:str) -> List[Zone] | None:
     """fetch all zones in the given area.
@@ -356,9 +380,11 @@ def get_obj_from_fetched(
             print('no events found')
 
         try:
+            la_timestam:datetime.datetime = fetched_zone[8]
+            if la_timestam is not None:
+                la_timestam = la_timestam.astimezone(pytz.timezone(TIMEZONE))
+        except ValueError:
             la_timestam = fetched_zone[8]
-        except IndexError:
-            la_timestam = None
 
         if events:
             ai_firerisk_enum, firerisk, smokerisk = drone_events_table.calculate_firerisk(events)

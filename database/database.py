@@ -7,6 +7,9 @@ from pydantic import BaseModel
 
 DATABASE_PATH = os.getenv('DB_PATH')
 BACKUP_PATH = os.getenv('DB_BACKUP_PATH')
+TIMEZONE = os.getenv('TIMEZONE')
+if TIMEZONE is None:
+    TIMEZONE = 'Europe/Berlin'
 
 EMAIL_REGEX = r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)"
 

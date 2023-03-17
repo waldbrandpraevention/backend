@@ -96,8 +96,8 @@ class Drone(BaseModel):
         flight_range: maximum flight range of the aerial vehicle in [km],
         cc_range: maximum command and control range of the aerial vehicle in [km],
         flight_time: maximum flight time of the aerial vehicle in [minutes],
-        last_update: timestamp of last communication with drone.
-        ?zone: zone the drone is currently in."""
+        last_update: last update of the drone,
+        zone: zone the drone is currently in."""
     id: int | None = None
     name: str | None = None
     type: str | None = None
@@ -190,8 +190,8 @@ class TerritoryWithZones(Territory):
     dwd_fire_risk: FireRisk | None = None
     ai_fire_risk: FireRisk | None = None
     drone_count: int | None = None
-    zone_count: int | None = None
     last_update: datetime | None = None
+    zone_count: int | None = None
     geo_json: dict | None = None
     lon : float | None = None
     lat : float | None = None

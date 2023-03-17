@@ -1,9 +1,10 @@
 """funcs to read and write on the drone_event table in database."""
 import datetime
-import random
 from typing import List
+
+import pytz
 from api.dependencies.classes import DroneEvent, EventType, FireRisk
-from database.database import fetched_match_class
+from database.database import TIMEZONE, fetched_match_class
 import database.database as db
 from database import drone_updates_table
 
@@ -57,57 +58,6 @@ SELECT drone_event.id,drone_id,timestamp, X(coordinates), Y(coordinates),event_t
 FROM drone_event
 JOIN zones ON ST_Intersects(zones.area, coordinates)
 AND drone_event.id = ?;'''
-
-
-def insert_demo_events(long: float, lat: float, droneid = 1, ignore_existing: bool = False):
-    """insert 5 demo drone events.
-
-    Args:
-        long (float): long of the coordinate.
-        lat (float): lat of the coordinate.
-    """
-    if not ignore_existing:
-        update = drone_updates_table.get_latest_update(droneid)
-        if update is not None:
-            print('already created drone events.')
-            return
-    timestamp = datetime.datetime.utcnow()
-    i = 0
-    num_inserted = 0
-    flight_range = 100
-    flight_time =0
-    while num_inserted < 4:
-        event_rand = random.randint(0, 2)
-        long_rand = random.randint(0, 100)/100000
-        lat_rand = random.randint(0, 100)/100000
-        long= long+long_rand
-        lat = lat+lat_rand
-        flight_range-=2
-        flight_time+=10
-        drone_updates_table.create_drone_update(
-            drone_id=droneid,
-            timestamp=timestamp,
-            longitude=long,
-            latitude=lat,
-            flight_range=flight_range,
-            flight_time=flight_time
-        )
-        if event_rand > 0:
-            confidence = random.randint(20, 90)
-
-            create_drone_event_entry(
-                drone_id=droneid,
-                timestamp=timestamp,
-                longitude=long,
-                latitude=lat,
-                event_type=event_rand,
-                confidence=confidence,
-                picture_path='/data/events/1',
-                csv_file_path=f'demo/path/{i}'
-            )
-            num_inserted += 1
-        timestamp += datetime.timedelta(seconds=10)
-        i += 1
 
 
 def create_drone_event_entry(drone_id: int,
@@ -217,10 +167,17 @@ def get_obj_from_fetched(fetched_dronedata) -> DroneEvent | None:
         except ValueError:
             eventtype = None
 
+        try:
+            timestamp:datetime.datetime = fetched_dronedata[2]
+            if timestamp is not None:
+                timestamp = timestamp.astimezone(pytz.timezone(TIMEZONE))
+        except ValueError:
+            timestamp = fetched_dronedata[2]
+
         drone_data_obj = DroneEvent(
             id=fetched_dronedata[0],
             drone_id=fetched_dronedata[1],
-            timestamp=fetched_dronedata[2],
+            timestamp=timestamp,
             lon =longitude,
             lat =latitude,
             event_type=eventtype,
