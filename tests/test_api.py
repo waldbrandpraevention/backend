@@ -4,10 +4,10 @@ import os
 import cProfile
 import random
 from smtplib import SMTPException
+import pytz
 from fastapi import HTTPException
 import msgspec
 import pytest
-import pytz
 from shapely import Polygon, from_geojson, difference
 from api.routers import zones,users,drones
 from api.routers.incidents import alarm_team, all_incidents
