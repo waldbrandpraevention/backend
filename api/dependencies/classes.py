@@ -190,6 +190,7 @@ class TerritoryWithZones(Territory):
     dwd_fire_risk: FireRisk | None = None
     ai_fire_risk: FireRisk | None = None
     drone_count: int | None = None
+    last_update: datetime | None = None
     zone_count: int | None = None
     geo_json: dict | None = None
     lon : float | None = None
