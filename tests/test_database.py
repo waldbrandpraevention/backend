@@ -1,6 +1,8 @@
 """database tests"""
 # setting path
 import json
+import os
+import random
 from sqlite3 import IntegrityError
 from api.dependencies.authentication import get_password_hash
 from api.dependencies.classes import(Organization,
@@ -74,19 +76,22 @@ def test_orga():
 def test_usersettings():
     """tests for usersettings and settings table.
     """
-    user = get_user(MAIL)
+    user = get_user(os.getenv("ADMIN_MAIL"))
     #create tables
     create_table(settings_table.CREATE_SETTINGS_TABLE)
     create_table(user_settings_table.CREATE_USERSETTINGS_TABLE)
     #create settings
-    settings_table.create_setting('Test',
-                                'This is a testsetting',
-                                'test',
-                                SettingsType.STRING)
-    settings_table.create_setting('Lightmode',
-                                'Lightmode activated or not',
-                                json.dumps({'test':1}),
-                                SettingsType.JSON)
+    try:
+        settings_table.create_setting('Test',
+                                    'This is a testsetting',
+                                    'test',
+                                    SettingsType.STRING)
+        settings_table.create_setting('Lightmode',
+                                    'Lightmode activated or not',
+                                    json.dumps({'test':1}),
+                                    SettingsType.JSON)
+    except IntegrityError:
+        print('Setting already exists')
 
     #get list of all settings
     settinglist = settings_table.get_settings()
@@ -102,9 +107,17 @@ def test_usersettings():
     setting = user_settings_table.get_usersetting(1,user.id)
     assert setting.value != 'ich will das', 'Couldnt set value.'
 
-    #set the setting with id 2 for user to {'test':2}
-    user_settings_table.set_usersetting(2,user_id=user.id,value=json.dumps({'test':2}))
+    #set the setting with id 2 for user to {'test':random_int}
+    test_int = random.randint(1,100)
+
+    test_str = f'test{test_int}'
+    user_settings_table.set_usersetting(1,user_id=user.id,value=test_str)
+    usrsetting = user_settings_table.get_usersetting(1,user.id)
+    assert usrsetting.value == test_str, 'Couldnt set value.'
+
+    test_json = json.dumps({'test':test_int})
+    user_settings_table.set_usersetting(2,user_id=user.id,value=json.dumps(test_json))
     usrsetting = user_settings_table.get_usersetting(2,user.id)
-    print(usrsetting)
-    usrsetting = user_settings_table.get_usersetting(2,3)
-    print(usrsetting)
+    assert usrsetting.value == test_json, 'Couldnt set value.'
+
+    
