@@ -53,12 +53,6 @@ COUNT(DISTINCT territory_zones.zone_id)
 from territories
 JOIN territory_zones ON territory_zones.territory_id = territories.id
 JOIN zones ON territory_zones.zone_id = zones.id
-LEFT OUTER JOIN (
-        SELECT coordinates, MAX(timestamp) as ts, drone_id
-        from drone_data
-        group by drone_data.drone_id
-    ) AS newdrone_data
-ON ST_Intersects(newdrone_data.coordinates, area)
 {}
 group by territories.id;"""
 
@@ -180,7 +174,6 @@ def get_obj_from_fetched(fetched_territory: tuple) -> TerritoryWithZones:
     except ValueError:
         pass
 
-
     if events:
         try:
             ai_firerisk_enum = drone_events_table.calculate_firerisk(events)[0]
@@ -189,7 +182,7 @@ def get_obj_from_fetched(fetched_territory: tuple) -> TerritoryWithZones:
     else:
         ai_firerisk_enum = FireRisk(0)
 
-    zone_count = fetched_territory[9]
+    zone_count = fetched_territory[8]
 
     try:
         lon = fetched_territory[5]
@@ -204,9 +197,8 @@ def get_obj_from_fetched(fetched_territory: tuple) -> TerritoryWithZones:
                               description=fetched_territory[3],
                               dwd_fire_risk=None,
                               ai_fire_risk=ai_firerisk_enum,
-                              drone_count=fetched_territory[8],
+                              drone_count=fetched_territory[7],
                               zone_count=zone_count,
-                              last_update=la_timestam,
                               geo_json=geo_json,
                               lon=lon,
                               lat=lat)
