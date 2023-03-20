@@ -24,7 +24,7 @@ RUN cp object_detection/packages/tf2/setup.py .
 RUN python -m pip install --no-cache-dir --upgrade pip 
 
 # Mac problems https://github.com/tensorflow/models/issues/10499
-RUN python -m pip install --no-cache-dir --upgrade  --no-deps .
+RUN python -m pip install --no-cache-dir --upgrade .
 
 RUN rm -rf /models
 
@@ -32,9 +32,6 @@ RUN rm -rf /models
 WORKDIR /api
 
 COPY ./requirements.txt /api/requirements.txt
-
-# maybe fix https://github.com/waldbrandpraevention/backend/actions/runs/4471759683/jobs/7857051725 ?
-RUN python3 -m pip install --upgrade pip setuptools wheel
 
 RUN pip install --no-cache-dir --upgrade -r /api/requirements.txt
 
