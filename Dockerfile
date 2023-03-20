@@ -23,7 +23,8 @@ RUN cp object_detection/packages/tf2/setup.py .
 
 RUN python -m pip install --no-cache-dir --upgrade pip 
 
-RUN python -m pip install --no-cache-dir --upgrade .
+# Mac problems https://github.com/tensorflow/models/issues/10499
+RUN python -m pip install --no-cache-dir --upgrade  --no-deps .
 
 RUN rm -rf /models
 
