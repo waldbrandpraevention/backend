@@ -33,6 +33,9 @@ WORKDIR /api
 
 COPY ./requirements.txt /api/requirements.txt
 
+# maybe fix https://github.com/waldbrandpraevention/backend/actions/runs/4471759683/jobs/7857051725 ?
+RUN python3 -m pip install --upgrade pip setuptools wheel
+
 RUN pip install --no-cache-dir --upgrade -r /api/requirements.txt
 
 COPY . .
